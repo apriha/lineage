@@ -1,0 +1,2 @@
+include *.txt *.rst VERSION
+recursive-include lineage *.txt *.rst VERSION
