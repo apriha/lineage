@@ -6,6 +6,13 @@ consumer DNA testing companies (e.g., `23andMe <https://www.23andme.com>`_,
 `Ancestry <http://www.ancestry.com>`_), primarily for the purposes of genetic
 genealogy.
 
+Capabilities
+------------
+- Merge raw data files from different DNA testing companies, identifying discrepant SNPs in the process
+- Compute centimorgans (cMs) of shared DNA between individuals using HapMap tables
+- Plot shared DNA between individuals
+- Find discordant SNPs between child and parent(s)
+
 Dependencies
 ------------
 ``lineage`` requires Python 3.4+, `pandas <http://pandas.pydata.org>`_, and
