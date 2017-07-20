@@ -26,6 +26,10 @@ Installation
 
     pip install lineage
 
+Documentation
+-------------
+Documentation is available `here <https://apriha.github.io/lineage/>`_.
+
 Acknowledgements
 ----------------
 Thanks to Whit Athey, Ryan Dale, Binh Bui, Gopal Vashishtha, and
