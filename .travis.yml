@@ -1,0 +1,76 @@
+# https://github.com/drdoctr/doctr/blob/master/.travis.yml
+# https://github.com/sympy/sympy/blob/master/.travis.yml
+# https://github.com/twisted/klein/blob/master/.travis.yml
+
+language: python
+
+sudo: false
+
+env:
+  global:
+    - secure: "HdD8dimf6ac120e77MW2yXl+ZQC/abJ5s7Y+onPHDy/aKb2aOD+mXx1dw8441kNaJNvgyj3ALqqUG+PIQiwOytuvppxKdVJoVA0BFJy71dCZbBhMw4AFGFOaQxLnNMYzayD8PGCGrqlt5VCM1DtjUEWicHFfLBK7JOVPmYsepAEdoo4dVBGTqeguXsxhccz1G1Cqkh4M1tvFgTom/ie+B1M37lk0tmw/C4GigAb7ibbSo8FVlkSDBxEDgui5/Bmpt8zjg5ckYcxYRtqr81nhve4UmlJl2u98yzXwA1ZgAkObpu26oEDGWlcCWk5rsOc2Ky5pJggVm8XtLmWNBbdXo21jOcVf4+Uk9vpVy7clDqUSXZFw2P+b+co7zUkNZ+o0q/J8fSRJphYjVBnLhMsJVQ0fY7A1JSZkMuU8i1pV4Cr5UmXB8QSqsLs2h9qE/SE4M1dcs5wLGgvmF7Bx9aC3ZL4FTieMp47s0abSKUU+2CvrTIC/MGCkKDo2MHyjq6O5bzSrqPfgzmcEiSvowyFZ7Ho3MPRxASLOVHbuUuMWZ5owUOzN4O7lPvj5NqdK1gTYcFvTMsxQ1cJt1UDpGBjlbwfZV9ZV8J5gNjmnRXCX47erQWJr+SKd/ZHHBN1VMgJqEzuEeZhW+dtwNWiKhFo3qXJv1+rcOmDd6rEZiuI+qTc="
+
+matrix:
+  include:
+    - python: 3.5
+    - python: 3.6
+      env:
+        DOCS="true"
+        DEPLOY="true"
+
+before_install:
+  - if [[ "${DOCS}" == "true" ]]; then
+      pip install sphinx;
+      pip install sphinx_rtd_theme;
+      pip install doctr;
+    fi
+
+install:
+  - pip install .
+
+# build and deploy Sphinx documentation to GitHub Pages with doctr
+# https://github.com/drdoctr/doctr
+
+script:
+  - set -e
+  - if [[ "${DOCS}" == "true" ]]; then
+      cd docs;
+      make html;
+      cd ..;
+      doctr deploy .;
+    fi
+
+# automatically package and deploy to PyPI
+# https://www.appneta.com/blog/pypi-deployment-with-travis-ci/
+
+# make version unique for test PyPI deployment
+# https://stackoverflow.com/a/31363120
+before_deploy:
+  - if [[ "${DEPLOY}" == "true" ]]; then
+      chmod +x deploy.sh;
+      ./deploy.sh;
+    fi
+
+deploy:
+  # test PyPI
+  - provider: pypi
+    server: https://test.pypi.org/legacy/
+    user: "apriha"
+    password:
+      secure: "rAYkKbW1Grw0Yfbd21HR9F4CPHILQZi27U6Nemm2lMUKG2N12LedSNV5v2AiAvCaMVuyn25z+o9zjHgDDfX96g7jX/lOHb4NujQNvWqbNR2PhNdwjaT3A3vs9vGUDLAP552krFx+QWOT9boP2UAX24RTRs3voI9insY/mWmtzgo7K4ogCD+Dt42Hk2MaITXzCay1rzwQoX/WV/CpvYoFDuieEyttJ9nA8aN5pU9lV4Y+DyF1eoyqW5iLAN31RrFSqO5DtdbYtJPlij17iKwCrCkuvNaPZ9pAKpz/uceHLm9T1F0JQkOa7dG7axXjRV/smeYpdIJv7OOcwVDKraVj5vU/o8ucwUzsVnWJvzOpMTdVYYP9IaEyOUr/gapEpGy4Er+YUyT4jJc40t1EbWjFuJt/bhbkDFZzviWD/2SHODtkKqpFJlVaoN7GdMLo6CAY0gBkEUNZbggXnc9WwrxRVFrGnBK4cpl7ucqGK5eHTHrIWc9k4egDBAUtKo8bYtl5IN97cpVWr0eVLgVSrq59DnfuzuKs/9uQXEtjmcqe45Zrrw/ullYYRCriNgldCUhTCNXUGqdgiPEfG8hQGqw4wJj+m28xCTVq5cAanE4VjmmWKCHIHhon7oV285/hjijr5L2rZF5tJn8fjcwS8TB9kxPbOXKo/aOKydtDoCQwCXw="
+    skip_cleanup: true
+    distributions: "sdist bdist_wheel"
+    on:
+      branch: master
+      tags: false
+      condition: $DEPLOY = "true"
+  # production PyPI
+  - provider: pypi
+    user: "apriha"
+    password:
+      secure: "ILDxck7IPSffABa4mWFANETAOJgazxXJRJBFoMQ+0TKxsrTKVA6VDtrUBEAgxAdm2Zp9Lwh8vsOKodEToTrcm5J4JmnFsyz+pxBbPNpKE1RU4bn+X0qqd3D//iK6DoATxrQCS73MZA7GoMOEL7dvU2R8d2d8i6H3x4lDCIp3dcPRZm1+YYGo51bwv6MYJGcN9lQOtQlVgFYPp/9TSAiwK5sWjQk8Bfv7ASIJWGb0+oLW5AK468ANk1agof+pg56d041vWYDqTBuuaZs6gEYxJQSk0V0o896NoNoqenfIch39KeHnL4jTBUhftDk/NNT/wGfi8JasGC/ks+ESE7R8BwbWYb0QH9AhBQSraAjIr0IEyoOXYYl2FlghHWFC2/mBKZcmQXuL+Dx6tJxvAP914bB2sb+ZNNcBfuPkfzeOYoVosTly/O/MPoyuj2/Ohmw76hKzeGu2IE4UILQUsggaZvgVk/A+Vu8KmeOx15X+IgHn3ahJ3550K4d5vFTRlvY1EZQP5XY5Mx7OW55Orm71wZKOMIN4Y6COyZA7NCs0tCR5M7EjIk/j401Dm/O75hcYIY0J69eZiifSIXUNsJ+6QmOvhZJA8ZtYNlJ6nyGhBAF22a6wp7E2OQEY2WR2X1ZMRaP9SSr7X8wUbKHTt9JbEVFQwqTQzqdP+8Szj/Hh0nA="
+    distributions: "sdist bdist_wheel"
+    on:
+      branch: master
+      tags: true
+      condition: $DEPLOY = "true"
