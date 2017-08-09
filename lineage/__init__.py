@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 
 # http://mikegrouchy.com/blog/2012/05/be-pythonic-__init__py.html
+from lineage.ensembl import EnsemblRestClient
 from lineage.individual import Individual
 from lineage.resources import Resources
 from lineage.visualization import plot_chromosomes
@@ -36,6 +37,7 @@ class Lineage(object):
     def __init__(self, output_dir='output', resources_dir='resources'):
         self._output_dir = os.path.abspath(output_dir)
         self._resources = Resources(resources_dir=resources_dir)
+        self._ensembl_rest_client = EnsemblRestClient()
 
     def create_individual(self, name, raw_data=None):
         """ Initialize an individual in the context of the `lineage` framework.
@@ -53,7 +55,7 @@ class Lineage(object):
             ``Individual`` initialized in the context of the `lineage` framework
 
         """
-        return Individual(name, raw_data)
+        return Individual(name, raw_data, self._ensembl_rest_client)
 
     def find_discordant_snps(self, individual1, individual2, individual3=None, save_output=False):
         """ Find discordant SNPs between two or three individuals.

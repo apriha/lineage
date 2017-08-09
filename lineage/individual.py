@@ -36,7 +36,7 @@ class Individual(object):
 
     """
 
-    def __init__(self, name, raw_data=None):
+    def __init__(self, name, raw_data=None, ensembl_rest_client=None):
         """ Initialize an individual.
 
         Parameters
@@ -45,10 +45,13 @@ class Individual(object):
             name of the individual
         raw_data : list or str
             path(s) to file(s) with raw genotype data
+        ensembl_rest_client : EnsemblRestClient
+            client for making requests to the Ensembl REST API
 
         """
 
         self._name = name
+        self._ensembl_rest_client = ensembl_rest_client
         self._snps = None
 
         if raw_data is not None:
