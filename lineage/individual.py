@@ -127,6 +127,102 @@ class Individual(object):
 
         return re.sub('\W|^(?=\d)', '_', self.name)  # [SO-02]
 
+    def remap_snps(self, source_assembly, target_assembly):
+        """ Remap the SNP coordinates of this ``Individual`` from one assembly to another.
+
+        This method uses the assembly map endpoint of the Ensembl REST API service (via this
+        ``Individual``'s ``EnsemblRestClient``) to convert SNP coordinates / positions from one
+        assembly to another. After remapping, the coordinates / positions for the ``Individual``'s
+        SNPs will be that of the target assembly.
+
+        Parameters
+        ----------
+        source_assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
+            starting assembly of an Individual's SNPs
+        target_assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
+            assembly to remap to
+
+        Notes
+        -----
+        An assembly is also know as a "build." For example:
+
+        Assembly NCBI36 = Build 36
+        Assembly GRCh37 = Build 37
+        Assembly GRCh38 = Build 38
+
+        See https://www.ncbi.nlm.nih.gov/assembly for more information about assemblies and
+        remapping.
+
+        References
+        ----------
+        ..[1] Ensembl, Assembly Map Endpoint,
+          http://rest.ensembl.org/documentation/info/assembly_map
+
+        """
+
+        if self._ensembl_rest_client is None:
+            print('Need an ``EnsemblRestClient`` to remap SNPs')
+            return
+
+        valid_assemblies = ['NCBI36', 'GRCh37', 'GRCh38']
+
+        if source_assembly not in valid_assemblies:
+            print('Invalid source assembly')
+            return
+        elif target_assembly not in valid_assemblies:
+            print('Invalid target assembly')
+            return
+
+        for chrom in self._snps['chrom'].unique():
+            print('Remapping chromosome ' + chrom + '...')
+
+            # extract SNPs for this chrom for faster remapping
+            temp = pd.DataFrame(self._snps.loc[self._snps['chrom'] == chrom])
+
+            temp['remapped'] = False
+
+            pos_start = str(int(temp['pos'].describe()['min']))
+            pos_end = str(int(temp['pos'].describe()['max']))
+
+            endpoint = '/map/human/' + source_assembly + '/' + chrom + ':' + \
+                       pos_start + '..' + pos_end + '/' + target_assembly + '?'
+
+            # get remapping information
+            response = self._ensembl_rest_client.perform_rest_action(endpoint)
+
+            for mapping in response['mappings']:
+                orig_range_len = mapping['original']['end'] - mapping['original']['start']
+                mapped_range_len = mapping['mapped']['end'] - mapping['mapped']['start']
+
+                orig_region = mapping['original']['seq_region_name']
+                mapped_region = mapping['mapped']['seq_region_name']
+
+                if orig_region != mapped_region:
+                    print('discrepant chroms')
+                    continue
+
+                if orig_range_len != mapped_range_len:
+                    print('discrepant coords')  # observed when mapping NCBI36 -> GRCh38
+                    continue
+
+                offset = mapping['mapped']['start'] - mapping['original']['start']
+
+                # find the SNPs that are being remapped for this mapping
+                snp_indices = temp.loc[~temp['remapped'] &
+                                   (temp['pos'] >= mapping['original']['start']) &
+                                   (temp['pos'] <= mapping['original']['end'])].index
+
+                # remap the SNPs
+                temp.loc[snp_indices, 'pos'] = temp['pos'] + offset
+
+                # mark these SNPs as remapped
+                temp.loc[snp_indices, 'remapped'] = True
+
+            # update SNP positions for this chrom
+            self._snps.loc[temp.index, 'pos'] = temp['pos']
+
+        self._sort_snps()
+
     def _read_raw_data(self, file):
         if not os.path.exists(file):
             print(file + ' does not exist; skipping')

@@ -12,6 +12,7 @@ Capabilities
 - Compute centimorgans (cMs) of shared DNA between individuals using HapMap tables
 - Plot shared DNA between individuals
 - Find discordant SNPs between child and parent(s)
+- Remap SNPs between assemblies / builds (e.g., convert SNPs from build 36 to build 37, etc.)
 
 Dependencies
 ------------
