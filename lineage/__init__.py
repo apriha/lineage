@@ -37,6 +37,24 @@ class Lineage(object):
         self._output_dir = os.path.abspath(output_dir)
         self._resources = Resources(resources_dir=resources_dir)
 
+    def create_individual(self, name, raw_data=None):
+        """ Initialize an individual in the context of the `lineage` framework.
+
+        Parameters
+        ----------
+        name : str
+            name of the individual
+        raw_data : list or str
+            path(s) to file(s) with raw genotype data
+
+        Returns
+        -------
+        Individual
+            ``Individual`` initialized in the context of the `lineage` framework
+
+        """
+        return Individual(name, raw_data)
+
     def find_discordant_snps(self, individual1, individual2, individual3=None, save_output=False):
         """ Find discordant SNPs between two or three individuals.
 
