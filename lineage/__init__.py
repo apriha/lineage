@@ -286,17 +286,15 @@ class Lineage(object):
             # discrepant SNP
             adjacent_ix = np.where(np.roll(matches_passed[:, 0], -1) - matches_passed[:, 1] == 1)
 
-            # TODO: check when first one_chrom_match value is false
-
             # if there are adjacent segments
             if len(adjacent_ix[0]) != 0:
                 matches_stitched = np.array([0, 0])
-                prev = 0
+                prev = -1
                 counter = 0
 
                 # stitch together adjacent segments
                 for x in matches_passed:
-                    if prev + 1 == x[0]:
+                    if prev != -1 and prev + 1 == x[0]:
                         matches_stitched[counter, 1] = x[1]
                     else:
                         matches_stitched = np.vstack((matches_stitched, x))
