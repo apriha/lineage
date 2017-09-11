@@ -295,9 +295,18 @@ class Individual(object):
         """
 
         try:
-            return pd.read_csv(file, skiprows=1, na_values='--',
-                               names=['rsid', 'chrom', 'pos', 'genotype'],
-                               index_col=0, dtype={'chrom': object})
+            df = pd.read_csv(file, skiprows=1, na_values='--',
+                             names=['rsid', 'chrom', 'pos', 'genotype'],
+                             index_col=0, dtype={'chrom': object})
+
+            # remove incongruous data
+            df = df.drop(df.loc[df['chrom'] == '0'].index)
+            df = df.drop(df.loc[df.index == 'RSID'].index)  # second header for concatenated data
+
+            # if second header existed, pos dtype will be object (should be np.int64)
+            df['pos'] = df['pos'].astype(np.int64)
+
+            return df
         except Exception as err:
             print(err)
             return None
