@@ -181,12 +181,17 @@ class Lineage(object):
         """
         df = individual1.snps
 
-        df = df.join(individual2.snps['genotype'], rsuffix='2')
+        df = df.join(individual2.snps['genotype'], rsuffix='2', how='inner')
 
         genotype1 = 'genotype_' + individual1.get_var_name()
         genotype2 = 'genotype_' + individual2.get_var_name()
 
         df = df.rename(columns={'genotype': genotype1, 'genotype2': genotype2})
+
+        one_x_chrom = self._is_one_individual_male(df, genotype1, genotype2)
+
+        # determine the genetic distance between each SNP using HapMap tables
+        hapmap, df = self._compute_snp_distances(df, build)
 
         # determine where individuals share an allele on one chromosome
         df['one_chrom_match'] = np.where(
@@ -205,8 +210,58 @@ class Lineage(object):
               ((df[genotype1].str[0] == df[genotype2].str[1]) &
                (df[genotype1].str[1] == df[genotype2].str[0])))), True, False)
 
-        shared_dna = []
-        
+        # compute shared DNA between individuals
+        one_chrom_shared_dna = self._compute_shared_dna(df, hapmap, 'one_chrom_match',
+                                                        cM_threshold, snp_threshold, one_x_chrom)
+
+        two_chrom_shared_dna = self._compute_shared_dna(df, hapmap, 'two_chrom_match',
+                                                        cM_threshold, snp_threshold, one_x_chrom)
+
+        if build == 36:
+            cytobands = self._resources.get_cytoband_h36()
+        else:
+            cytobands = self._resources.get_cytoband_h37()
+
+        # plot data
+        if dir_exists(self._output_dir):
+            plot_chromosomes(one_chrom_shared_dna, two_chrom_shared_dna, cytobands,
+                             os.path.join(self._output_dir, individual1.get_var_name() + '_' +
+                                          individual2.get_var_name() + '_shared_dna.png'),
+                             individual1.name + ' / ' + individual2.name + ' shared DNA', build)
+
+        # print results in CSV format
+        if len(one_chrom_shared_dna) > 0:
+            self._print_shared_dna_csv_format(one_chrom_shared_dna, 'one')
+
+        if len(two_chrom_shared_dna) > 0:
+            self._print_shared_dna_csv_format(two_chrom_shared_dna, 'two')
+
+    def _print_shared_dna_csv_format(self, shared_dna, type):
+        print(type + ' chrom shared DNA:')
+        print("chrom,start,stop,cMs,snps")
+        for shared_segment in shared_dna:
+            print(shared_segment["chrom"] + "," + str(shared_segment["start"]) + "," +
+                  str(shared_segment["end"]) + "," + str(shared_segment["cMs"]) + "," +
+                  str(shared_segment["snps"]))
+        print()
+
+    def _is_one_individual_male(self, df, genotype1, genotype2, heterozygous_x_snp_threshold=100):
+        # determine if at least one individual is male by counting heterozygous X SNPs
+
+        if len(df.loc[(df['chrom'] == 'X') &
+                      (df[genotype1].notnull()) &
+                      (df[genotype1].str[0] != df[genotype1].str[1])]) < heterozygous_x_snp_threshold:
+            return True
+        else:
+            if len(df.loc[(df['chrom'] == 'X') &
+                          (df[genotype2].notnull()) &
+                          (df[genotype2].str[0] != df[genotype2].str[1])]) < heterozygous_x_snp_threshold:
+                return True
+            else:
+                return False
+
+
+    def _compute_snp_distances(self, df, build):
         if build == 36:
             hapmap = self._resources.get_hapmap_h36()
         else:
@@ -262,9 +317,22 @@ class Lineage(object):
             # add back into df
             df.loc[(df['chrom'] == chrom), 'cM_from_prev_snp'] = np.r_[0, cM_from_prev_snp][:-1]
 
+        return hapmap, df
+
+    def _compute_shared_dna(self, df, hapmap, col, cM_threshold, snp_threshold, one_x_chrom):
+        shared_dna = []
+
+        for chrom in df['chrom'].unique():
+            if chrom not in hapmap.keys():
+                continue
+
+            # skip calculating two chrom shared on the X chromosome if an individual is male
+            if chrom == 'X' and col == 'two_chrom_match' and one_x_chrom:
+                continue
+
             # get consecutive strings of trues
             # http://stackoverflow.com/a/17151327
-            a = df.loc[(df['chrom'] == chrom)]['one_chrom_match'].values
+            a = df.loc[(df['chrom'] == chrom)][col].values
             a = np.r_[a, False]
             a_rshifted = np.roll(a, 1)
             starts = a & ~a_rshifted
@@ -316,35 +384,20 @@ class Lineage(object):
 
             counter = 0
             # save matches for this chromosome
+            if col == 'one_chrom_match':
+                chrom_stain = 'one_chrom'
+            else:
+                chrom_stain = 'two_chrom'
+
             for x in matches_passed:
                 shared_dna.append({"chrom": chrom,
                                    "start": df.loc[(df['chrom'] == chrom)].ix[x[0]].pos,
                                    "end": df.loc[(df['chrom'] == chrom)].ix[x[1] - 1].pos,
                                    "cMs": cMs_match_segment[counter],
                                    "snps": x[1] - x[0],
-                                   "gie_stain": "match"})
+                                   "gie_stain": chrom_stain})
                 counter += 1
-
-        if build == 36:
-            cytobands = self._resources.get_cytoband_h36()
-        else:
-            cytobands = self._resources.get_cytoband_h37()
-
-        # plot data
-        if dir_exists(self._output_dir):
-            plot_chromosomes(shared_dna, cytobands,
-                             os.path.join(self._output_dir,
-                                          individual1.get_var_name() + '_' +
-                                          individual2.get_var_name() + '_shared_dna.png'),
-                             individual1.name + ' / ' + individual2.name + ' shared DNA', build)
-
-        # print results in CSV format
-        print("chrom,start,stop,cMs,snps")
-        for shared_segment in shared_dna:
-            print(shared_segment["chrom"] + "," + str(shared_segment["start"]) + "," +
-                  str(shared_segment["end"]) + "," + str(shared_segment["cMs"]) + "," +
-                  str(shared_segment["snps"]))
-
+        return shared_dna
 
 def dir_exists(path):
     # https://stackoverflow.com/a/5032238
