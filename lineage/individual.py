@@ -131,7 +131,7 @@ class Individual(object):
 
         return re.sub('\W|^(?=\d)', '_', self.name)  # [SO-02]
 
-    def remap_snps(self, source_assembly, target_assembly):
+    def remap_snps(self, source_assembly, target_assembly, complement_bases=True):
         """ Remap the SNP coordinates of this ``Individual`` from one assembly to another.
 
         This method uses the assembly map endpoint of the Ensembl REST API service (via this
@@ -145,6 +145,8 @@ class Individual(object):
             starting assembly of an Individual's SNPs
         target_assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
             assembly to remap to
+        complement_bases : bool
+            complement bases when remapping SNPs to the minus strand
 
         Notes
         -----
@@ -209,23 +211,51 @@ class Individual(object):
                     print('discrepant coords')  # observed when mapping NCBI36 -> GRCh38
                     continue
 
-                offset = mapping['mapped']['start'] - mapping['original']['start']
-
                 # find the SNPs that are being remapped for this mapping
                 snp_indices = temp.loc[~temp['remapped'] &
                                    (temp['pos'] >= mapping['original']['start']) &
                                    (temp['pos'] <= mapping['original']['end'])].index
 
-                # remap the SNPs
-                temp.loc[snp_indices, 'pos'] = temp['pos'] + offset
+                if len(snp_indices) > 0:
+                    # remap the SNPs
+                    if mapping['mapped']['strand'] == -1:
+                        # flip and (optionally) complement since we're mapping to minus strand
+                        diff_from_start = temp.loc[snp_indices, 'pos'] - mapping['original']['start']
+                        temp.loc[snp_indices, 'pos'] = mapping['mapped']['end'] - diff_from_start
 
-                # mark these SNPs as remapped
-                temp.loc[snp_indices, 'remapped'] = True
+                        if complement_bases:
+                            self._snps.loc[snp_indices, 'genotype'] = \
+                                temp.loc[snp_indices, 'genotype'].apply(self._complement_bases)
+                    else:
+                        # mapping is on same (plus) strand, so just remap based on offset
+                        offset = mapping['mapped']['start'] - mapping['original']['start']
+                        temp.loc[snp_indices, 'pos'] = temp['pos'] + offset
+
+                    # mark these SNPs as remapped
+                    temp.loc[snp_indices, 'remapped'] = True
 
             # update SNP positions for this chrom
             self._snps.loc[temp.index, 'pos'] = temp['pos']
 
         self._sort_snps()
+
+    def _complement_bases(self, genotype):
+        if pd.isnull(genotype):
+            return np.nan
+
+        complement = ''
+
+        for base in list(genotype):
+            if base == 'A':
+                complement += 'T'
+            elif base == 'G':
+                complement += 'C'
+            elif base == 'C':
+                complement += 'G'
+            elif base == 'T':
+                complement += 'A'
+
+        return complement
 
     def _read_raw_data(self, file):
         if not os.path.exists(file):
