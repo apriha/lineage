@@ -55,7 +55,7 @@ class Lineage(object):
             ``Individual`` initialized in the context of the `lineage` framework
 
         """
-        return Individual(name, raw_data, self._ensembl_rest_client)
+        return Individual(name, raw_data, self._output_dir, self._ensembl_rest_client)
 
     def find_discordant_snps(self, individual1, individual2, individual3=None, save_output=False):
         """ Find discordant SNPs between two or three individuals.
