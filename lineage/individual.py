@@ -57,6 +57,8 @@ class Individual(object):
         self._output_dir = output_dir
         self._ensembl_rest_client = ensembl_rest_client
         self._snps = None
+        self._discrepant_positions_file_count = 0
+        self._discrepant_genotypes_file_count = 0
 
         if raw_data is not None:
             self.load_snps(raw_data)
@@ -385,7 +387,11 @@ class Individual(object):
 
             if 0 < len(discrepant_positions) < discrepant_snp_positions_threshold:
                 print('some SNP positions being added differ; keeping original positions')
-                print(discrepant_positions)
+
+                self._discrepant_positions_file_count += 1
+                lineage.save_df_as_csv(discrepant_positions, self._output_dir,
+                                       self.get_var_name() + '_discrepant_positions_' + str(
+                                           self._discrepant_positions_file_count) + '.csv')
             elif len(discrepant_positions) >= discrepant_snp_positions_threshold:
                 print('too many SNPs differ in position; ensure same genome build is being used')
                 return
@@ -409,7 +415,11 @@ class Individual(object):
 
             if 0 < len(discrepant_genotypes) < discrepant_genotypes_threshold:
                 print('some genotypes were discrepant; marking those as null')
-                print(discrepant_genotypes)
+
+                self._discrepant_genotypes_file_count += 1
+                lineage.save_df_as_csv(discrepant_genotypes, self._output_dir,
+                                       self.get_var_name() + '_discrepant_genotypes_' + str(
+                                           self._discrepant_genotypes_file_count) + '.csv')
             elif len(discrepant_genotypes) >= discrepant_genotypes_threshold:
                 print('too many SNPs differ in their genotype; ensure file is for same '
                       'individual')
