@@ -26,6 +26,7 @@ import zipfile
 import numpy as np
 import pandas as pd
 
+import lineage
 
 class Individual(object):
     """ Object used to represent and interact with an individual.
@@ -100,18 +101,16 @@ class Individual(object):
         else:
             raise TypeError('invalid filetype')
 
-    def save_snps(self, file):
-        """ Save SNPs to file.
-
-        Parameters
-        ----------
-        file : str
-            path to file
-
-        """
+    def save_snps(self):
+        """ Save SNPs to file. """
         if self._snps is not None:
             try:
-                self._snps.to_csv(file, na_rep="--", header=['chromosome', 'position', 'genotype'])
+                if lineage.dir_exists(self._output_dir):
+                    output_dir = self._output_dir
+                else:
+                    output_dir = ''
+
+                self._snps.to_csv(os.path.join(output_dir, self.get_var_name() + '.csv'), na_rep="--", header=['chromosome', 'position', 'genotype'])
             except Exception as err:
                 print(err)
         else:
