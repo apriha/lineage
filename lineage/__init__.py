@@ -416,5 +416,5 @@ def dir_exists(path):
 def save_df_as_csv(df, path, filename):
     if dir_exists(path):
         destination = os.path.join(path, filename)
-        print('Saving ' + destination + '...')
+        print('Saving ' + os.path.relpath(destination) + '...')
         df.to_csv(destination, na_rep='--')
