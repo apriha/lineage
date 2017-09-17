@@ -196,6 +196,9 @@ class Individual(object):
             # get remapping information
             response = self._ensembl_rest_client.perform_rest_action(endpoint)
 
+            if response is None:
+                continue
+
             for mapping in response['mappings']:
                 orig_range_len = mapping['original']['end'] - mapping['original']['start']
                 mapped_range_len = mapping['mapped']['end'] - mapping['mapped']['start']
