@@ -386,7 +386,8 @@ class Individual(object):
                 (common_snps['pos'] != common_snps['pos_added'])]
 
             if 0 < len(discrepant_positions) < discrepant_snp_positions_threshold:
-                print('some SNP positions being added differ; keeping original positions')
+                print(str(len(discrepant_positions)) + ' SNP positions being added differ; '
+                      'keeping original positions')
 
                 self._discrepant_positions_file_count += 1
                 lineage.save_df_as_csv(discrepant_positions, self._output_dir,
@@ -414,7 +415,8 @@ class Individual(object):
                    (common_snps['genotype'].str[1] == common_snps['genotype_added'].str[0])))]
 
             if 0 < len(discrepant_genotypes) < discrepant_genotypes_threshold:
-                print('some genotypes were discrepant; marking those as null')
+                print(str(len(discrepant_genotypes)) + ' genotypes were discrepant; '
+                      'marking those as null')
 
                 self._discrepant_genotypes_file_count += 1
                 lineage.save_df_as_csv(discrepant_genotypes, self._output_dir,
