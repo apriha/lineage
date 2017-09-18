@@ -229,21 +229,36 @@ class Lineage(object):
                                           individual2.get_var_name() + '_shared_dna.png'),
                              individual1.name + ' / ' + individual2.name + ' shared DNA', build)
 
-        # print results in CSV format
+        # save results in CSV format
         if len(one_chrom_shared_dna) > 0:
-            self._print_shared_dna_csv_format(one_chrom_shared_dna, 'one')
+            self._save_shared_dna_csv_format(one_chrom_shared_dna, 'one',
+                                             individual1.get_var_name(),
+                                             individual2.get_var_name())
 
         if len(two_chrom_shared_dna) > 0:
-            self._print_shared_dna_csv_format(two_chrom_shared_dna, 'two')
+            self._save_shared_dna_csv_format(two_chrom_shared_dna, 'two',
+                                             individual1.get_var_name(),
+                                             individual2.get_var_name())
 
-    def _print_shared_dna_csv_format(self, shared_dna, type):
-        print(type + ' chrom shared DNA:')
-        print("chrom,start,stop,cMs,snps")
-        for shared_segment in shared_dna:
-            print(shared_segment["chrom"] + "," + str(shared_segment["start"]) + "," +
-                  str(shared_segment["end"]) + "," + str(shared_segment["cMs"]) + "," +
-                  str(shared_segment["snps"]))
-        print()
+    def _save_shared_dna_csv_format(self, shared_dna, type, individual1_name, individual2_name):
+        if type == 'one':
+            chroms = 'one_chrom'
+        else:
+            chroms = 'two_chroms'
+
+        file = os.path.join(self._output_dir, 'shared_dna_' + chroms + '_' + individual1_name +
+                            '_' + individual2_name + '.csv')
+
+        print('Saving ' + os.path.relpath(file))
+
+        with open(file, 'w') as f:
+            f.write('chrom,start,stop,cMs,snps\n')
+
+            for shared_segment in shared_dna:
+                f.write('{chrom},{start:d},{stop:d},{cMs:.2f},{snps:d}\n'.format(
+                            chrom=shared_segment['chrom'], start=shared_segment['start'],
+                            stop=shared_segment['end'], cMs=shared_segment['cMs'],
+                            snps=shared_segment['snps']))
 
     def _is_one_individual_male(self, df, genotype1, genotype2, heterozygous_x_snp_threshold=100):
         # determine if at least one individual is male by counting heterozygous X SNPs
