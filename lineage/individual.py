@@ -95,9 +95,11 @@ class Individual(object):
         """
         if type(raw_data) is list:
             for file in raw_data:
+                print('Loading ' + os.path.relpath(file))
                 self._add_snps(self._read_raw_data(file), discrepant_snp_positions_threshold,
                                discrepant_genotypes_threshold)
         elif type(raw_data) is str:
+            print('Loading ' + os.path.relpath(raw_data))
             self._add_snps(self._read_raw_data(raw_data), discrepant_snp_positions_threshold,
                            discrepant_genotypes_threshold)
         else:
@@ -112,7 +114,9 @@ class Individual(object):
                 else:
                     output_dir = ''
 
-                self._snps.to_csv(os.path.join(output_dir, self.get_var_name() + '.csv'), na_rep="--", header=['chromosome', 'position', 'genotype'])
+                file = os.path.join(output_dir, self.get_var_name() + '.csv')
+                print('Saving ' + os.path.relpath(file))
+                self._snps.to_csv(file, na_rep="--", header=['chromosome', 'position', 'genotype'])
             except Exception as err:
                 print(err)
         else:

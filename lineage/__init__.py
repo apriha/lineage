@@ -225,8 +225,9 @@ class Lineage(object):
         # plot data
         if dir_exists(self._output_dir):
             plot_chromosomes(one_chrom_shared_dna, two_chrom_shared_dna, cytobands,
-                             os.path.join(self._output_dir, individual1.get_var_name() + '_' +
-                                          individual2.get_var_name() + '_shared_dna.png'),
+                             os.path.join(self._output_dir, 'shared_dna_' +
+                                          individual1.get_var_name() + '_' +
+                                          individual2.get_var_name() + '.png'),
                              individual1.name + ' / ' + individual2.name + ' shared DNA', build)
 
         # save results in CSV format
@@ -431,5 +432,5 @@ def dir_exists(path):
 def save_df_as_csv(df, path, filename):
     if dir_exists(path):
         destination = os.path.join(path, filename)
-        print('Saving ' + os.path.relpath(destination) + '...')
+        print('Saving ' + os.path.relpath(destination))
         df.to_csv(destination, na_rep='--')
