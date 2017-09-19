@@ -161,11 +161,14 @@ class Lineage(object):
         return df
 
     def find_shared_dna(self, individual1, individual2, build=37, cM_threshold=0.75,
-                        snp_threshold=1100):
+                        snp_threshold=1100, shared_genes=False):
         """ Find the shared DNA between two individuals.
 
         Computes the genetic distance in centimorgans (cMs) between SNPs using the specified
         assembly's HapMap. Applies thresholds to determine the shared DNA. Plots shared DNA.
+        Optionally determines shared genes (i.e., genes that are transcribed from the shared DNA).
+
+        All output is saved to the output directory as `CSV` or `PNG` files.
 
         Parameters
         ----------
@@ -177,6 +180,8 @@ class Lineage(object):
             minimum centimorgans for each shared DNA segment
         snp_threshold : int
             minimum SNPs for each shared DNA segment
+        shared_genes : bool
+            determine shared genes
 
         """
         df = individual1.snps
@@ -230,16 +235,61 @@ class Lineage(object):
                                           individual2.get_var_name() + '.png'),
                              individual1.name + ' / ' + individual2.name + ' shared DNA', build)
 
+        if shared_genes and build == 36:
+            print('Remap SNPs to Build 37 to determine shared genes')
+            shared_genes = False
+
         # save results in CSV format
         if len(one_chrom_shared_dna) > 0:
             self._save_shared_dna_csv_format(one_chrom_shared_dna, 'one',
                                              individual1.get_var_name(),
                                              individual2.get_var_name())
+            if shared_genes:
+                self._compute_shared_genes(one_chrom_shared_dna, 'one',
+                                           individual1.get_var_name(),
+                                           individual2.get_var_name())
 
         if len(two_chrom_shared_dna) > 0:
             self._save_shared_dna_csv_format(two_chrom_shared_dna, 'two',
                                              individual1.get_var_name(),
                                              individual2.get_var_name())
+            if shared_genes:
+                self._compute_shared_genes(two_chrom_shared_dna, 'two',
+                                           individual1.get_var_name(),
+                                           individual2.get_var_name())
+
+    def _compute_shared_genes(self, shared_dna, type, individual1_name, individual2_name):
+        knownGenes = self._resources.get_knownGene_h37()
+        kgXref = self._resources.get_kgXref_h37()
+
+        # http://seqanswers.com/forums/showthread.php?t=22336
+        df = knownGenes.join(kgXref)
+
+        shared_genes = []
+
+        for shared_segment in shared_dna:
+            # determine genes transcribed from this shared DNA segment
+            temp = df.loc[(df['chrom'] == shared_segment['chrom']) &
+                          (df['txStart'] >= shared_segment['start']) &
+                          (df['txEnd'] <= shared_segment['end'])].copy()
+
+            # select subset of columns
+            temp = temp[['geneSymbol', 'chrom', 'strand', 'txStart', 'txEnd', 'refseq',
+                         'proteinID', 'description']]
+
+            if len(temp) > 0:
+                shared_genes.append(temp)
+
+        if len(shared_genes) > 0:
+            if type == 'one':
+                chroms = 'one_chrom'
+            else:
+                chroms = 'two_chroms'
+
+            file = os.path.join(self._output_dir, 'shared_genes_' + chroms + '_' +
+                                individual1_name + '_' + individual2_name + '.csv')
+
+            save_df_as_csv(pd.concat(shared_genes), self._output_dir, file)
 
     def _save_shared_dna_csv_format(self, shared_dna, type, individual1_name, individual2_name):
         if type == 'one':

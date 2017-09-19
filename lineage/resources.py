@@ -38,6 +38,8 @@ class Resources(object):
         self._hapmap_h37 = None
         self._cytoband_h36 = None
         self._cytoband_h37 = None
+        self._knownGene_h37 = None
+        self._kgXref_h37 = None
 
     def get_hapmap_h36(self):
         if self._hapmap_h36 is None:
@@ -62,6 +64,18 @@ class Resources(object):
             self._cytoband_h37 = self._load_cytoband(self._get_path_cytoband_h37())
 
         return self._cytoband_h37
+
+    def get_knownGene_h37(self):
+        if self._knownGene_h37 is None:
+            self._knownGene_h37 = self._load_knownGene(self._get_path_knownGene_h37())
+
+        return self._knownGene_h37
+
+    def get_kgXref_h37(self):
+        if self._kgXref_h37 is None:
+            self._kgXref_h37 = self._load_kgXref(self._get_path_kgXref_h37())
+
+        return self._kgXref_h37
 
     @staticmethod
     def _load_hapmap(filename):
@@ -145,6 +159,64 @@ class Resources(object):
             # adapted from chromosome plotting code (see [1]_)
             df = pd.read_table(filename, names=['chrom', 'start', 'end', 'name', 'gie_stain'])
             df['chrom'] = df['chrom'].str[3:]
+            return df
+        except Exception as err:
+            print(err)
+            return None
+
+    @staticmethod
+    def _load_knownGene(filename):
+        """ Load UCSC knownGene table.
+
+        http://genome.ucsc.edu/cgi-bin/hgTables
+
+        Parameters
+        ----------
+        filename : str
+            path to knownGene file
+
+        Returns
+        -------
+        df : pandas.DataFrame
+            knownGene data if loading was successful, else None
+        """
+        if filename is None:
+            return None
+
+        try:
+            df = pd.read_table(filename, names=['name', 'chrom', 'strand', 'txStart', 'txEnd',
+                                                'cdsStart', 'cdsEnd', 'exonCount', 'exonStarts',
+                                                'exonEnds', 'proteinID', 'alignID'], index_col=0)
+            df['chrom'] = df['chrom'].str[3:]
+            return df
+        except Exception as err:
+            print(err)
+            return None
+
+    @staticmethod
+    def _load_kgXref(filename):
+        """ Load UCSC kgXref table.
+
+        http://genome.ucsc.edu/cgi-bin/hgTables
+
+        Parameters
+        ----------
+        filename : str
+            path to kgXref file
+
+        Returns
+        -------
+        df : pandas.DataFrame
+            kgXref data if loading was successful, else None
+        """
+        if filename is None:
+            return None
+
+        try:
+            df = pd.read_table(filename, names=['kgID', 'mRNA', 'spID', 'spDisplayID',
+                                                'geneSymbol', 'refseq', 'protAcc',
+                                                'description', 'rfamAcc', 'tRnaName'], index_col=0,
+                               dtype=object)
             return df
         except Exception as err:
             print(err)
@@ -247,6 +319,35 @@ class Resources(object):
         return self._download_file(
             'ftp://ftp.ncbi.nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37'
             '/genetic_map_HapMapII_GRCh37.tar.gz', 'hapmap_h37.tar.gz')
+
+    def _get_path_knownGene_h37(self):
+        """ Get local path to knownGene file for hg19 / GRCh37 from UCSC, downloading if necessary.
+
+        Returns
+        -------
+        str
+            path to knownGene_h37.txt.gz
+
+        """
+
+        return self._download_file(
+            'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/knownGene.txt.gz',
+            'knownGene_h37.txt.gz')
+
+
+    def _get_path_kgXref_h37(self):
+        """ Get local path to kgXref file for hg19 / GRCh37 from UCSC, downloading if necessary.
+
+        Returns
+        -------
+        str
+            path to kgXref_h37.txt.gz
+
+        """
+
+        return self._download_file(
+            'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/kgXref.txt.gz',
+            'kgXref_h37.txt.gz')
 
     def _download_file(self, url, filename):
         """ Download a file.
