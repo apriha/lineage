@@ -160,7 +160,7 @@ class Resources(object):
 
     @staticmethod
     def _load_cytoband(filename):
-        """ Load UCSC cytoBandIdeo table.
+        """ Load UCSC cytoBand table.
 
         Parameters
         ----------
@@ -278,7 +278,7 @@ class Resources(object):
         Returns
         -------
         str
-            path to hapmap_36.tar.gz
+            path to hapmap_h36.tar.gz
 
         References
         ----------
@@ -327,7 +327,7 @@ class Resources(object):
         Returns
         -------
         str
-            path to hapmap_36.tar.gz
+            path to hapmap_h37.tar.gz
 
         References
         ----------
