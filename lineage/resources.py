@@ -1,4 +1,32 @@
-""" Class for downloading and loading required external resources. """
+""" Class for downloading and loading required external resources.
+
+`lineage` uses tables and data from UCSC's Genome Browser:
+
+* http://genome.ucsc.edu/
+* http://genome.ucsc.edu/cgi-bin/hgTables
+
+References
+----------
+..[1] Karolchik D, Hinrichs AS, Furey TS, Roskin KM, Sugnet CW, Haussler D, Kent WJ.
+  The UCSC Table Browser data retrieval tool. Nucleic Acids Res. 2004 Jan
+  1;32(Database issue):D493-6. PubMed PMID: 14681465; PubMed Central PMCID:
+  PMC308837. https://www.ncbi.nlm.nih.gov/pubmed/14681465
+..[2] Tyner C, Barber GP, Casper J, Clawson H, Diekhans M, Eisenhart C, Fischer CM,
+  Gibson D, Gonzalez JN, Guruvadoo L, Haeussler M, Heitner S, Hinrichs AS,
+  Karolchik D, Lee BT, Lee CM, Nejad P, Raney BJ, Rosenbloom KR, Speir ML,
+  Villarreal C, Vivian J, Zweig AS, Haussler D, Kuhn RM, Kent WJ. The UCSC Genome
+  Browser database: 2017 update. Nucleic Acids Res. 2017 Jan 4;45(D1):D626-D634.
+  doi: 10.1093/nar/gkw1134. Epub 2016 Nov 29. PubMed PMID: 27899642; PubMed Central
+  PMCID: PMC5210591. https://www.ncbi.nlm.nih.gov/pubmed/27899642
+..[3] International Human Genome Sequencing Consortium. Initial sequencing and
+  analysis of the human genome. Nature. 2001 Feb 15;409(6822):860-921.
+  http://dx.doi.org/10.1038/35057062
+..[4] hg19 (GRCh37): Hiram Clawson, Brooke Rhead, Pauline Fujita, Ann Zweig, Katrina
+  Learned, Donna Karolchik and Robert Kuhn, https://genome.ucsc.edu/cgi-bin/hgGateway?db=hg19
+..[5] hg18 (NCBI36): Engineering effort led by Fan Hsu; QA effort led by Ann Zweig,
+  https://genome.ucsc.edu/cgi-bin/hgGateway?db=hg18
+
+"""
 
 """
 Copyright (C) 2017 Andrew Riha
@@ -134,8 +162,6 @@ class Resources(object):
     def _load_cytoband(filename):
         """ Load UCSC cytoBandIdeo table.
 
-        http://genome.ucsc.edu/cgi-bin/hgTables
-
         Parameters
         ----------
         filename : str
@@ -168,8 +194,6 @@ class Resources(object):
     def _load_knownGene(filename):
         """ Load UCSC knownGene table.
 
-        http://genome.ucsc.edu/cgi-bin/hgTables
-
         Parameters
         ----------
         filename : str
@@ -196,8 +220,6 @@ class Resources(object):
     @staticmethod
     def _load_kgXref(filename):
         """ Load UCSC kgXref table.
-
-        http://genome.ucsc.edu/cgi-bin/hgTables
 
         Parameters
         ----------
