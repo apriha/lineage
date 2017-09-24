@@ -303,7 +303,8 @@ class Resources(object):
                     with tarfile.open(destination, "w:gz") as out_tar:
                         for filename in ftp.nlst():
                             if '.txt' in filename:
-                                self._print_download_msg(filename)
+                                path = os.path.join(destination, hapmap, filename)
+                                self._print_download_msg(path)
 
                                 # open temp file, download HapMap file, close temp file
                                 with tempfile.NamedTemporaryFile(delete=False) as fp:
@@ -394,7 +395,7 @@ class Resources(object):
 
         if not os.path.exists(destination):
             try:
-                self._print_download_msg(filename)
+                self._print_download_msg(destination)
                 # get file if it hasn't already been downloaded [SO-01]
                 with urllib.request.urlopen(url) as response, open(destination, 'wb') as out_file:
                     data = response.read()  # a `bytes` object
@@ -406,15 +407,15 @@ class Resources(object):
         return destination
 
     @staticmethod
-    def _print_download_msg(filename):
+    def _print_download_msg(path):
         """ Print download message.
 
         Parameters
         ----------
-        filename : str
-            filename to print
+        path : str
+            path to file being downloaded
         """
-        print('Downloading ' + filename + '...')
+        print('Downloading ' + os.path.relpath(path))
 
 
 """
