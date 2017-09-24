@@ -34,8 +34,8 @@ Documentation is available `here <https://apriha.github.io/lineage/>`_.
 
 Acknowledgements
 ----------------
-Thanks to Whit Athey, Ryan Dale, Binh Bui, Gopal Vashishtha, and
-`CS50 <https://cs50.harvard.edu>`_.
+Thanks to Whit Athey, Ryan Dale, Binh Bui, Gopal Vashishtha,
+`CS50 <https://cs50.harvard.edu>`_, and `openSNP <https://opensnp.org>`_.
 
 License
 -------

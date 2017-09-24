@@ -52,6 +52,7 @@ import os
 import tarfile
 import tempfile
 import urllib.request
+import zlib
 
 import pandas as pd
 
@@ -105,6 +106,56 @@ class Resources(object):
             self._kgXref_h37 = self._load_kgXref(self._get_path_kgXref_h37())
 
         return self._kgXref_h37
+
+    def download_example_datasets(self):
+        """ Download example datasets from `openSNP <https://opensnp.org>`_.
+
+        Per openSNP, "the data is donated into the public domain using `CC0 1.0
+        <http://creativecommons.org/publicdomain/zero/1.0/>`_."
+
+        References
+        ----------
+        ..[1] Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP–A Crowdsourced Web Resource
+          for Personal Genomics," PLOS ONE, 9(3): e89204,
+          https://doi.org/10.1371/journal.pone.0089204
+
+        """
+        self._download_file('https://opensnp.org/data/662.23andme.304',
+                            '662.23andme.304.csv.gz', compress=True)
+        self._download_file('https://opensnp.org/data/662.23andme.340',
+                            '662.23andme.340.csv.gz', compress=True)
+        self._download_file('https://opensnp.org/data/662.ftdna-illumina.341',
+                            '662.ftdna-illumina.341.csv.gz', compress=True)
+        self._download_file('https://opensnp.org/data/663.23andme.305',
+                            '663.23andme.305.csv.gz', compress=True)
+
+        # these two files consist of concatenated gzip files and therefore need special handling
+        gzip_paths = []
+        gzip_paths.append(self._download_file('https://opensnp.org/data/4583.ftdna-illumina.3482',
+                                              '4583.ftdna-illumina.3482.csv.gz'))
+        gzip_paths.append(self._download_file('https://opensnp.org/data/4584.ftdna-illumina.3483',
+                                              '4584.ftdna-illumina.3483.csv.gz'))
+
+        try:
+            for gzip_path in gzip_paths:
+                # https://stackoverflow.com/q/4928560
+                # https://stackoverflow.com/a/37042747
+                with open(gzip_path, 'rb') as f:
+                    decompressor = zlib.decompressobj(31)
+
+                    # decompress data from first concatenated gzip file
+                    data = decompressor.decompress(f.read())
+
+                    if len(decompressor.unused_data) > 0:
+                        # decompress data from second concatenated gzip file, if any
+                        additional_data = zlib.decompress(decompressor.unused_data, 31)
+                        data += additional_data[33:]  # skip over second header
+
+                # recompress data
+                with gzip.open(gzip_path, 'wb') as f:
+                    f.write(data)
+        except Exception as err:
+            print(err)
 
     @staticmethod
     def _load_hapmap(filename):

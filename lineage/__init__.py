@@ -57,6 +57,21 @@ class Lineage(object):
         """
         return Individual(name, raw_data, self._output_dir, self._ensembl_rest_client)
 
+    def download_example_datasets(self):
+        """ Download example datasets from `openSNP <https://opensnp.org>`_.
+
+        Per openSNP, "the data is donated into the public domain using `CC0 1.0
+        <http://creativecommons.org/publicdomain/zero/1.0/>`_."
+
+        References
+        ----------
+        ..[1] Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP–A Crowdsourced Web Resource
+          for Personal Genomics," PLOS ONE, 9(3): e89204,
+          https://doi.org/10.1371/journal.pone.0089204
+
+        """
+        self._resources.download_example_datasets()
+
     def find_discordant_snps(self, individual1, individual2, individual3=None, save_output=False):
         """ Find discordant SNPs between two or three individuals.
 
