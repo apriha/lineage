@@ -47,6 +47,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import ftplib
+import gzip
 import os
 import tarfile
 import tempfile
@@ -372,15 +373,19 @@ class Resources(object):
             'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/kgXref.txt.gz',
             'kgXref_h37.txt.gz')
 
-    def _download_file(self, url, filename):
-        """ Download a file.
+    def _download_file(self, url, filename, compress=False):
+        """ Download a file to the resources folder.
 
-        Download data from `url` and save as `filename`.
+        Download data from `url`, save as `filename`, and optionally compress with gzip.
 
         Parameters
         ----------
         url : str
+            URL to download data from
         filename : str
+            name of file to save; if compress, ensure '.gz' is appended
+        compress : bool
+            compress with gzip
 
         Returns
         -------
@@ -391,15 +396,24 @@ class Resources(object):
         if not lineage.dir_exists(self._resources_dir):
             return None
 
+        if compress and filename[-3:] != '.gz':
+            filename += '.gz'
+
         destination = os.path.join(self._resources_dir, filename)
 
         if not os.path.exists(destination):
             try:
                 self._print_download_msg(destination)
+
+                if compress:
+                    open_func = gzip.open
+                else:
+                    open_func = open
+
                 # get file if it hasn't already been downloaded [SO-01]
-                with urllib.request.urlopen(url) as response, open(destination, 'wb') as out_file:
+                with urllib.request.urlopen(url) as response, open_func(destination, 'wb') as f:
                     data = response.read()  # a `bytes` object
-                    out_file.write(data)
+                    f.write(data)
             except Exception as err:
                 print(err)
                 return None
