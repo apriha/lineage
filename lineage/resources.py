@@ -461,7 +461,8 @@ class Resources(object):
                 else:
                     open_func = open
 
-                # get file if it hasn't already been downloaded [SO-01]
+                # get file if it hasn't already been downloaded
+                # http://stackoverflow.com/a/7244263
                 with urllib.request.urlopen(url) as response, open_func(destination, 'wb') as f:
                     data = response.read()  # a `bytes` object
                     f.write(data)
@@ -481,16 +482,3 @@ class Resources(object):
             path to file being downloaded
         """
         print('Downloading ' + os.path.relpath(path))
-
-
-"""
-Stack Overflow Attributions
----------------------------
-
-[SO-01] "Download file from web in Python 3"
-        http://stackoverflow.com/q/7243750
-        Bo Milanovich : http://stackoverflow.com/users/647897/bo-milanovich
-        http://stackoverflow.com/a/7244263
-        Oleh Prypin : http://stackoverflow.com/users/241039/oleh-prypin
-
-"""

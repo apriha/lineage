@@ -133,7 +133,8 @@ class Individual(object):
 
         """
 
-        return re.sub('\W|^(?=\d)', '_', self.name)  # [SO-02]
+        # http://stackoverflow.com/a/3305731
+        return re.sub('\W|^(?=\d)', '_', self.name)
 
     def remap_snps(self, source_assembly, target_assembly, complement_bases=True):
         """ Remap the SNP coordinates of this ``Individual`` from one assembly to another.
@@ -378,7 +379,8 @@ class Individual(object):
             # create genotype column from allele columns
             df['genotype'] = df['allele1'] + df['allele2']
 
-            # delete allele columns [SO-01]
+            # delete allele columns
+            # http://stackoverflow.com/a/13485766
             del df['allele1']
             del df['allele2']
 
@@ -513,8 +515,8 @@ class Individual(object):
             sorted_list.remove('MT')
             sorted_list.append('MT')
 
-        # https://stackoverflow.com/a/26707444
         # convert chrom column to category for sorting
+        # https://stackoverflow.com/a/26707444
         self._snps['chrom'] = \
             self._snps['chrom'].astype('category', categories=sorted_list, ordered=True)
 
@@ -529,25 +531,3 @@ class Individual(object):
     def _natural_sort_key(s, natural_sort_re=re.compile('([0-9]+)')):
         return [int(text) if text.isdigit() else text.lower()
                 for text in re.split(natural_sort_re, s)]
-
-
-"""
-Stack Overflow Attributions
----------------------------
-
-[SO-##] references throughout the code above correspond to the following
-content from Stack Overflow (http://stackoverflow.com):
-
-[SO-01] "Delete column from pandas DataFrame"
-        http://stackoverflow.com/q/13411544
-        John : http://stackoverflow.com/users/390388/john
-        http://stackoverflow.com/a/13485766
-        Wes McKinney : http://stackoverflow.com/users/776560/wes-mckinney
-
-[SO-02] "how do I convert a string to a valid variable name in python?"
-        http://stackoverflow.com/q/3303312
-        George Profenza : http://stackoverflow.com/users/89766/george-profenza
-        http://stackoverflow.com/a/3305731
-        Nas Banov : http://stackoverflow.com/users/226086/nas-banov
-
-"""
