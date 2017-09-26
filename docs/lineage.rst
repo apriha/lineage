@@ -4,6 +4,14 @@ lineage package
 Submodules
 ----------
 
+lineage\.ensembl module
+-----------------------
+
+.. automodule:: lineage.ensembl
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 lineage\.individual module
 --------------------------
 
