@@ -13,6 +13,7 @@
    :caption: Contents
 
    README <readme>
+   output_files
 
 Indices and tables
 ==================
