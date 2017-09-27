@@ -155,7 +155,7 @@ Column  Description
 chrom   Chromosome with matching DNA segment
 start   Start position of matching DNA segment
 stop    Stop position of matching DNA segment
-cMs     Centimorgans of matching DNA segment
+cMs     CentiMorgans of matching DNA segment
 snps    Number of SNPs in matching DNA segment
 ======  ===========
 
@@ -169,7 +169,7 @@ Column  Description
 chrom   Pair of chromosomes with matching DNA segment
 start   Start position of matching DNA segment on each chromosome
 stop    Stop position of matching DNA segment on each chromosome
-cMs     Centimorgans of matching DNA segment on each chromosome
+cMs     CentiMorgans of matching DNA segment on each chromosome
 snps    Number of SNPs in matching DNA segment on each chromosome
 ======  ===========
 

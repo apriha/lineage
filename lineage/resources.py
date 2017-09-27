@@ -63,6 +63,14 @@ class Resources(object):
     """ Object used to manage resources required by `lineage`. """
 
     def __init__(self, resources_dir):
+        """ Initialize a ``Resources`` object.
+
+        Parameters
+        ----------
+        resources_dir : str
+            name / path of resources directory
+
+        """
         self._resources_dir = os.path.abspath(resources_dir)
         self._hapmap_h36 = None
         self._hapmap_h37 = None
@@ -72,36 +80,84 @@ class Resources(object):
         self._kgXref_h37 = None
 
     def get_hapmap_h36(self):
+        """ Get International HapMap Consortium HapMap for Build 36.
+
+        Returns
+        -------
+        dict
+            dict of pandas.DataFrame HapMap tables if loading was successful, else None
+
+        """
         if self._hapmap_h36 is None:
             self._hapmap_h36 = self._load_hapmap(self._get_path_hapmap_h36())
 
         return self._hapmap_h36
 
     def get_hapmap_h37(self):
+        """ Get International HapMap Consortium HapMap for Build 37.
+
+        Returns
+        -------
+        dict
+            dict of pandas.DataFrame HapMap tables if loading was successful, else None
+
+        """
         if self._hapmap_h37 is None:
             self._hapmap_h37 = self._load_hapmap(self._get_path_hapmap_h37())
 
         return self._hapmap_h37
 
     def get_cytoband_h36(self):
+        """ Get UCSC cytoBand table for Build 36.
+
+        Returns
+        -------
+        pandas.DataFrame
+            cytoBand table if loading was successful, else None
+
+        """
         if self._cytoband_h36 is None:
             self._cytoband_h36 = self._load_cytoband(self._get_path_cytoband_h36())
 
         return self._cytoband_h36
 
     def get_cytoband_h37(self):
+        """ Get UCSC cytoBand table for Build 37.
+
+        Returns
+        -------
+        pandas.DataFrame
+            cytoBand table if loading was successful, else None
+
+        """
         if self._cytoband_h37 is None:
             self._cytoband_h37 = self._load_cytoband(self._get_path_cytoband_h37())
 
         return self._cytoband_h37
 
     def get_knownGene_h37(self):
+        """ Get UCSC knownGene table for Build 37.
+
+        Returns
+        -------
+        pandas.DataFrame
+            knownGene table if loading was successful, else None
+
+        """
         if self._knownGene_h37 is None:
             self._knownGene_h37 = self._load_knownGene(self._get_path_knownGene_h37())
 
         return self._knownGene_h37
 
     def get_kgXref_h37(self):
+        """ Get UCSC kgXref table for Build 37.
+
+        Returns
+        -------
+        pandas.DataFrame
+            kgXref table if loading was successful, else None
+
+        """
         if self._kgXref_h37 is None:
             self._kgXref_h37 = self._load_kgXref(self._get_path_kgXref_h37())
 
@@ -217,12 +273,12 @@ class Resources(object):
         Parameters
         ----------
         filename : str
-            path to cytoband file
+            path to cytoBand file
 
         Returns
         -------
         df : pandas.DataFrame
-            cytoband data if loading was successful, else None
+            cytoBand table if loading was successful, else None
 
         References
         ----------
@@ -254,7 +310,7 @@ class Resources(object):
         Returns
         -------
         df : pandas.DataFrame
-            knownGene data if loading was successful, else None
+            knownGene table if loading was successful, else None
         """
         if filename is None:
             return None
@@ -281,7 +337,7 @@ class Resources(object):
         Returns
         -------
         df : pandas.DataFrame
-            kgXref data if loading was successful, else None
+            kgXref table if loading was successful, else None
         """
         if filename is None:
             return None

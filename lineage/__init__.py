@@ -34,7 +34,19 @@ from lineage.visualization import plot_chromosomes
 
 
 class Lineage(object):
+    """ Object used to interact with the `lineage` framework. """
+
     def __init__(self, output_dir='output', resources_dir='resources'):
+        """ Initialize a ``Lineage`` object.
+
+        Parameters
+        ----------
+        output_dir : str
+            name / path of output directory
+        resources_dir
+            name / path of resources directory
+
+        """
         self._output_dir = os.path.abspath(output_dir)
         self._resources = Resources(resources_dir=resources_dir)
         self._ensembl_rest_client = EnsemblRestClient()
@@ -179,7 +191,7 @@ class Lineage(object):
                         snp_threshold=1100, shared_genes=False):
         """ Find the shared DNA between two individuals.
 
-        Computes the genetic distance in centimorgans (cMs) between SNPs using the specified
+        Computes the genetic distance in centiMorgans (cMs) between SNPs using the specified
         assembly's HapMap. Applies thresholds to determine the shared DNA. Plots shared DNA.
         Optionally determines shared genes (i.e., genes that are transcribed from the shared DNA).
 
@@ -192,7 +204,7 @@ class Lineage(object):
         build : {36, 37}
             human genome assembly
         cM_threshold : float
-            minimum centimorgans for each shared DNA segment
+            minimum centiMorgans for each shared DNA segment
         snp_threshold : int
             minimum SNPs for each shared DNA segment
         shared_genes : bool
@@ -368,7 +380,7 @@ class Lineage(object):
             # get difference between positions
             pos_diffs = np.ediff1d(temp['pos'])
 
-            # compute cMs between each pos based on probablistic recombination rate
+            # compute cMs between each pos based on probabilistic recombination rate
             # https://www.biostars.org/p/123539/
             cMs_match_segment = (temp['rate'] * np.r_[pos_diffs, 0] / 1e6).values
 
@@ -456,7 +468,7 @@ class Lineage(object):
             snp_counts = matches_passed[:, 1] - matches_passed[:, 0]
 
             # apply SNP count threshold for each matching segment; we now have the shared DNA
-            # segments that pass the centimorgan and SNP thresholds
+            # segments that pass the centiMorgan and SNP thresholds
             matches_passed = matches_passed[np.where(snp_counts > snp_threshold)]
 
             # compute total cMs for each match segment
@@ -507,6 +519,18 @@ def create_dir(path):
 
 
 def save_df_as_csv(df, path, filename):
+    """ Save dataframe to a CSV file.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        dataframe to save
+    path : str
+        path to directory where to save CSV file
+    filename : str
+        filename of CSV file
+
+    """
     if create_dir(path):
         destination = os.path.join(path, filename)
         print('Saving ' + os.path.relpath(destination))

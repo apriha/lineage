@@ -31,14 +31,14 @@ import lineage
 class Individual(object):
     """ Object used to represent and interact with an individual.
 
-    The `Individual` object maintains information about an individual. The object provides
+    The ``Individual`` object maintains information about an individual. The object provides
     methods for loading an individual's genetic data (SNPs) and normalizing it for use with the
     `lineage` framework.
 
     """
 
     def __init__(self, name, raw_data=None, output_dir='', ensembl_rest_client=None):
-        """ Initialize an individual.
+        """ Initialize an ``Individual`` object.
 
         Parameters
         ----------
@@ -68,10 +68,24 @@ class Individual(object):
 
     @property
     def name(self):
+        """ Get this ``Individual``'s name.
+
+        Returns
+        -------
+        str
+
+        """
         return self._name
 
     @property
     def snps(self):
+        """ Get a copy of this ``Individual``'s SNPs.
+
+        Returns
+        -------
+        pandas.DataFrame
+
+        """
         if self._snps is not None:
             return self._snps.copy()
         else:
