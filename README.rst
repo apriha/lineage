@@ -28,6 +28,198 @@ Installation
 
     pip install lineage
 
+Examples
+--------
+Initialize the lineage Framework
+````````````````````````````````
+Import ``Lineage`` and instantiate a ``Lineage`` object:
+
+>>> from lineage import Lineage
+>>> l = Lineage()
+
+Download Example Data
+`````````````````````
+Let's download some example data from `openSNP <https://opensnp.org>`_:
+
+>>> l.download_example_datasets()
+Downloading resources/662.23andme.304.csv.gz
+Downloading resources/662.23andme.340.csv.gz
+Downloading resources/662.ftdna-illumina.341.csv.gz
+Downloading resources/663.23andme.305.csv.gz
+Downloading resources/4583.ftdna-illumina.3482.csv.gz
+Downloading resources/4584.ftdna-illumina.3483.csv.gz
+
+We'll call these datasets ``User662``, ``User663``, ``User4583``, and ``User4584``.
+
+Load Raw Data
+`````````````
+Create an ``Individual`` in the context of the ``lineage`` framework to interact with the
+``User662`` dataset:
+
+>>> user662 = l.create_individual('User662', 'resources/662.ftdna-illumina.341.csv.gz')
+Loading resources/662.ftdna-illumina.341.csv.gz
+
+Here we created ``user662`` with the name ``User662`` and loaded a raw data file.
+
+Remap SNPs
+``````````
+Oops! The data we just loaded is Build 36, but we want Build 37 since the other files in the
+datasets are Build 37... Let's remap the SNPs:
+
+>>> user662.remap_snps('NCBI36', 'GRCh37')
+Remapping chromosome 1...
+Remapping chromosome 2...
+Remapping chromosome 3...
+Remapping chromosome 4...
+Remapping chromosome 5...
+Remapping chromosome 6...
+Remapping chromosome 7...
+Remapping chromosome 8...
+Remapping chromosome 9...
+Remapping chromosome 10...
+Remapping chromosome 11...
+Remapping chromosome 12...
+Remapping chromosome 13...
+Remapping chromosome 14...
+Remapping chromosome 15...
+Remapping chromosome 16...
+Remapping chromosome 17...
+Remapping chromosome 18...
+Remapping chromosome 19...
+Remapping chromosome 20...
+Remapping chromosome 21...
+Remapping chromosome 22...
+
+SNPs can be re-mapped between Build 36 (``NCBI36``), Build 37 (``GRCh37``), and Build 38
+(``GRCh38``).
+
+Merge Raw Data Files
+````````````````````
+The dataset for ``User662`` consists of three raw data files from two different DNA testing
+companies. Let's load the remaining two files.
+
+As the data gets added, it's compared to the existing data and discrepancies are saved to CSV
+files. (The discrepancy thresholds can be tuned via parameters.)
+
+>>> user662.load_snps(['resources/662.23andme.304.csv.gz', 'resources/662.23andme.340.csv.gz'],
+...                   discrepant_genotypes_threshold=160)
+Loading resources/662.23andme.304.csv.gz
+3 SNP positions being added differ; keeping original positions
+Saving output/User662_discrepant_positions_1.csv
+8 genotypes were discrepant; marking those as null
+Saving output/User662_discrepant_genotypes_1.csv
+Loading resources/662.23andme.340.csv.gz
+27 SNP positions being added differ; keeping original positions
+Saving output/User662_discrepant_positions_2.csv
+156 genotypes were discrepant; marking those as null
+Saving output/User662_discrepant_genotypes_2.csv
+
+All `output files <https://apriha.github.io/lineage/output_files.html>`_ are saved to the output
+directory.
+
+Save SNPs
+`````````
+Ok, so far we've remapped the SNPs to the same build and merged the SNPs from three files,
+identifying discrepancies along the way. Let's save the merged dataset consisting of over 1M+
+SNPs to a CSV file:
+
+>>> user662.save_snps()
+Saving output/User662.csv
+
+Compare Individuals
+```````````````````
+Let's create another ``Individual`` for the ``User663`` dataset:
+
+>>> user663 = l.create_individual('User663', 'resources/663.23andme.305.csv.gz')
+Loading resources/663.23andme.305.csv.gz
+
+Now we can perform some analysis between the ``User662`` and ``User663`` datasets.
+
+Find Discordant SNPs
+''''''''''''''''''''
+First, let's find discordant SNPs (i.e., SNP data that is not consistent with Mendelian
+inheritance):
+
+>>> discordant_snps = l.find_discordant_snps(user662, user663, save_output=True)
+Saving output/discordant_snps_User662_User663.csv
+
+This method also returns a ``pandas`` ``DataFrame``, and it can be inspected interactively at
+the prompt, although the same output is available in the CSV file.
+
+>>> len(discordant_snps.loc[discordant_snps['chrom'] != 'MT'])
+37
+
+Not counting mtDNA SNPs, there are 37 discordant SNPs between these two datasets.
+
+Find Shared DNA
+'''''''''''''''
+``lineage`` uses the probabilistic recombination rates throughout the human genome from the
+`International HapMap Project <https://www.genome.gov/10001688/international-hapmap-project/>`_ to
+compute the shared DNA (in centiMorgans) between two individuals. Additionally, ``lineage``
+denotes when the shared DNA is shared on either one or both chromosomes in a pair. For example,
+when siblings share a segment of DNA on both chromosomes, they inherited the same DNA from their
+mother and father for that segment.
+
+With that background, let's find the shared DNA between the ``User662`` and ``User663`` datasets,
+calculating the centiMorgans of shared DNA and plotting the results:
+
+>>> l.find_shared_dna(user662, user663, cM_threshold=0.75, snp_threshold=1100)
+Downloading resources/hapmap_h37.tar.gz
+Downloading resources/cytoband_h37.txt.gz
+Saving output/shared_dna_User662_User663.png
+Saving output/shared_dna_one_chrom_User662_User663.csv
+
+Notice that the centiMorgan and SNP thresholds for each DNA segment can be tuned. Additionally,
+notice that two files were downloaded to facilitate the analysis and plotting - future analyses
+will used the downloaded files instead of downloading the files again.
+
+Here, the `output <https://apriha.github.io/lineage/output_files.html>`_ consists of a CSV file
+that details the shared segments of DNA on one chromosome. Additionally, a plot is also generated
+that illustrates the shared DNA:
+
+.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663.png
+
+Find Shared Genes
+'''''''''''''''''
+The `Central Dogma of Molecular Biology <https://www.nature.com/nature/focus/crick/pdf/crick227.pdf>`_
+states that genetic information flows from DNA to mRNA to proteins: DNA is transcribed into
+mRNA, and mRNA is translated into a protein. It's more complicated than this (it's biology
+after all), but generally, one mRNA produces one protein, and the mRNA / protein is considered a
+gene.
+
+Therefore, it would be interesting to understand not just what DNA is shared between individuals,
+but what *genes* are shared between individuals *with the same variations*. (In other words,
+what genes are producing the *same* proteins?) Since ``lineage`` can determine the shared DNA
+between individuals, it can use that information to determine what genes are also shared on
+either one or both chromosomes.
+
+For this example, let's create two more ``Individuals`` for the ``User4583`` and ``User4584``
+datasets:
+
+>>> user4583 = l.create_individual('User4583', 'resources/4583.ftdna-illumina.3482.csv.gz')
+Loading resources/4583.ftdna-illumina.3482.csv.gz
+
+>>> user4584 = l.create_individual('User4584', 'resources/4584.ftdna-illumina.3483.csv.gz')
+Loading resources/4584.ftdna-illumina.3483.csv.gz
+
+Now let's find the shared genes:
+
+>>> l.find_shared_dna(user4583, user4584, shared_genes=True)
+Saving output/shared_dna_User4583_User4584.png
+Saving output/shared_dna_one_chrom_User4583_User4584.csv
+Downloading resources/knownGene_h37.txt.gz
+Downloading resources/kgXref_h37.txt.gz
+Saving output/shared_genes_one_chrom_User4583_User4584.csv
+Saving output/shared_dna_two_chroms_User4583_User4584.csv
+Saving output/shared_genes_two_chroms_User4583_User4584.csv
+
+The plot that illustrates the shared DNA is shown below. Note that in addition to outputting the
+shared DNA segments on either one or both chromosomes, the shared genes on either one or both
+chromosomes are also output. These `output files <https://apriha.github.io/lineage/output_files.html>`_
+are detailed in the documentation.
+
+.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User4583_User4584.png
+
 Documentation
 -------------
 Documentation is available `here <https://apriha.github.io/lineage/>`_.
