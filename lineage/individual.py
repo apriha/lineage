@@ -116,7 +116,7 @@ class Individual(object):
 
                 file = os.path.join(output_dir, self.get_var_name() + '.csv')
                 print('Saving ' + os.path.relpath(file))
-                self._snps.to_csv(file, na_rep="--", header=['chromosome', 'position', 'genotype'])
+                self._snps.to_csv(file, na_rep='--', header=['chromosome', 'position', 'genotype'])
             except Exception as err:
                 print(err)
         else:

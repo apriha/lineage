@@ -471,12 +471,12 @@ class Lineage(object):
                 chrom_stain = 'two_chrom'
 
             for x in matches_passed:
-                shared_dna.append({"chrom": chrom,
-                                   "start": df.loc[(df['chrom'] == chrom)].ix[x[0]].pos,
-                                   "end": df.loc[(df['chrom'] == chrom)].ix[x[1] - 1].pos,
-                                   "cMs": cMs_match_segment[counter],
-                                   "snps": x[1] - x[0],
-                                   "gie_stain": chrom_stain})
+                shared_dna.append({'chrom': chrom,
+                                   'start': df.loc[(df['chrom'] == chrom)].ix[x[0]].pos,
+                                   'end': df.loc[(df['chrom'] == chrom)].ix[x[1] - 1].pos,
+                                   'cMs': cMs_match_segment[counter],
+                                   'snps': x[1] - x[0],
+                                   'gie_stain': chrom_stain})
                 counter += 1
         return shared_dna
 

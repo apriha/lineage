@@ -352,7 +352,7 @@ class Resources(object):
                     ftp.cwd('hapmap/recombination/2008-03_rel22_B36/rates')
 
                     # download each HapMap file and add to compressed tar
-                    with tarfile.open(destination, "w:gz") as out_tar:
+                    with tarfile.open(destination, 'w:gz') as out_tar:
                         for filename in ftp.nlst():
                             if '.txt' in filename:
                                 path = os.path.join(destination, hapmap, filename)
