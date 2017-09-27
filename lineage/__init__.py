@@ -243,7 +243,7 @@ class Lineage(object):
             cytobands = self._resources.get_cytoband_h37()
 
         # plot data
-        if dir_exists(self._output_dir):
+        if create_dir(self._output_dir):
             plot_chromosomes(one_chrom_shared_dna, two_chrom_shared_dna, cytobands,
                              os.path.join(self._output_dir, 'shared_dna_' +
                                           individual1.get_var_name() + '_' +
@@ -480,7 +480,19 @@ class Lineage(object):
                 counter += 1
         return shared_dna
 
-def dir_exists(path):
+def create_dir(path):
+    """ Create directory specified by `path` if it doesn't already exist.
+
+    Parameters
+    ----------
+    path : str
+        path to directory
+
+    Returns
+    -------
+    bool
+        True if `path` exists
+    """
     # https://stackoverflow.com/a/5032238
     try:
         os.makedirs(path, exist_ok=True)
@@ -495,7 +507,7 @@ def dir_exists(path):
 
 
 def save_df_as_csv(df, path, filename):
-    if dir_exists(path):
+    if create_dir(path):
         destination = os.path.join(path, filename)
         print('Saving ' + os.path.relpath(destination))
         df.to_csv(destination, na_rep='--')

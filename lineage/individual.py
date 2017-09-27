@@ -109,7 +109,7 @@ class Individual(object):
         """ Save SNPs to file. """
         if self._snps is not None:
             try:
-                if lineage.dir_exists(self._output_dir):
+                if lineage.create_dir(self._output_dir):
                     output_dir = self._output_dir
                 else:
                     output_dir = ''

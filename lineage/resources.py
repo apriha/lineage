@@ -338,7 +338,7 @@ class Resources(object):
           map of over 3.1 million SNPs.  Nature 449: 851-861."
 
         """
-        if not lineage.dir_exists(self._resources_dir):
+        if not lineage.create_dir(self._resources_dir):
             return None
 
         hapmap = 'hapmap_h36'
@@ -444,7 +444,7 @@ class Resources(object):
             path to downloaded file, None if error
 
         """
-        if not lineage.dir_exists(self._resources_dir):
+        if not lineage.create_dir(self._resources_dir):
             return None
 
         if compress and filename[-3:] != '.gz':
