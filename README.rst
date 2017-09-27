@@ -1,15 +1,14 @@
 lineage
 =======
-``lineage`` provides a framework for analyzing raw DNA data provided by
-consumer DNA testing companies (e.g., `23andMe <https://www.23andme.com>`_,
-`Family Tree DNA <https://www.familytreedna.com>`_, and
-`Ancestry <http://www.ancestry.com>`_), primarily for the purposes of genetic
-genealogy.
+``lineage`` provides a framework for analyzing genotype (raw data) files from direct-to-consumer
+DNA testing companies (e.g., `23andMe <https://www.23andme.com>`_,
+`Family Tree DNA <https://www.familytreedna.com>`_, and `Ancestry <http://www.ancestry.com>`_),
+primarily for the purposes of genetic genealogy.
 
 Capabilities
 ------------
 - Merge raw data files from different DNA testing companies, identifying discrepant SNPs in the process
-- Compute centimorgans (cMs) of shared DNA between individuals using HapMap tables
+- Compute centiMorgans (cMs) of shared DNA between individuals using HapMap tables
 - Plot shared DNA between individuals
 - Determine genes shared between individuals (i.e., genes transcribed from shared DNA segments)
 - Find discordant SNPs between child and parent(s)
@@ -17,16 +16,19 @@ Capabilities
 
 Dependencies
 ------------
-``lineage`` requires Python 3.4+, `pandas <http://pandas.pydata.org>`_, and
-`matplotlib <http://matplotlib.org>`_.
+``lineage`` requires `Python <https://www.python.org>`_ 3.4+, `pandas <http://pandas.pydata.org>`_,
+and `matplotlib <http://matplotlib.org>`_.
+
+On Linux systems, the ``python3-tk`` package may also be required::
+
+    $ sudo apt-get install python3-tk
 
 Installation
 ------------
 ``lineage`` is `available <https://pypi.python.org/pypi/lineage/>`_ on the
-`Python Package Index <https://pypi.python.org/pypi>`_. Install ``lineage`` via
-``pip``::
+`Python Package Index <https://pypi.python.org/pypi>`_. Install ``lineage`` via ``pip``::
 
-    pip install lineage
+    $ pip install lineage
 
 Examples
 --------
@@ -226,7 +228,7 @@ Documentation is available `here <https://apriha.github.io/lineage/>`_.
 
 Acknowledgements
 ----------------
-Thanks to Whit Athey, Ryan Dale, Binh Bui, Gopal Vashishtha,
+Thanks to Whit Athey, Ryan Dale, Mike Agostino, Padma Reddy, Binh Bui, Gopal Vashishtha,
 `CS50 <https://cs50.harvard.edu>`_, and `openSNP <https://opensnp.org>`_.
 
 License
