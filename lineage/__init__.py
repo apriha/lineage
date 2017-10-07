@@ -32,6 +32,11 @@ from lineage.individual import Individual
 from lineage.resources import Resources
 from lineage.visualization import plot_chromosomes
 
+# set version string with Versioneer
+from lineage._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
+
 
 class Lineage(object):
     """ Object used to interact with the `lineage` framework. """

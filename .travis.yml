@@ -43,14 +43,6 @@ script:
 # automatically package and deploy to PyPI
 # https://www.appneta.com/blog/pypi-deployment-with-travis-ci/
 
-# make version unique for test PyPI deployment
-# https://stackoverflow.com/a/31363120
-before_deploy:
-  - if [[ "${DEPLOY}" == "true" ]]; then
-      chmod +x deploy.sh;
-      ./deploy.sh;
-    fi
-
 deploy:
   # test PyPI
   - provider: pypi

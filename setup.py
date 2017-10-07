@@ -52,19 +52,17 @@ from setuptools import setup
 from codecs import open
 from os import path
 
+import versioneer
+
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-# get the version from the VERSION file
-with open(path.join(here, 'lineage/VERSION')) as version_file:
-    version = version_file.read().strip()
-
 setup(
     name='lineage',
-    version=version,
+    version=versioneer.get_version(),
     description='tools for genetic genealogy and the analysis of consumer DNA '
                 'test results',
     long_description=long_description,
