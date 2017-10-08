@@ -92,6 +92,7 @@ setup(
              'inheritance ancestry',
     packages=['lineage'],
     install_requires=[
+        'numpy',
         'pandas',
         'matplotlib'
     ]
