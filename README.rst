@@ -22,9 +22,13 @@ Dependencies
 - `pandas <http://pandas.pydata.org>`_
 - `matplotlib <http://matplotlib.org>`_
 
-On Linux systems, the ``python3-tk`` package may also be required::
+On Linux systems, the following system-level installs may also be required::
 
     $ sudo apt-get install python3-tk
+    $ sudo apt-get install gfortran
+    $ sudo apt-get install python-dev
+    $ sudo apt-get install python-devel
+    $ sudo apt-get install python3.X-dev # (where X == Python minor version)
 
 Installation
 ------------
