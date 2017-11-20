@@ -176,20 +176,20 @@ class Resources(object):
           https://doi.org/10.1371/journal.pone.0089204
 
         """
-        self._download_file('https://opensnp.org/data/662.23andme.304',
+        self._download_file(self._get_url_dataset_user662_304(),
                             '662.23andme.304.csv.gz', compress=True)
-        self._download_file('https://opensnp.org/data/662.23andme.340',
+        self._download_file(self._get_url_dataset_user662_340(),
                             '662.23andme.340.csv.gz', compress=True)
-        self._download_file('https://opensnp.org/data/662.ftdna-illumina.341',
+        self._download_file(self._get_url_dataset_user662_341(),
                             '662.ftdna-illumina.341.csv.gz', compress=True)
-        self._download_file('https://opensnp.org/data/663.23andme.305',
+        self._download_file(self._get_url_dataset_user663_305(),
                             '663.23andme.305.csv.gz', compress=True)
 
         # these two files consist of concatenated gzip files and therefore need special handling
         gzip_paths = []
-        gzip_paths.append(self._download_file('https://opensnp.org/data/4583.ftdna-illumina.3482',
+        gzip_paths.append(self._download_file(self._get_url_dataset_user4583_3482(),
                                               '4583.ftdna-illumina.3482.csv.gz'))
-        gzip_paths.append(self._download_file('https://opensnp.org/data/4584.ftdna-illumina.3483',
+        gzip_paths.append(self._download_file(self._get_url_dataset_user4584_3483(),
                                               '4584.ftdna-illumina.3483.csv.gz'))
 
         try:
@@ -212,6 +212,30 @@ class Resources(object):
                     f.write(data)
         except Exception as err:
             print(err)
+
+    @staticmethod
+    def _get_url_dataset_user662_304():
+        return 'https://opensnp.org/data/662.23andme.304'
+
+    @staticmethod
+    def _get_url_dataset_user662_340():
+        return 'https://opensnp.org/data/662.23andme.340'
+
+    @staticmethod
+    def _get_url_dataset_user662_341():
+        return 'https://opensnp.org/data/662.ftdna-illumina.341'
+
+    @staticmethod
+    def _get_url_dataset_user663_305():
+        return 'https://opensnp.org/data/663.23andme.305'
+
+    @staticmethod
+    def _get_url_dataset_user4583_3482():
+        return 'https://opensnp.org/data/4583.ftdna-illumina.3482'
+
+    @staticmethod
+    def _get_url_dataset_user4584_3483():
+        return 'https://opensnp.org/data/4584.ftdna-illumina.3483'
 
     @staticmethod
     def _load_hapmap(filename):
@@ -376,9 +400,11 @@ class Resources(object):
 
         """
 
-        return self._download_file(
-            'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz',
-            'cytoband_h37.txt.gz')
+        return self._download_file(self._get_url_cytoband_h37(), 'cytoband_h37.txt.gz')
+
+    @staticmethod
+    def _get_url_cytoband_h37():
+        return 'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz'
 
     def _get_path_hapmap_h36(self):
         """ Get local path to HapMap for hg18 / NCBI36, downloading if necessary.
@@ -447,9 +473,12 @@ class Resources(object):
 
         """
 
-        return self._download_file(
-            'ftp://ftp.ncbi.nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37'
-            '/genetic_map_HapMapII_GRCh37.tar.gz', 'hapmap_h37.tar.gz')
+        return self._download_file(self._get_url_hapmap_h37(), 'hapmap_h37.tar.gz')
+
+    @staticmethod
+    def _get_url_hapmap_h37():
+        return 'ftp://ftp.ncbi.nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37/' \
+               'genetic_map_HapMapII_GRCh37.tar.gz'
 
     def _get_path_knownGene_h37(self):
         """ Get local path to knownGene file for hg19 / GRCh37 from UCSC, downloading if necessary.
@@ -461,9 +490,11 @@ class Resources(object):
 
         """
 
-        return self._download_file(
-            'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/knownGene.txt.gz',
-            'knownGene_h37.txt.gz')
+        return self._download_file(self._get_url_knownGene_h37(), 'knownGene_h37.txt.gz')
+
+    @staticmethod
+    def _get_url_knownGene_h37():
+        return 'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/knownGene.txt.gz'
 
 
     def _get_path_kgXref_h37(self):
@@ -476,9 +507,11 @@ class Resources(object):
 
         """
 
-        return self._download_file(
-            'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/kgXref.txt.gz',
-            'kgXref_h37.txt.gz')
+        return self._download_file(self._get_url_kgXref_h37(), 'kgXref_h37.txt.gz')
+
+    @staticmethod
+    def _get_url_kgXref_h37():
+        return 'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/kgXref.txt.gz'
 
     def _download_file(self, url, filename, compress=False):
         """ Download a file to the resources folder.
