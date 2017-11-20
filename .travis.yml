@@ -12,6 +12,7 @@ env:
 
 matrix:
   include:
+    - python: 3.4
     - python: 3.5
     - python: 3.6
       env:
@@ -19,6 +20,7 @@ matrix:
         DEPLOY="true"
 
 before_install:
+  - pip install pytest-cov
   - if [[ "${DOCS}" == "true" ]]; then
       pip install sphinx;
       pip install sphinx_rtd_theme;
@@ -33,6 +35,7 @@ install:
 
 script:
   - set -e
+  - pytest --cov=lineage tests
   - if [[ "${DOCS}" == "true" ]]; then
       cd docs;
       make html;
