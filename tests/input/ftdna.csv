@@ -1,0 +1,6 @@
+RSID,CHROMOSOME,POSITION,RESULT
+"rs1","1","1","AA"
+"rs2","1","2","CC"
+"rs3","1","3","GG"
+"rs4","1","4","TT"
+"rs5","1","5","--"
