@@ -79,7 +79,6 @@ setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Topic :: Scientific/Engineering',
@@ -93,7 +92,7 @@ setup(
     packages=['lineage'],
     install_requires=[
         'numpy',
-        'pandas',
+        'pandas>=0.21.0',
         'matplotlib'
     ]
 )

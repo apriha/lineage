@@ -25,6 +25,7 @@ import zipfile
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import CategoricalDtype
 
 import lineage
 
@@ -532,7 +533,7 @@ class Individual(object):
         # convert chrom column to category for sorting
         # https://stackoverflow.com/a/26707444
         self._snps['chrom'] = \
-            self._snps['chrom'].astype('category', categories=sorted_list, ordered=True)
+            self._snps['chrom'].astype(CategoricalDtype(categories=sorted_list, ordered=True))
 
         # sort based on ordered chromosome list and position
         self._snps = self._snps.sort_values(['chrom', 'pos'])
