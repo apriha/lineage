@@ -210,6 +210,9 @@ class Individual(object):
         elif target_assembly not in valid_assemblies:
             print('Invalid target assembly')
             return
+        elif str(self._assembly) not in source_assembly:
+            print('Current assembly of SNPs does not match specified source assembly')
+            return
 
         for chrom in self._snps['chrom'].unique():
             print('Remapping chromosome ' + chrom + '...')
@@ -273,6 +276,7 @@ class Individual(object):
             self._snps.loc[temp.index, 'pos'] = temp['pos']
 
         self._sort_snps()
+        self._assembly = int(target_assembly[-2:])
 
     def _complement_bases(self, genotype):
         if pd.isnull(genotype):
