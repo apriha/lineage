@@ -8,8 +8,7 @@ References
 ----------
 ..[1] Yates et. al. (doi:10.1093/bioinformatics/btu613),
   http://europepmc.org/search/?query=DOI:10.1093/bioinformatics/btu613
-..[2] Cunningham et. al. (doi:10.1093/nar/gku1010),
-  http://europepmc.org/search/?query=DOI:10.1093/nar/gku1010
+..[2] Zerbino et. al. (doi.org/10.1093/nar/gkx1098), https://doi.org/10.1093/nar/gkx1098
 
 """
 
