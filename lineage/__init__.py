@@ -192,7 +192,7 @@ class Lineage(object):
 
         return df
 
-    def find_shared_dna(self, individual1, individual2, build=37, cM_threshold=0.75,
+    def find_shared_dna(self, individual1, individual2, cM_threshold=0.75,
                         snp_threshold=1100, shared_genes=False):
         """ Find the shared DNA between two individuals.
 
@@ -206,8 +206,6 @@ class Lineage(object):
         ----------
         individual1 : Individual
         individual2 : Individual
-        build : {36, 37}
-            human genome assembly
         cM_threshold : float
             minimum centiMorgans for each shared DNA segment
         snp_threshold : int
@@ -228,7 +226,7 @@ class Lineage(object):
         one_x_chrom = self._is_one_individual_male(df, genotype1, genotype2)
 
         # determine the genetic distance between each SNP using HapMap tables
-        hapmap, df = self._compute_snp_distances(df, build)
+        hapmap, df = self._compute_snp_distances(df)
 
         # determine where individuals share an allele on one chromosome
         df['one_chrom_match'] = np.where(
@@ -254,10 +252,7 @@ class Lineage(object):
         two_chrom_shared_dna = self._compute_shared_dna(df, hapmap, 'two_chrom_match',
                                                         cM_threshold, snp_threshold, one_x_chrom)
 
-        if build == 36:
-            cytobands = self._resources.get_cytoband_h36()
-        else:
-            cytobands = self._resources.get_cytoband_h37()
+        cytobands = self._resources.get_cytoband_h37()
 
         # plot data
         if create_dir(self._output_dir):
@@ -265,11 +260,7 @@ class Lineage(object):
                              os.path.join(self._output_dir, 'shared_dna_' +
                                           individual1.get_var_name() + '_' +
                                           individual2.get_var_name() + '.png'),
-                             individual1.name + ' / ' + individual2.name + ' shared DNA', build)
-
-        if shared_genes and build == 36:
-            print('Remap SNPs to Build 37 to determine shared genes')
-            shared_genes = False
+                             individual1.name + ' / ' + individual2.name + ' shared DNA', 37)
 
         # save results in CSV format
         if len(one_chrom_shared_dna) > 0:
@@ -359,11 +350,8 @@ class Lineage(object):
                 return False
 
 
-    def _compute_snp_distances(self, df, build):
-        if build == 36:
-            hapmap = self._resources.get_hapmap_h36()
-        else:
-            hapmap = self._resources.get_hapmap_h37()
+    def _compute_snp_distances(self, df):
+        hapmap = self._resources.get_hapmap_h37()
 
         for chrom in df['chrom'].unique():
             if chrom not in hapmap.keys():
