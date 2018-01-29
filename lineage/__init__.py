@@ -118,6 +118,7 @@ class Lineage(object):
           http://www.math.mun.ca/~dapike/FF23utils/trio-discord.php
 
         """
+        self._remap_snps_to_GRCh37([individual1, individual2, individual3])
 
         df = individual1.snps
 
@@ -214,6 +215,8 @@ class Lineage(object):
             determine shared genes
 
         """
+        self._remap_snps_to_GRCh37([individual1, individual2])
+
         df = individual1.snps
 
         df = df.join(individual2.snps['genotype'], rsuffix='2', how='inner')
@@ -484,6 +487,15 @@ class Lineage(object):
                                    'gie_stain': chrom_stain})
                 counter += 1
         return shared_dna
+
+    @staticmethod
+    def _remap_snps_to_GRCh37(individuals):
+        for i in individuals:
+            if i is None:
+                continue
+
+            i.remap_snps(37)
+
 
 def create_dir(path):
     """ Create directory specified by `path` if it doesn't already exist.
