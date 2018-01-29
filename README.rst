@@ -76,7 +76,9 @@ Remap SNPs
 Oops! The data we just loaded is Build 36, but we want Build 37 since the other files in the
 datasets are Build 37... Let's remap the SNPs:
 
->>> user662.remap_snps('NCBI36', 'GRCh37')
+>>> user662.assembly
+36
+>>> user662.remap_snps(37)
 Remapping chromosome 1...
 Remapping chromosome 2...
 Remapping chromosome 3...

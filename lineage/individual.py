@@ -58,6 +58,7 @@ class Individual(object):
         self._output_dir = output_dir
         self._ensembl_rest_client = ensembl_rest_client
         self._snps = None
+        self._assembly = None
         self._discrepant_positions_file_count = 0
         self._discrepant_genotypes_file_count = 0
 
@@ -91,6 +92,17 @@ class Individual(object):
             return self._snps.copy()
         else:
             return None
+
+    @property
+    def assembly(self):
+        """ Get the assembly of this ``Individual``'s SNPs.
+
+        Returns
+        -------
+        int
+
+        """
+        return self._assembly
 
     def load_snps(self, raw_data, discrepant_snp_positions_threshold=100,
                   discrepant_genotypes_threshold=10000):
@@ -151,7 +163,7 @@ class Individual(object):
         # http://stackoverflow.com/a/3305731
         return re.sub('\W|^(?=\d)', '_', self.name)
 
-    def remap_snps(self, source_assembly, target_assembly, complement_bases=True):
+    def remap_snps(self, target_assembly, complement_bases=True):
         """ Remap the SNP coordinates of this ``Individual`` from one assembly to another.
 
         This method uses the assembly map endpoint of the Ensembl REST API service (via this
@@ -159,11 +171,12 @@ class Individual(object):
         assembly to another. After remapping, the coordinates / positions for the ``Individual``'s
         SNPs will be that of the target assembly.
 
+        If the SNPs are already mapped relative to the target assembly, remapping will not be
+        performed.
+
         Parameters
         ----------
-        source_assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
-            starting assembly of an Individual's SNPs
-        target_assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
+        target_assembly : {'NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38}
             assembly to remap to
         complement_bases : bool
             complement bases when remapping SNPs to the minus strand
@@ -190,13 +203,24 @@ class Individual(object):
             print('Need an ``EnsemblRestClient`` to remap SNPs')
             return
 
-        valid_assemblies = ['NCBI36', 'GRCh37', 'GRCh38']
+        valid_assemblies = ['NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38]
 
-        if source_assembly not in valid_assemblies:
-            print('Invalid source assembly')
-            return
-        elif target_assembly not in valid_assemblies:
+        if target_assembly not in valid_assemblies:
             print('Invalid target assembly')
+            return
+
+        if isinstance(target_assembly, int):
+            if target_assembly == 36:
+                target_assembly = 'NCBI36'
+            else:
+                target_assembly = 'GRCh' + str(target_assembly)
+
+        if self._assembly == 36:
+            source_assembly = 'NCBI36'
+        else:
+            source_assembly = 'GRCh' + str(self._assembly)
+
+        if source_assembly == target_assembly:
             return
 
         for chrom in self._snps['chrom'].unique():
@@ -261,6 +285,7 @@ class Individual(object):
             self._snps.loc[temp.index, 'pos'] = temp['pos']
 
         self._sort_snps()
+        self._assembly = int(target_assembly[-2:])
 
     def _complement_bases(self, genotype):
         if pd.isnull(genotype):
@@ -430,6 +455,17 @@ class Individual(object):
         # ensure there area always two X alleles
         snps = self._double_single_alleles(snps, 'X')
 
+        assembly = self._detect_assembly(snps)
+
+        if assembly is None:
+            print('assembly not detected, assuming build 37')
+            assembly = 37
+
+        if self._assembly is None:
+            self._assembly = assembly
+        elif self._assembly != assembly:
+            print('assembly / build mismatch between current assembly of SNPs and SNPs being loaded')
+
         if self._snps is None:
             self._snps = snps
         else:
@@ -546,3 +582,63 @@ class Individual(object):
     def _natural_sort_key(s, natural_sort_re=re.compile('([0-9]+)')):
         return [int(text) if text.isdigit() else text.lower()
                 for text in re.split(natural_sort_re, s)]
+
+    def _detect_assembly(self, snps):
+        """ Detect assembly of SNPs being loaded.
+
+        Use the coordinates of common SNPs to identify the assembly / build of a genotype file
+        that is being loaded.
+
+        Notes
+        -----
+        rs3094315 : plus strand in 36, 37, and 38
+        rs11928389 : plus strand in 36, minus strand in 37 and 38
+        rs2500347 : plus strand in 36 and 37, minus strand in 38
+        rs964481 : plus strand in 36, 37, and 38
+
+        Parameters
+        ----------
+        snps : pandas.DataFrame
+            SNPs to add
+
+        Returns
+        -------
+        int
+            detected assembly of SNPs, else None
+
+        References
+        ----------
+        ..[1] Yates et. al. (doi:10.1093/bioinformatics/btu613),
+          http://europepmc.org/search/?query=DOI:10.1093/bioinformatics/btu613
+        ..[2] Zerbino et. al. (doi.org/10.1093/nar/gkx1098), https://doi.org/10.1093/nar/gkx1098
+        ..[3] Sherry ST, Ward MH, Kholodov M, Baker J, Phan L, Smigielski EM, Sirotkin K.
+          dbSNP: the NCBI database of genetic variation. Nucleic Acids Res. 2001 Jan 1;29(1):308-11.
+        ..[4] Database of Single Nucleotide Polymorphisms (dbSNP). Bethesda (MD): National Center
+          for Biotechnology Information, National Library of Medicine. dbSNP accession: rs3094315,
+          rs11928389, rs2500347, and rs964481 (dbSNP Build ID: 151). Available from:
+          http://www.ncbi.nlm.nih.gov/SNP/
+
+        """
+
+        assembly = None
+
+        rsids = ['rs3094315', 'rs11928389', 'rs2500347', 'rs964481']
+        df = pd.DataFrame({36: [742429, 50908372, 143649677, 27566744],
+                           37: [752566, 50927009, 144938320, 27656823],
+                           38: [817186, 50889578, 148946169, 27638706]}, index=rsids)
+
+        for rsid in rsids:
+            if rsid in snps.index:
+                assembly = self._lookup_assembly_with_snp_pos(snps.loc[rsid].pos, df.loc[rsid])
+
+            if assembly is not None:
+                break
+
+        return assembly
+
+    @staticmethod
+    def _lookup_assembly_with_snp_pos(pos, s):
+        try:
+            return s.loc[s == pos].index[0]
+        except:
+            return None

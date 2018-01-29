@@ -23,8 +23,6 @@ References
   http://dx.doi.org/10.1038/35057062
 ..[4] hg19 (GRCh37): Hiram Clawson, Brooke Rhead, Pauline Fujita, Ann Zweig, Katrina
   Learned, Donna Karolchik and Robert Kuhn, https://genome.ucsc.edu/cgi-bin/hgGateway?db=hg19
-..[5] hg18 (NCBI36): Engineering effort led by Fan Hsu; QA effort led by Ann Zweig,
-  https://genome.ucsc.edu/cgi-bin/hgGateway?db=hg18
 
 """
 
@@ -46,11 +44,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-import ftplib
 import gzip
 import os
 import tarfile
-import tempfile
 import urllib.request
 import zlib
 
@@ -72,26 +68,10 @@ class Resources(object):
 
         """
         self._resources_dir = os.path.abspath(resources_dir)
-        self._hapmap_h36 = None
         self._hapmap_h37 = None
-        self._cytoband_h36 = None
         self._cytoband_h37 = None
         self._knownGene_h37 = None
         self._kgXref_h37 = None
-
-    def get_hapmap_h36(self):
-        """ Get International HapMap Consortium HapMap for Build 36.
-
-        Returns
-        -------
-        dict
-            dict of pandas.DataFrame HapMap tables if loading was successful, else None
-
-        """
-        if self._hapmap_h36 is None:
-            self._hapmap_h36 = self._load_hapmap(self._get_path_hapmap_h36())
-
-        return self._hapmap_h36
 
     def get_hapmap_h37(self):
         """ Get International HapMap Consortium HapMap for Build 37.
@@ -106,20 +86,6 @@ class Resources(object):
             self._hapmap_h37 = self._load_hapmap(self._get_path_hapmap_h37())
 
         return self._hapmap_h37
-
-    def get_cytoband_h36(self):
-        """ Get UCSC cytoBand table for Build 36.
-
-        Returns
-        -------
-        pandas.DataFrame
-            cytoBand table if loading was successful, else None
-
-        """
-        if self._cytoband_h36 is None:
-            self._cytoband_h36 = self._load_cytoband(self._get_path_cytoband_h36())
-
-        return self._cytoband_h36
 
     def get_cytoband_h37(self):
         """ Get UCSC cytoBand table for Build 37.
@@ -258,20 +224,9 @@ class Resources(object):
         try:
             hapmap = {}
 
-            if '36' in filename:
+            if '37' in filename:
                 with tarfile.open(filename, 'r') as tar:
                     # http://stackoverflow.com/a/2018576
-                    for member in tar.getmembers():
-                        if 'genetic_map' in member.name:
-                            df = pd.read_csv(tar.extractfile(member), sep=' ')
-                            df = df.rename(columns={'position': 'pos',
-                                                    'COMBINED_rate(cM/Mb)': 'rate',
-                                                    'Genetic_Map(cM)': 'map'})
-                            start_pos = member.name.index('chr') + 3
-                            end_pos = member.name.index('_b36')
-                            hapmap[member.name[start_pos:end_pos]] = df
-            elif '37' in filename:
-                with tarfile.open(filename, 'r') as tar:
                     for member in tar.getmembers():
                         if 'genetic_map' in member.name:
                             df = pd.read_csv(tar.extractfile(member), sep='\t')
@@ -376,20 +331,6 @@ class Resources(object):
             print(err)
             return None
 
-    def _get_path_cytoband_h36(self):
-        """ Get local path to cytoBand file for hg18 / NCBI36 from UCSC, downloading if necessary.
-
-        Returns
-        -------
-        str
-            path to cytoband_h36.txt.gz
-
-        """
-
-        return self._download_file(
-            'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg18/database/cytoBand.txt.gz',
-            'cytoband_h36.txt.gz')
-
     def _get_path_cytoband_h37(self):
         """ Get local path to cytoBand file for hg19 / GRCh37 from UCSC, downloading if necessary.
 
@@ -406,56 +347,6 @@ class Resources(object):
     def _get_url_cytoband_h37():
         return 'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz'
 
-    def _get_path_hapmap_h36(self):
-        """ Get local path to HapMap for hg18 / NCBI36, downloading if necessary.
-
-        Returns
-        -------
-        str
-            path to hapmap_h36.tar.gz
-
-        References
-        ----------
-        ..[1] "The International HapMap Consortium (2007).  A second generation human haplotype
-          map of over 3.1 million SNPs.  Nature 449: 851-861."
-
-        """
-        if not lineage.create_dir(self._resources_dir):
-            return None
-
-        hapmap = 'hapmap_h36'
-        destination = os.path.join(self._resources_dir, hapmap + '.tar.gz')
-
-        if not os.path.exists(destination):
-            try:
-                # make FTP connection to NCBI
-                with ftplib.FTP('ftp.ncbi.nlm.nih.gov') as ftp:
-                    ftp.login()
-                    ftp.cwd('hapmap/recombination/2008-03_rel22_B36/rates')
-
-                    # download each HapMap file and add to compressed tar
-                    with tarfile.open(destination, 'w:gz') as out_tar:
-                        for filename in ftp.nlst():
-                            if '.txt' in filename:
-                                path = os.path.join(destination, hapmap, filename)
-                                self._print_download_msg(path)
-
-                                # open temp file, download HapMap file, close temp file
-                                with tempfile.NamedTemporaryFile(delete=False) as fp:
-                                    ftp.retrbinary('RETR ' + filename, fp.write)
-
-                                # add temp file to archive
-                                out_tar.add(fp.name, arcname=os.path.join(hapmap, filename))
-
-                                # remove temp file
-                                os.remove(fp.name)
-                    ftp.quit()
-            except Exception as err:
-                print(err)
-                return None
-
-        return destination
-
     def _get_path_hapmap_h37(self):
         """ Get local path to HapMap for hg19 / GRCh37, downloading if necessary.
 
@@ -466,7 +357,9 @@ class Resources(object):
 
         References
         ----------
-        ..[1] "The map was generated by lifting the HapMap Phase II genetic map from build 35 to
+        ..[1] "The International HapMap Consortium (2007).  A second generation human haplotype
+          map of over 3.1 million SNPs.  Nature 449: 851-861."
+        ..[2] "The map was generated by lifting the HapMap Phase II genetic map from build 35 to
           GRCh37. The original map was generated using LDhat as described in the 2007 HapMap
           paper (Nature, 18th Sept 2007). The conversion from b35 to GRCh37 was achieved using
           the UCSC liftOver tool. Adam Auton, 08/12/2010"
