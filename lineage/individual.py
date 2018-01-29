@@ -163,7 +163,7 @@ class Individual(object):
         # http://stackoverflow.com/a/3305731
         return re.sub('\W|^(?=\d)', '_', self.name)
 
-    def remap_snps(self, source_assembly, target_assembly, complement_bases=True):
+    def remap_snps(self, target_assembly, complement_bases=True):
         """ Remap the SNP coordinates of this ``Individual`` from one assembly to another.
 
         This method uses the assembly map endpoint of the Ensembl REST API service (via this
@@ -171,11 +171,12 @@ class Individual(object):
         assembly to another. After remapping, the coordinates / positions for the ``Individual``'s
         SNPs will be that of the target assembly.
 
+        If the SNPs are already mapped relative to the target assembly, remapping will not be
+        performed.
+
         Parameters
         ----------
-        source_assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
-            starting assembly of an Individual's SNPs
-        target_assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
+        target_assembly : {'NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38}
             assembly to remap to
         complement_bases : bool
             complement bases when remapping SNPs to the minus strand
@@ -202,16 +203,24 @@ class Individual(object):
             print('Need an ``EnsemblRestClient`` to remap SNPs')
             return
 
-        valid_assemblies = ['NCBI36', 'GRCh37', 'GRCh38']
+        valid_assemblies = ['NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38]
 
-        if source_assembly not in valid_assemblies:
-            print('Invalid source assembly')
-            return
-        elif target_assembly not in valid_assemblies:
+        if target_assembly not in valid_assemblies:
             print('Invalid target assembly')
             return
-        elif str(self._assembly) not in source_assembly:
-            print('Current assembly of SNPs does not match specified source assembly')
+
+        if isinstance(target_assembly, int):
+            if target_assembly == 36:
+                target_assembly = 'NCBI36'
+            else:
+                target_assembly = 'GRCh' + str(target_assembly)
+
+        if self._assembly == 36:
+            source_assembly = 'NCBI36'
+        else:
+            source_assembly = 'GRCh' + str(self._assembly)
+
+        if source_assembly == target_assembly:
             return
 
         for chrom in self._snps['chrom'].unique():

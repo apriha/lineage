@@ -77,7 +77,7 @@ def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, b
         path to destination `.png` file
     title : str
         title for plot
-    build : {36, 37}
+    build : {37}
         human genome assembly
 
     """
