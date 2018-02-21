@@ -1,3 +1,5 @@
+.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/lineage_banner.png
+
 lineage
 =======
 ``lineage`` provides a framework for analyzing genotype (raw data) files from direct-to-consumer
@@ -238,7 +240,7 @@ Documentation is available `here <https://apriha.github.io/lineage/>`_.
 
 Acknowledgements
 ----------------
-Thanks to Whit Athey, Ryan Dale, Mike Agostino, Padma Reddy, Binh Bui, Gopal Vashishtha,
+Thanks to Whit Athey, Ryan Dale, Mike Agostino, Padma Reddy, Binh Bui, Jeff Gill, Gopal Vashishtha,
 `CS50 <https://cs50.harvard.edu>`_, and `openSNP <https://opensnp.org>`_.
 
 License
