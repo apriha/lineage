@@ -121,7 +121,7 @@ In the filenames below, ``name1`` is the name of the first
 :class:`~lineage.individual.Individual`.
 
 Note that shared DNA will not be shown on the Y chromosome since the Y chromosome does not
-recombine; therefore, the HapMaps do not have recombination rates for the Y chromosome.
+recombine; therefore, genetic maps do not have recombination rates for the Y chromosome.
 
 shared_dna_<name1>_<name2>.png
 ``````````````````````````````

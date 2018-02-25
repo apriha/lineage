@@ -197,8 +197,8 @@ class Lineage(object):
                         snp_threshold=1100, shared_genes=False):
         """ Find the shared DNA between two individuals.
 
-        Computes the genetic distance in centiMorgans (cMs) between SNPs using the specified
-        assembly's HapMap. Applies thresholds to determine the shared DNA. Plots shared DNA.
+        Computes the genetic distance in centiMorgans (cMs) between SNPs using the HapMap Phase II
+        GRCh37 genetic map. Applies thresholds to determine the shared DNA. Plots shared DNA.
         Optionally determines shared genes (i.e., genes that are transcribed from the shared DNA).
 
         All output is saved to the output directory as `CSV` or `PNG` files.
@@ -228,8 +228,8 @@ class Lineage(object):
 
         one_x_chrom = self._is_one_individual_male(df, genotype1, genotype2)
 
-        # determine the genetic distance between each SNP using HapMap tables
-        hapmap, df = self._compute_snp_distances(df)
+        # determine the genetic distance between each SNP using the HapMap Phase II genetic map
+        genetic_map, df = self._compute_snp_distances(df)
 
         # determine where individuals share an allele on one chromosome
         df['one_chrom_match'] = np.where(
@@ -249,13 +249,13 @@ class Lineage(object):
                (df[genotype1].str[1] == df[genotype2].str[0])))), True, False)
 
         # compute shared DNA between individuals
-        one_chrom_shared_dna = self._compute_shared_dna(df, hapmap, 'one_chrom_match',
+        one_chrom_shared_dna = self._compute_shared_dna(df, genetic_map, 'one_chrom_match',
                                                         cM_threshold, snp_threshold, one_x_chrom)
 
-        two_chrom_shared_dna = self._compute_shared_dna(df, hapmap, 'two_chrom_match',
+        two_chrom_shared_dna = self._compute_shared_dna(df, genetic_map, 'two_chrom_match',
                                                         cM_threshold, snp_threshold, one_x_chrom)
 
-        cytobands = self._resources.get_cytoband_h37()
+        cytobands = self._resources.get_cytoBand_hg19()
 
         # plot data
         if create_dir(self._output_dir):
@@ -285,8 +285,8 @@ class Lineage(object):
                                            individual2.get_var_name())
 
     def _compute_shared_genes(self, shared_dna, type, individual1_name, individual2_name):
-        knownGenes = self._resources.get_knownGene_h37()
-        kgXref = self._resources.get_kgXref_h37()
+        knownGenes = self._resources.get_knownGene_hg19()
+        kgXref = self._resources.get_kgXref_hg19()
 
         # http://seqanswers.com/forums/showthread.php?t=22336
         df = knownGenes.join(kgXref)
@@ -354,17 +354,17 @@ class Lineage(object):
 
 
     def _compute_snp_distances(self, df):
-        hapmap = self._resources.get_hapmap_h37()
+        genetic_map = self._resources.get_genetic_map_HapMapII_GRCh37()
 
         for chrom in df['chrom'].unique():
-            if chrom not in hapmap.keys():
+            if chrom not in genetic_map.keys():
                 continue
 
             # create a new dataframe from the positions for the current chromosome
             temp = pd.DataFrame(df.loc[(df['chrom'] == chrom)]['pos'].values, columns=['pos'])
 
-            # merge HapMap for this chrom
-            temp = temp.append(hapmap[chrom], ignore_index=True)
+            # merge genetic map for this chrom
+            temp = temp.append(genetic_map[chrom], ignore_index=True)
 
             # sort based on pos
             temp = temp.sort_values('pos')
@@ -406,13 +406,13 @@ class Lineage(object):
             # add back into df
             df.loc[(df['chrom'] == chrom), 'cM_from_prev_snp'] = np.r_[0, cM_from_prev_snp][:-1]
 
-        return hapmap, df
+        return genetic_map, df
 
-    def _compute_shared_dna(self, df, hapmap, col, cM_threshold, snp_threshold, one_x_chrom):
+    def _compute_shared_dna(self, df, genetic_map, col, cM_threshold, snp_threshold, one_x_chrom):
         shared_dna = []
 
         for chrom in df['chrom'].unique():
-            if chrom not in hapmap.keys():
+            if chrom not in genetic_map.keys():
                 continue
 
             # skip calculating two chrom shared on the X chromosome if an individual is male
