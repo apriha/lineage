@@ -406,7 +406,7 @@ class Resources(object):
     def _get_url_kgXref_h37():
         return 'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/kgXref.txt.gz'
 
-    def _download_file(self, url, filename, compress=False):
+    def _download_file(self, url, filename, compress=False, timeout=30):
         """ Download a file to the resources folder.
 
         Download data from `url`, save as `filename`, and optionally compress with gzip.
@@ -445,7 +445,8 @@ class Resources(object):
 
                 # get file if it hasn't already been downloaded
                 # http://stackoverflow.com/a/7244263
-                with urllib.request.urlopen(url) as response, open_func(destination, 'wb') as f:
+                with urllib.request.urlopen(url, timeout=timeout) as response, \
+                        open_func(destination, 'wb') as f:
                     data = response.read()  # a `bytes` object
                     f.write(data)
             except Exception as err:
