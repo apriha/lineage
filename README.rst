@@ -7,6 +7,8 @@ DNA testing companies (e.g., `23andMe <https://www.23andme.com>`_,
 `Family Tree DNA <https://www.familytreedna.com>`_, and `Ancestry <http://www.ancestry.com>`_),
 primarily for the purposes of genetic genealogy.
 
+|codecov|
+
 Capabilities
 ------------
 - Merge raw data files from different DNA testing companies, identifying discrepant SNPs in the process
@@ -259,3 +261,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+.. https://github.com/rtfd/readthedocs.org/blob/master/docs/badges.rst
+.. |codecov| image:: https://codecov.io/gh/apriha/lineage/branch/add-tests/graph/badge.svg
+  :target: https://codecov.io/gh/apriha/lineage
