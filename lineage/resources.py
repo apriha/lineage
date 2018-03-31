@@ -206,9 +206,6 @@ class Resources(object):
         Keys of returned dict are chromosomes and values are the corresponding genetic map.
 
         """
-        if filename is None:
-            return None
-
         try:
             genetic_map = {}
 
@@ -250,9 +247,6 @@ class Resources(object):
           https://gist.github.com/daler/c98fc410282d7570efc3#file-ideograms-py
 
         """
-        if filename is None:
-            return None
-
         try:
             # adapted from chromosome plotting code (see [1]_)
             df = pd.read_table(filename, names=['chrom', 'start', 'end', 'name', 'gie_stain'])
@@ -276,9 +270,6 @@ class Resources(object):
         df : pandas.DataFrame
             knownGene table if loading was successful, else None
         """
-        if filename is None:
-            return None
-
         try:
             df = pd.read_table(filename, names=['name', 'chrom', 'strand', 'txStart', 'txEnd',
                                                 'cdsStart', 'cdsEnd', 'exonCount', 'exonStarts',
@@ -303,9 +294,6 @@ class Resources(object):
         df : pandas.DataFrame
             kgXref table if loading was successful, else None
         """
-        if filename is None:
-            return None
-
         try:
             df = pd.read_table(filename, names=['kgID', 'mRNA', 'spID', 'spDisplayID',
                                                 'geneSymbol', 'refseq', 'protAcc',
