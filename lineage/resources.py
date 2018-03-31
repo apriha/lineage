@@ -212,26 +212,23 @@ class Resources(object):
         try:
             genetic_map = {}
 
-            if '37' in filename:
-                with tarfile.open(filename, 'r') as tar:
-                    # http://stackoverflow.com/a/2018576
-                    for member in tar.getmembers():
-                        if 'genetic_map' in member.name:
-                            df = pd.read_csv(tar.extractfile(member), sep='\t')
-                            df = df.rename(columns={'Position(bp)': 'pos',
-                                                    'Rate(cM/Mb)': 'rate',
-                                                    'Map(cM)': 'map'})
-                            del df['Chromosome']
-                            start_pos = member.name.index('chr') + 3
-                            end_pos = member.name.index('.')
-                            genetic_map[member.name[start_pos:end_pos]] = df
-            else:
-                genetic_map = None
+            with tarfile.open(filename, 'r') as tar:
+                # http://stackoverflow.com/a/2018576
+                for member in tar.getmembers():
+                    if 'genetic_map' in member.name:
+                        df = pd.read_csv(tar.extractfile(member), sep='\t')
+                        df = df.rename(columns={'Position(bp)': 'pos',
+                                                'Rate(cM/Mb)': 'rate',
+                                                'Map(cM)': 'map'})
+                        del df['Chromosome']
+                        start_pos = member.name.index('chr') + 3
+                        end_pos = member.name.index('.')
+                        genetic_map[member.name[start_pos:end_pos]] = df
+
+            return genetic_map
         except Exception as err:
             print(err)
-            genetic_map = None
-
-        return genetic_map
+            return None
 
     @staticmethod
     def _load_cytoBand(filename):
