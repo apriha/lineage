@@ -80,6 +80,11 @@ class Lineage(object):
         Per openSNP, "the data is donated into the public domain using `CC0 1.0
         <http://creativecommons.org/publicdomain/zero/1.0/>`_."
 
+        Returns
+        -------
+        paths : list of str or None
+            paths to example datasets
+
         References
         ----------
         ..[1] Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP–A Crowdsourced Web Resource
@@ -87,7 +92,12 @@ class Lineage(object):
           https://doi.org/10.1371/journal.pone.0089204
 
         """
-        self._resources.download_example_datasets()
+        paths = self._resources.download_example_datasets()
+
+        if None in paths:
+            print('Example dataset(s) not currently available')
+
+        return paths
 
     def find_discordant_snps(self, individual1, individual2, individual3=None, save_output=False):
         """ Find discordant SNPs between two or three individuals.

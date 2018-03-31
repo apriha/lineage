@@ -136,6 +136,11 @@ class Resources(object):
         Per openSNP, "the data is donated into the public domain using `CC0 1.0
         <http://creativecommons.org/publicdomain/zero/1.0/>`_."
 
+        Returns
+        -------
+        paths : list of str or None
+            paths to example datasets
+
         References
         ----------
         ..[1] Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP–A Crowdsourced Web Resource
@@ -143,24 +148,24 @@ class Resources(object):
           https://doi.org/10.1371/journal.pone.0089204
 
         """
-        self._download_file('https://opensnp.org/data/662.23andme.304',
-                            '662.23andme.304.txt.gz', compress=True)
-        self._download_file('https://opensnp.org/data/662.23andme.340',
-                            '662.23andme.340.txt.gz', compress=True)
-        self._download_file('https://opensnp.org/data/662.ftdna-illumina.341',
-                            '662.ftdna-illumina.341.csv.gz', compress=True)
-        self._download_file('https://opensnp.org/data/663.23andme.305',
-                            '663.23andme.305.txt.gz', compress=True)
+        paths = []
+        paths.append(self._download_file('https://opensnp.org/data/662.23andme.304',
+                                         '662.23andme.304.txt.gz', compress=True))
+        paths.append(self._download_file('https://opensnp.org/data/662.23andme.340',
+                                         '662.23andme.340.txt.gz', compress=True))
+        paths.append(self._download_file('https://opensnp.org/data/662.ftdna-illumina.341',
+                                         '662.ftdna-illumina.341.csv.gz', compress=True))
+        paths.append(self._download_file('https://opensnp.org/data/663.23andme.305',
+                                         '663.23andme.305.txt.gz', compress=True))
 
         # these two files consist of concatenated gzip files and therefore need special handling
-        gzip_paths = []
-        gzip_paths.append(self._download_file('https://opensnp.org/data/4583.ftdna-illumina.3482',
-                                              '4583.ftdna-illumina.3482.csv.gz'))
-        gzip_paths.append(self._download_file('https://opensnp.org/data/4584.ftdna-illumina.3483',
-                                              '4584.ftdna-illumina.3483.csv.gz'))
+        paths.append(self._download_file('https://opensnp.org/data/4583.ftdna-illumina.3482',
+                                         '4583.ftdna-illumina.3482.csv.gz'))
+        paths.append(self._download_file('https://opensnp.org/data/4584.ftdna-illumina.3483',
+                                         '4584.ftdna-illumina.3483.csv.gz'))
 
         try:
-            for gzip_path in gzip_paths:
+            for gzip_path in paths[-2:]:
                 # https://stackoverflow.com/q/4928560
                 # https://stackoverflow.com/a/37042747
                 with open(gzip_path, 'rb') as f:
@@ -179,6 +184,8 @@ class Resources(object):
                     f.write(data)
         except Exception as err:
             print(err)
+
+        return paths
 
     @staticmethod
     def _load_genetic_map(filename):
