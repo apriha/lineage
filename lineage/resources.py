@@ -367,6 +367,8 @@ class Resources(object):
             name of file to save; if compress, ensure '.gz' is appended
         compress : bool
             compress with gzip
+        timeout : int
+            seconds for timeout of download request
 
         Returns
         -------
