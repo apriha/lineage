@@ -50,7 +50,6 @@ class Lineage(object):
             name / path of output directory
         resources_dir
             name / path of resources directory
-
         """
         self._output_dir = os.path.abspath(output_dir)
         self._resources = Resources(resources_dir=resources_dir)
@@ -70,7 +69,6 @@ class Lineage(object):
         -------
         Individual
             ``Individual`` initialized in the context of the `lineage` framework
-
         """
         return Individual(name, raw_data, self._output_dir, self._ensembl_rest_client)
 
@@ -90,7 +88,6 @@ class Lineage(object):
         ..[1] Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP–A Crowdsourced Web Resource
           for Personal Genomics," PLOS ONE, 9(3): e89204,
           https://doi.org/10.1371/journal.pone.0089204
-
         """
         paths = self._resources.download_example_datasets()
 
@@ -126,7 +123,6 @@ class Lineage(object):
         ..[2] David Pike, "Search for Discordant SNPs when given data
           for child and both parents," David Pike's Utilities,
           http://www.math.mun.ca/~dapike/FF23utils/trio-discord.php
-
         """
         self._remap_snps_to_GRCh37([individual1, individual2, individual3])
 
@@ -223,7 +219,6 @@ class Lineage(object):
             minimum SNPs for each shared DNA segment
         shared_genes : bool
             determine shared genes
-
         """
         self._remap_snps_to_GRCh37([individual1, individual2])
 
@@ -544,7 +539,6 @@ def save_df_as_csv(df, path, filename):
         path to directory where to save CSV file
     filename : str
         filename of CSV file
-
     """
     if create_dir(path):
         destination = os.path.join(path, filename)

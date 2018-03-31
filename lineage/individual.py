@@ -51,9 +51,7 @@ class Individual(object):
             path to output directory
         ensembl_rest_client : EnsemblRestClient
             client for making requests to the Ensembl REST API
-
         """
-
         self._name = name
         self._output_dir = output_dir
         self._ensembl_rest_client = ensembl_rest_client
@@ -75,7 +73,6 @@ class Individual(object):
         Returns
         -------
         str
-
         """
         return self._name
 
@@ -86,7 +83,6 @@ class Individual(object):
         Returns
         -------
         pandas.DataFrame
-
         """
         if self._snps is not None:
             return self._snps.copy()
@@ -100,7 +96,6 @@ class Individual(object):
         Returns
         -------
         int
-
         """
         return self._assembly
 
@@ -118,7 +113,6 @@ class Individual(object):
         discrepant_genotypes_threshold : int
             threshold for discrepant genotype data between existing data and data to be loaded,
             a large value could indicated mismatched individuals
-
         """
         if type(raw_data) is list:
             for file in raw_data:
@@ -157,9 +151,7 @@ class Individual(object):
         -------
         str
             cleaned string that can be used as a variable name
-
         """
-
         # http://stackoverflow.com/a/3305731
         return re.sub('\W|^(?=\d)', '_', self.name)
 
@@ -196,9 +188,7 @@ class Individual(object):
         ----------
         ..[1] Ensembl, Assembly Map Endpoint,
           http://rest.ensembl.org/documentation/info/assembly_map
-
         """
-
         if self._ensembl_rest_client is None:
             print('Need an ``EnsemblRestClient`` to remap SNPs')
             return
@@ -347,9 +337,7 @@ class Individual(object):
         -------
         pandas.DataFrame
             individual's genetic data normalized for use with `lineage`
-
         """
-
         try:
             return pd.read_csv(file, comment='#', sep='\t', na_values='--',
                                names=['rsid', 'chrom', 'pos', 'genotype'],
@@ -373,9 +361,7 @@ class Individual(object):
         -------
         pandas.DataFrame
             individual's genetic data normalized for use with `lineage`
-
         """
-
         try:
             df = pd.read_csv(file, skiprows=1, na_values='--',
                              names=['rsid', 'chrom', 'pos', 'genotype'],
@@ -408,9 +394,7 @@ class Individual(object):
         -------
         pandas.DataFrame
             individual's genetic data normalized for use with `lineage`
-
         """
-
         try:
             df = pd.read_csv(file, comment='#', header=0, sep='\t', na_values=0,
                              names=['rsid', 'chrom', 'pos', 'allele1', 'allele2'],
@@ -446,9 +430,7 @@ class Individual(object):
             see above
         discrepant_genotypes_threshold : int
             see above
-
         """
-
         if snps is None:
             return
 
@@ -541,7 +523,6 @@ class Individual(object):
         -------
         df : pandas.DataFrame
             SNPs with specified chromosome's single alleles doubled
-
         """
         # find all single alleles of the specified chromosome
         single_alleles = np.where((df['chrom'] == chrom) &
@@ -617,9 +598,7 @@ class Individual(object):
           for Biotechnology Information, National Library of Medicine. dbSNP accession: rs3094315,
           rs11928389, rs2500347, and rs964481 (dbSNP Build ID: 151). Available from:
           http://www.ncbi.nlm.nih.gov/SNP/
-
         """
-
         assembly = None
 
         rsids = ['rs3094315', 'rs11928389', 'rs2500347', 'rs964481']

@@ -65,7 +65,6 @@ class Resources(object):
         ----------
         resources_dir : str
             name / path of resources directory
-
         """
         self._resources_dir = os.path.abspath(resources_dir)
         self._genetic_map_HapMapII_GRCh37 = None
@@ -80,7 +79,6 @@ class Resources(object):
         -------
         dict
             dict of pandas.DataFrame HapMapII genetic maps if loading was successful, else None
-
         """
         if self._genetic_map_HapMapII_GRCh37 is None:
             self._genetic_map_HapMapII_GRCh37 = \
@@ -95,7 +93,6 @@ class Resources(object):
         -------
         pandas.DataFrame
             cytoBand table if loading was successful, else None
-
         """
         if self._cytoBand_hg19 is None:
             self._cytoBand_hg19 = self._load_cytoBand(self._get_path_cytoBand_hg19())
@@ -109,7 +106,6 @@ class Resources(object):
         -------
         pandas.DataFrame
             knownGene table if loading was successful, else None
-
         """
         if self._knownGene_hg19 is None:
             self._knownGene_hg19 = self._load_knownGene(self._get_path_knownGene_hg19())
@@ -123,7 +119,6 @@ class Resources(object):
         -------
         pandas.DataFrame
             kgXref table if loading was successful, else None
-
         """
         if self._kgXref_hg19 is None:
             self._kgXref_hg19 = self._load_kgXref(self._get_path_kgXref_hg19())
@@ -146,7 +141,6 @@ class Resources(object):
         ..[1] Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP–A Crowdsourced Web Resource
           for Personal Genomics," PLOS ONE, 9(3): e89204,
           https://doi.org/10.1371/journal.pone.0089204
-
         """
         paths = []
         paths.append(self._download_file('https://opensnp.org/data/662.23andme.304',
@@ -204,7 +198,6 @@ class Resources(object):
         Notes
         -----
         Keys of returned dict are chromosomes and values are the corresponding genetic map.
-
         """
         try:
             genetic_map = {}
@@ -245,7 +238,6 @@ class Resources(object):
         ----------
         ..[1] Ryan Dale, GitHub Gist,
           https://gist.github.com/daler/c98fc410282d7570efc3#file-ideograms-py
-
         """
         try:
             # adapted from chromosome plotting code (see [1]_)
@@ -311,9 +303,7 @@ class Resources(object):
         -------
         str
             path to cytoBand_hg19.txt.gz
-
         """
-
         return self._download_file(
             'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz',
             'cytoBand_hg19.txt.gz')
@@ -335,9 +325,7 @@ class Resources(object):
           GRCh37. The original map was generated using LDhat as described in the 2007 HapMap
           paper (Nature, 18th Sept 2007). The conversion from b35 to GRCh37 was achieved using
           the UCSC liftOver tool. Adam Auton, 08/12/2010"
-
         """
-
         return self._download_file(
             'ftp://ftp.ncbi.nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37/'
             'genetic_map_HapMapII_GRCh37.tar.gz', 'genetic_map_HapMapII_GRCh37.tar.gz')
@@ -349,9 +337,7 @@ class Resources(object):
         -------
         str
             path to knownGene_hg19.txt.gz
-
         """
-
         return self._download_file(
             'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/knownGene.txt.gz',
             'knownGene_hg19.txt.gz')
@@ -363,9 +349,7 @@ class Resources(object):
         -------
         str
             path to kgXref_hg19.txt.gz
-
         """
-
         return self._download_file(
             'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/kgXref.txt.gz',
             'kgXref_hg19.txt.gz')
@@ -388,7 +372,6 @@ class Resources(object):
         -------
         str
             path to downloaded file, None if error
-
         """
         if not lineage.create_dir(self._resources_dir):
             return None
