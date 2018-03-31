@@ -1,13 +1,13 @@
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/lineage_banner.png
 
+|build| |codecov| |pypi| |python| |license|
+
 lineage
 =======
 ``lineage`` provides a framework for analyzing genotype (raw data) files from direct-to-consumer
 DNA testing companies (e.g., `23andMe <https://www.23andme.com>`_,
 `Family Tree DNA <https://www.familytreedna.com>`_, and `Ancestry <http://www.ancestry.com>`_),
 primarily for the purposes of genetic genealogy.
-
-|codecov|
 
 Capabilities
 ------------
@@ -263,5 +263,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 .. https://github.com/rtfd/readthedocs.org/blob/master/docs/badges.rst
-.. |codecov| image:: https://codecov.io/gh/apriha/lineage/branch/add-tests/graph/badge.svg
-  :target: https://codecov.io/gh/apriha/lineage
+.. |build| image:: https://travis-ci.org/apriha/lineage.svg?branch=master
+   :target: https://travis-ci.org/apriha/lineage
+.. |codecov| image:: https://codecov.io/gh/apriha/lineage/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/apriha/lineage
+.. |pypi| image:: https://img.shields.io/pypi/v/lineage.svg
+   :target: https://pypi.python.org/pypi/lineage
+.. |python| image:: https://img.shields.io/pypi/pyversions/lineage.svg
+   :target: https://www.python.org
+.. |license| image:: https://img.shields.io/pypi/l/lineage.svg
+   :target: https://github.com/apriha/lineage/blob/master/LICENSE.txt
