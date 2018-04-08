@@ -127,21 +127,31 @@ class Individual(object):
             raise TypeError('invalid filetype')
 
     def save_snps(self):
-        """ Save SNPs to file. """
+        """ Save SNPs to file.
+
+        Returns
+        -------
+        bool
+            true if SNPs saved to file in output directory
+        """
         if self._snps is not None:
             try:
                 if lineage.create_dir(self._output_dir):
                     output_dir = self._output_dir
                 else:
-                    output_dir = ''
+                    return False
 
                 file = os.path.join(output_dir, self.get_var_name() + '.csv')
                 print('Saving ' + os.path.relpath(file))
                 self._snps.to_csv(file, na_rep='--', header=['chromosome', 'position', 'genotype'])
             except Exception as err:
                 print(err)
+                return False
         else:
             print('no SNPs to save...')
+            return False
+
+        return True
 
     def get_var_name(self):
         """ Clean a string so that it can be a valid Python variable
@@ -173,6 +183,11 @@ class Individual(object):
         complement_bases : bool
             complement bases when remapping SNPs to the minus strand
 
+        Returns
+        -------
+        bool
+            true if SNPs mapped relative to target assembly
+
         Notes
         -----
         An assembly is also know as a "build." For example:
@@ -191,13 +206,17 @@ class Individual(object):
         """
         if self._ensembl_rest_client is None:
             print('Need an ``EnsemblRestClient`` to remap SNPs')
-            return
+            return False
+
+        if self._snps is None:
+            print('No SNPs to remap')
+            return False
 
         valid_assemblies = ['NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38]
 
         if target_assembly not in valid_assemblies:
             print('Invalid target assembly')
-            return
+            return False
 
         if isinstance(target_assembly, int):
             if target_assembly == 36:
@@ -211,7 +230,7 @@ class Individual(object):
             source_assembly = 'GRCh' + str(self._assembly)
 
         if source_assembly == target_assembly:
-            return
+            return True
 
         for chrom in self._snps['chrom'].unique():
             print('Remapping chromosome ' + chrom + '...')
@@ -276,6 +295,8 @@ class Individual(object):
 
         self._sort_snps()
         self._assembly = int(target_assembly[-2:])
+
+        return True
 
     def _complement_bases(self, genotype):
         if pd.isnull(genotype):
