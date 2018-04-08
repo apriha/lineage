@@ -340,6 +340,8 @@ class Individual(object):
             return self._read_ancestry(file)
         elif line[:4] == 'RSID':
             return self._read_ftdna(file)
+        elif line[:4] == 'rsid':
+            return self._read_generic_csv(file)
         else:
             return None
 
@@ -434,6 +436,41 @@ class Individual(object):
             df.ix[np.where(df['chrom'] == '24')[0], 'chrom'] = 'Y'
             df.ix[np.where(df['chrom'] == '25')[0], 'chrom'] = 'PAR'
             df.ix[np.where(df['chrom'] == '26')[0], 'chrom'] = 'MT'
+
+            return df
+        except Exception as err:
+            print(err)
+            return None
+
+    @staticmethod
+    def _read_generic_csv(file):
+        """ Read and parse generic CSV file.
+
+        Notes
+        -----
+        Assumes columns are 'rsid', 'chrom' / 'chromosome', 'pos' / 'position', and 'genotype';
+        values are comma separated; unreported genotypes are indicated by '--'; and one header row
+        precedes data. For example:
+
+            rsid,chromosome,position,genotype
+            rs1,1,1,AA
+            rs2,1,2,CC
+            rs3,1,3,--
+
+        Parameters
+        ----------
+        file : str
+            path to file
+
+        Returns
+        -------
+        pandas.DataFrame
+            individual's genetic data normalized for use with `lineage`
+        """
+        try:
+            df = pd.read_csv(file, skiprows=1, na_values='--',
+                             names=['rsid', 'chrom', 'pos', 'genotype'],
+                             index_col=0, dtype={'chrom': object, 'pos': np.int64})
 
             return df
         except Exception as err:
