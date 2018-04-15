@@ -185,46 +185,63 @@ def test_get_var_name(l):
 
 def test_remap_snps_36_to_37(l, snps_GRCh37):
     ind = l.create_individual('', 'tests/input/NCBI36.csv')
-    assert ind.remap_snps(37)
-    assert ind.assembly == 37
-    pd.testing.assert_frame_equal(ind.snps, snps_GRCh37)
+    chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(37)
+    assert ind.assembly == 37  # TODO: handle partial remapping; see #24
+    if len(chromosomes_remapped) == 2:
+        assert len(chromosomes_not_remapped) == 0
+        pd.testing.assert_frame_equal(ind.snps, snps_GRCh37)
 
 
 def test_remap_snps_37_to_36(l, snps_NCBI36):
     ind = l.create_individual('', 'tests/input/GRCh37.csv')
-    assert ind.remap_snps(36)
-    assert ind.assembly == 36
-    pd.testing.assert_frame_equal(ind.snps, snps_NCBI36)
+    chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(36)
+    assert ind.assembly == 36  # TODO: handle partial remapping; see #24
+    if len(chromosomes_remapped) == 2:
+        assert len(chromosomes_not_remapped) == 0
+        pd.testing.assert_frame_equal(ind.snps, snps_NCBI36)
 
 
 def test_remap_snps_37_to_38(l, snps_GRCh38):
     ind = l.create_individual('', 'tests/input/GRCh37.csv')
-    assert ind.remap_snps(38)
-    assert ind.assembly == 38
-    pd.testing.assert_frame_equal(ind.snps, snps_GRCh38)
+    chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(38)
+    assert ind.assembly == 38  # TODO: handle partial remapping; see #24
+    if len(chromosomes_remapped) == 2:
+        assert len(chromosomes_not_remapped) == 0
+        pd.testing.assert_frame_equal(ind.snps, snps_GRCh38)
 
 
 def test_remap_snps_37_to_37(l, snps_GRCh37):
     ind = l.create_individual('', 'tests/input/GRCh37.csv')
-    assert ind.remap_snps(37)
+    chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(37)
     assert ind.assembly == 37
+    assert len(chromosomes_remapped) == 0
+    assert len(chromosomes_not_remapped) == 2
     pd.testing.assert_frame_equal(ind.snps, snps_GRCh37)
 
 
 def test_remap_snps_no_EnsemblRestClient(l):
-    ind = l.create_individual('')
+    ind = l.create_individual('', 'tests/input/GRCh37.csv')
     ind._ensembl_rest_client = None
-    assert not ind.remap_snps(38)
+    chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(38)
+    assert ind.assembly == 37
+    assert len(chromosomes_remapped) == 0
+    assert len(chromosomes_not_remapped) == 2
 
 
 def test_remap_snps_no_snps(l):
     ind = l.create_individual('')
-    assert not ind.remap_snps(38)
+    chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(38)
+    assert ind.assembly is None
+    assert len(chromosomes_remapped) == 0
+    assert len(chromosomes_not_remapped) == 0
 
 
 def test_remap_snps_invalid_assembly(l):
     ind = l.create_individual('', 'tests/input/GRCh37.csv')
-    assert not ind.remap_snps(-1)
+    chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(-1)
+    assert ind.assembly == 37
+    assert len(chromosomes_remapped) == 0
+    assert len(chromosomes_not_remapped) == 2
 
 
 def test__read_23andme_None(l):

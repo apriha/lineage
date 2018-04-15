@@ -185,8 +185,10 @@ class Individual(object):
 
         Returns
         -------
-        bool
-            true if SNPs mapped relative to target assembly
+        chromosomes_remapped : list of str
+            chromosomes remapped; empty if None
+        chromosomes_not_remapped : list of str
+            chromosomes not remapped; empty if None
 
         Notes
         -----
@@ -204,19 +206,24 @@ class Individual(object):
         ..[1] Ensembl, Assembly Map Endpoint,
           http://rest.ensembl.org/documentation/info/assembly_map
         """
-        if self._ensembl_rest_client is None:
-            print('Need an ``EnsemblRestClient`` to remap SNPs')
-            return False
+        chromosomes_remapped = []
+        chromosomes_not_remapped = []
 
         if self._snps is None:
             print('No SNPs to remap')
-            return False
+            return chromosomes_remapped, chromosomes_not_remapped
+        else:
+            chromosomes_not_remapped = list(self._snps['chrom'].unique())
+
+        if self._ensembl_rest_client is None:
+            print('Need an ``EnsemblRestClient`` to remap SNPs')
+            return chromosomes_remapped, chromosomes_not_remapped
 
         valid_assemblies = ['NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38]
 
         if target_assembly not in valid_assemblies:
             print('Invalid target assembly')
-            return False
+            return chromosomes_remapped, chromosomes_not_remapped
 
         if isinstance(target_assembly, int):
             if target_assembly == 36:
@@ -230,7 +237,7 @@ class Individual(object):
             source_assembly = 'GRCh' + str(self._assembly)
 
         if source_assembly == target_assembly:
-            return True
+            return chromosomes_remapped, chromosomes_not_remapped
 
         for chrom in self._snps['chrom'].unique():
             print('Remapping chromosome ' + chrom + '...')
@@ -250,7 +257,11 @@ class Individual(object):
             response = self._ensembl_rest_client.perform_rest_action(endpoint)
 
             if response is None:
+                print('Chromosome ' + chrom + ' not remapped')
                 continue
+            else:
+                chromosomes_remapped.append(chrom)
+                chromosomes_not_remapped.remove(chrom)
 
             for mapping in response['mappings']:
                 orig_range_len = mapping['original']['end'] - mapping['original']['start']
@@ -296,7 +307,7 @@ class Individual(object):
         self._sort_snps()
         self._assembly = int(target_assembly[-2:])
 
-        return True
+        return chromosomes_remapped, chromosomes_not_remapped
 
     def _complement_bases(self, genotype):
         if pd.isnull(genotype):
