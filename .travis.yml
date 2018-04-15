@@ -2,6 +2,7 @@
 # https://github.com/sympy/sympy/blob/master/.travis.yml
 # https://github.com/twisted/klein/blob/master/.travis.yml
 # https://github.com/codecov/example-python
+# https://docs.travis-ci.com
 
 language: python
 
@@ -30,6 +31,13 @@ before_install:
 
 install:
   - pip install .
+
+# configure Travis CI for matplotlib
+
+before_script:
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+  - sleep 3
 
 # build and deploy Sphinx documentation to GitHub Pages with doctr
 # https://github.com/drdoctr/doctr
