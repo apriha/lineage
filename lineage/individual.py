@@ -313,6 +313,8 @@ class Individual(object):
                 complement += 'G'
             elif base == 'T':
                 complement += 'A'
+            else:
+                complement += base
 
         return complement
 

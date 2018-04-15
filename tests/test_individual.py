@@ -40,20 +40,23 @@ def generic_snps():
 
 @pytest.fixture(scope='module')
 def snps_NCBI36():
-    return create_snp_df(rsid=['rs3094315', 'rs2500347', 'rs11928389'], chrom=['1', '1', '3'],
-                pos=[742429, 143649677, 50908372], genotype=['AA', np.nan, 'AG'])
+    return create_snp_df(rsid=['rs3094315', 'rs2500347', 'rsIndelTest', 'rs11928389'],
+                         chrom=['1', '1', '1', '3'], pos=[742429, 143649677, 143649678, 50908372],
+                         genotype=['AA', np.nan, 'ID', 'AG'])
 
 
 @pytest.fixture(scope='module')
 def snps_GRCh37():
-    return create_snp_df(rsid=['rs3094315', 'rs2500347', 'rs11928389'], chrom=['1', '1', '3'],
-                pos=[752566, 144938320, 50927009], genotype=['AA', np.nan, 'TC'])
+    return create_snp_df(rsid=['rs3094315', 'rs2500347', 'rsIndelTest', 'rs11928389'],
+                         chrom=['1', '1', '1', '3'], pos=[752566, 144938320, 144938321, 50927009],
+                         genotype=['AA', np.nan, 'ID', 'TC'])
 
 
 @pytest.fixture(scope='module')
 def snps_GRCh38():
-    return create_snp_df(rsid=['rs3094315', 'rs2500347', 'rs11928389'], chrom=['1', '1', '3'],
-                pos=[817186, 148946169, 50889578], genotype=['AA', np.nan, 'TC'])
+    return create_snp_df(rsid=['rs3094315', 'rsIndelTest', 'rs2500347', 'rs11928389'],
+                         chrom=['1', '1', '1', '3'], pos=[817186, 148946168, 148946169, 50889578],
+                         genotype=['AA', 'ID', np.nan, 'TC'])
 
 
 def test_name(l):
