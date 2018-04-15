@@ -183,24 +183,28 @@ def test_get_var_name(l):
 def test_remap_snps_36_to_37(l, snps_GRCh37):
     ind = l.create_individual('', 'tests/input/NCBI36.csv')
     assert ind.remap_snps(37)
+    assert ind.assembly == 37
     pd.testing.assert_frame_equal(ind.snps, snps_GRCh37)
 
 
 def test_remap_snps_37_to_36(l, snps_NCBI36):
     ind = l.create_individual('', 'tests/input/GRCh37.csv')
     assert ind.remap_snps(36)
+    assert ind.assembly == 36
     pd.testing.assert_frame_equal(ind.snps, snps_NCBI36)
 
 
 def test_remap_snps_37_to_38(l, snps_GRCh38):
     ind = l.create_individual('', 'tests/input/GRCh37.csv')
     assert ind.remap_snps(38)
+    assert ind.assembly == 38
     pd.testing.assert_frame_equal(ind.snps, snps_GRCh38)
 
 
 def test_remap_snps_37_to_37(l, snps_GRCh37):
     ind = l.create_individual('', 'tests/input/GRCh37.csv')
     assert ind.remap_snps(37)
+    assert ind.assembly == 37
     pd.testing.assert_frame_equal(ind.snps, snps_GRCh37)
 
 
