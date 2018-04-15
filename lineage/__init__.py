@@ -147,7 +147,7 @@ class Lineage(object):
                          (df[genotype1] != df[genotype2])) |
                         ((df[genotype1].str.len() == 2) &
                          (df[genotype2].str.len() == 2) &
-                         (df[genotype1].str[0] != df[genotype2].str[1]) &
+                         (df[genotype1].str[0] != df[genotype2].str[0]) &
                          (df[genotype1].str[0] != df[genotype2].str[1]) &
                          (df[genotype1].str[1] != df[genotype2].str[0]) &
                          (df[genotype1].str[1] != df[genotype2].str[1]))]
