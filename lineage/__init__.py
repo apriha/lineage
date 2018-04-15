@@ -219,7 +219,21 @@ class Lineage(object):
             minimum SNPs for each shared DNA segment
         shared_genes : bool
             determine shared genes
+
+        Returns
+        -------
+        one_chrom_shared_dna : list of dicts
+            segments of shared DNA on one chromosome
+        two_chrom_shared_dna : list of dicts
+            segments of shared DNA on two chromosomes
+        one_chrom_shared_genes : pandas.DataFrame
+            shared genes on one chromosome
+        two_chrom_shared_genes : pandas.DataFrame
+            shared genes on two chromosomes
         """
+        one_chrom_shared_genes = pd.DataFrame()
+        two_chrom_shared_genes = pd.DataFrame()
+
         self._remap_snps_to_GRCh37([individual1, individual2])
 
         df = individual1.snps
@@ -276,18 +290,21 @@ class Lineage(object):
                                              individual1.get_var_name(),
                                              individual2.get_var_name())
             if shared_genes:
-                self._compute_shared_genes(one_chrom_shared_dna, 'one',
-                                           individual1.get_var_name(),
-                                           individual2.get_var_name())
+                one_chrom_shared_genes = self._compute_shared_genes(one_chrom_shared_dna, 'one',
+                                                                    individual1.get_var_name(),
+                                                                    individual2.get_var_name())
 
         if len(two_chrom_shared_dna) > 0:
             self._save_shared_dna_csv_format(two_chrom_shared_dna, 'two',
                                              individual1.get_var_name(),
                                              individual2.get_var_name())
             if shared_genes:
-                self._compute_shared_genes(two_chrom_shared_dna, 'two',
-                                           individual1.get_var_name(),
-                                           individual2.get_var_name())
+                two_chrom_shared_genes = self._compute_shared_genes(two_chrom_shared_dna, 'two',
+                                                                    individual1.get_var_name(),
+                                                                    individual2.get_var_name())
+
+        return one_chrom_shared_dna, two_chrom_shared_dna, \
+               one_chrom_shared_genes, two_chrom_shared_genes
 
     def _compute_shared_genes(self, shared_dna, type, individual1_name, individual2_name):
         knownGenes = self._resources.get_knownGene_hg19()
@@ -296,7 +313,8 @@ class Lineage(object):
         # http://seqanswers.com/forums/showthread.php?t=22336
         df = knownGenes.join(kgXref)
 
-        shared_genes = []
+        shared_genes_dfs = []
+        shared_genes = pd.DataFrame()
 
         for shared_segment in shared_dna:
             # determine genes transcribed from this shared DNA segment
@@ -309,9 +327,11 @@ class Lineage(object):
                          'proteinID', 'description']]
 
             if len(temp) > 0:
-                shared_genes.append(temp)
+                shared_genes_dfs.append(temp)
 
-        if len(shared_genes) > 0:
+        if len(shared_genes_dfs) > 0:
+            shared_genes = pd.concat(shared_genes_dfs)
+
             if type == 'one':
                 chroms = 'one_chrom'
             else:
@@ -320,7 +340,9 @@ class Lineage(object):
             file = os.path.join(self._output_dir, 'shared_genes_' + chroms + '_' +
                                 individual1_name + '_' + individual2_name + '.csv')
 
-            save_df_as_csv(pd.concat(shared_genes), self._output_dir, file)
+            save_df_as_csv(shared_genes, self._output_dir, file)
+
+        return shared_genes
 
     def _save_shared_dna_csv_format(self, shared_dna, type, individual1_name, individual2_name):
         if type == 'one':
