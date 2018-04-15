@@ -374,9 +374,11 @@ class Lineage(object):
             # sort based on pos
             temp = temp.sort_values('pos')
 
-            # fill cM rates forward and backward
+            # fill recombination rates forward
             temp['rate'] = temp['rate'].fillna(method='ffill')
-            temp['rate'] = temp['rate'].fillna(method='bfill')
+
+            # assume recombination rate of 0 for SNPs upstream of first defined rate
+            temp['rate'] = temp['rate'].fillna(0)
 
             # get difference between positions
             pos_diffs = np.ediff1d(temp['pos'])
