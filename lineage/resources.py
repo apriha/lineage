@@ -65,69 +65,65 @@ class Resources(object):
         ----------
         resources_dir : str
             name / path of resources directory
-
         """
         self._resources_dir = os.path.abspath(resources_dir)
-        self._hapmap_h37 = None
-        self._cytoband_h37 = None
-        self._knownGene_h37 = None
-        self._kgXref_h37 = None
+        self._genetic_map_HapMapII_GRCh37 = None
+        self._cytoBand_hg19 = None
+        self._knownGene_hg19 = None
+        self._kgXref_hg19 = None
 
-    def get_hapmap_h37(self):
-        """ Get International HapMap Consortium HapMap for Build 37.
+    def get_genetic_map_HapMapII_GRCh37(self):
+        """ Get International HapMap Consortium HapMap Phase II genetic map for Build 37.
 
         Returns
         -------
         dict
-            dict of pandas.DataFrame HapMap tables if loading was successful, else None
-
+            dict of pandas.DataFrame HapMapII genetic maps if loading was successful, else None
         """
-        if self._hapmap_h37 is None:
-            self._hapmap_h37 = self._load_hapmap(self._get_path_hapmap_h37())
+        if self._genetic_map_HapMapII_GRCh37 is None:
+            self._genetic_map_HapMapII_GRCh37 = \
+                self._load_genetic_map(self._get_path_genetic_map_HapMapII_GRCh37())
 
-        return self._hapmap_h37
+        return self._genetic_map_HapMapII_GRCh37
 
-    def get_cytoband_h37(self):
+    def get_cytoBand_hg19(self):
         """ Get UCSC cytoBand table for Build 37.
 
         Returns
         -------
         pandas.DataFrame
             cytoBand table if loading was successful, else None
-
         """
-        if self._cytoband_h37 is None:
-            self._cytoband_h37 = self._load_cytoband(self._get_path_cytoband_h37())
+        if self._cytoBand_hg19 is None:
+            self._cytoBand_hg19 = self._load_cytoBand(self._get_path_cytoBand_hg19())
 
-        return self._cytoband_h37
+        return self._cytoBand_hg19
 
-    def get_knownGene_h37(self):
+    def get_knownGene_hg19(self):
         """ Get UCSC knownGene table for Build 37.
 
         Returns
         -------
         pandas.DataFrame
             knownGene table if loading was successful, else None
-
         """
-        if self._knownGene_h37 is None:
-            self._knownGene_h37 = self._load_knownGene(self._get_path_knownGene_h37())
+        if self._knownGene_hg19 is None:
+            self._knownGene_hg19 = self._load_knownGene(self._get_path_knownGene_hg19())
 
-        return self._knownGene_h37
+        return self._knownGene_hg19
 
-    def get_kgXref_h37(self):
+    def get_kgXref_hg19(self):
         """ Get UCSC kgXref table for Build 37.
 
         Returns
         -------
         pandas.DataFrame
             kgXref table if loading was successful, else None
-
         """
-        if self._kgXref_h37 is None:
-            self._kgXref_h37 = self._load_kgXref(self._get_path_kgXref_h37())
+        if self._kgXref_hg19 is None:
+            self._kgXref_hg19 = self._load_kgXref(self._get_path_kgXref_hg19())
 
-        return self._kgXref_h37
+        return self._kgXref_hg19
 
     def download_example_datasets(self):
         """ Download example datasets from `openSNP <https://opensnp.org>`_.
@@ -135,31 +131,35 @@ class Resources(object):
         Per openSNP, "the data is donated into the public domain using `CC0 1.0
         <http://creativecommons.org/publicdomain/zero/1.0/>`_."
 
+        Returns
+        -------
+        paths : list of str or None
+            paths to example datasets
+
         References
         ----------
         ..[1] Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP–A Crowdsourced Web Resource
           for Personal Genomics," PLOS ONE, 9(3): e89204,
           https://doi.org/10.1371/journal.pone.0089204
-
         """
-        self._download_file(self._get_url_dataset_user662_304(),
-                            '662.23andme.304.csv.gz', compress=True)
-        self._download_file(self._get_url_dataset_user662_340(),
-                            '662.23andme.340.csv.gz', compress=True)
-        self._download_file(self._get_url_dataset_user662_341(),
-                            '662.ftdna-illumina.341.csv.gz', compress=True)
-        self._download_file(self._get_url_dataset_user663_305(),
-                            '663.23andme.305.csv.gz', compress=True)
+        paths = []
+        paths.append(self._download_file('https://opensnp.org/data/662.23andme.304',
+                                         '662.23andme.304.txt.gz', compress=True))
+        paths.append(self._download_file('https://opensnp.org/data/662.23andme.340',
+                                         '662.23andme.340.txt.gz', compress=True))
+        paths.append(self._download_file('https://opensnp.org/data/662.ftdna-illumina.341',
+                                         '662.ftdna-illumina.341.csv.gz', compress=True))
+        paths.append(self._download_file('https://opensnp.org/data/663.23andme.305',
+                                         '663.23andme.305.txt.gz', compress=True))
 
         # these two files consist of concatenated gzip files and therefore need special handling
-        gzip_paths = []
-        gzip_paths.append(self._download_file(self._get_url_dataset_user4583_3482(),
-                                              '4583.ftdna-illumina.3482.csv.gz'))
-        gzip_paths.append(self._download_file(self._get_url_dataset_user4584_3483(),
-                                              '4584.ftdna-illumina.3483.csv.gz'))
+        paths.append(self._download_file('https://opensnp.org/data/4583.ftdna-illumina.3482',
+                                         '4583.ftdna-illumina.3482.csv.gz'))
+        paths.append(self._download_file('https://opensnp.org/data/4584.ftdna-illumina.3483',
+                                         '4584.ftdna-illumina.3483.csv.gz'))
 
         try:
-            for gzip_path in gzip_paths:
+            for gzip_path in paths[-2:]:
                 # https://stackoverflow.com/q/4928560
                 # https://stackoverflow.com/a/37042747
                 with open(gzip_path, 'rb') as f:
@@ -179,74 +179,49 @@ class Resources(object):
         except Exception as err:
             print(err)
 
-    @staticmethod
-    def _get_url_dataset_user662_304():
-        return 'https://opensnp.org/data/662.23andme.304'
+        return paths
 
     @staticmethod
-    def _get_url_dataset_user662_340():
-        return 'https://opensnp.org/data/662.23andme.340'
-
-    @staticmethod
-    def _get_url_dataset_user662_341():
-        return 'https://opensnp.org/data/662.ftdna-illumina.341'
-
-    @staticmethod
-    def _get_url_dataset_user663_305():
-        return 'https://opensnp.org/data/663.23andme.305'
-
-    @staticmethod
-    def _get_url_dataset_user4583_3482():
-        return 'https://opensnp.org/data/4583.ftdna-illumina.3482'
-
-    @staticmethod
-    def _get_url_dataset_user4584_3483():
-        return 'https://opensnp.org/data/4584.ftdna-illumina.3483'
-
-    @staticmethod
-    def _load_hapmap(filename):
-        """ Load HapMap.
+    def _load_genetic_map(filename):
+        """ Load genetic map (e.g. HapMapII).
 
         Parameters
         ----------
         filename : str
-            path to compressed archive with HapMap data
+            path to compressed archive with genetic map data
 
         Returns
         -------
-        hapmap : dict
-            dict of pandas.DataFrame HapMap tables if loading was successful, else None
+        genetic_map : dict
+            dict of pandas.DataFrame genetic maps if loading was successful, else None
 
+        Notes
+        -----
+        Keys of returned dict are chromosomes and values are the corresponding genetic map.
         """
-        if filename is None:
-            return None
-
         try:
-            hapmap = {}
+            genetic_map = {}
 
-            if '37' in filename:
-                with tarfile.open(filename, 'r') as tar:
-                    # http://stackoverflow.com/a/2018576
-                    for member in tar.getmembers():
-                        if 'genetic_map' in member.name:
-                            df = pd.read_csv(tar.extractfile(member), sep='\t')
-                            df = df.rename(columns={'Position(bp)': 'pos',
-                                                    'Rate(cM/Mb)': 'rate',
-                                                    'Map(cM)': 'map'})
-                            del df['Chromosome']
-                            start_pos = member.name.index('chr') + 3
-                            end_pos = member.name.index('.')
-                            hapmap[member.name[start_pos:end_pos]] = df
-            else:
-                hapmap = None
+            with tarfile.open(filename, 'r') as tar:
+                # http://stackoverflow.com/a/2018576
+                for member in tar.getmembers():
+                    if 'genetic_map' in member.name:
+                        df = pd.read_csv(tar.extractfile(member), sep='\t')
+                        df = df.rename(columns={'Position(bp)': 'pos',
+                                                'Rate(cM/Mb)': 'rate',
+                                                'Map(cM)': 'map'})
+                        del df['Chromosome']
+                        start_pos = member.name.index('chr') + 3
+                        end_pos = member.name.index('.')
+                        genetic_map[member.name[start_pos:end_pos]] = df
+
+            return genetic_map
         except Exception as err:
             print(err)
-            hapmap = None
-
-        return hapmap
+            return None
 
     @staticmethod
-    def _load_cytoband(filename):
+    def _load_cytoBand(filename):
         """ Load UCSC cytoBand table.
 
         Parameters
@@ -263,11 +238,7 @@ class Resources(object):
         ----------
         ..[1] Ryan Dale, GitHub Gist,
           https://gist.github.com/daler/c98fc410282d7570efc3#file-ideograms-py
-
         """
-        if filename is None:
-            return None
-
         try:
             # adapted from chromosome plotting code (see [1]_)
             df = pd.read_table(filename, names=['chrom', 'start', 'end', 'name', 'gie_stain'])
@@ -291,9 +262,6 @@ class Resources(object):
         df : pandas.DataFrame
             knownGene table if loading was successful, else None
         """
-        if filename is None:
-            return None
-
         try:
             df = pd.read_table(filename, names=['name', 'chrom', 'strand', 'txStart', 'txEnd',
                                                 'cdsStart', 'cdsEnd', 'exonCount', 'exonStarts',
@@ -318,9 +286,6 @@ class Resources(object):
         df : pandas.DataFrame
             kgXref table if loading was successful, else None
         """
-        if filename is None:
-            return None
-
         try:
             df = pd.read_table(filename, names=['kgID', 'mRNA', 'spID', 'spDisplayID',
                                                 'geneSymbol', 'refseq', 'protAcc',
@@ -331,29 +296,26 @@ class Resources(object):
             print(err)
             return None
 
-    def _get_path_cytoband_h37(self):
+    def _get_path_cytoBand_hg19(self):
         """ Get local path to cytoBand file for hg19 / GRCh37 from UCSC, downloading if necessary.
 
         Returns
         -------
         str
-            path to cytoband_h37.txt.gz
-
+            path to cytoBand_hg19.txt.gz
         """
+        return self._download_file(
+            'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz',
+            'cytoBand_hg19.txt.gz')
 
-        return self._download_file(self._get_url_cytoband_h37(), 'cytoband_h37.txt.gz')
-
-    @staticmethod
-    def _get_url_cytoband_h37():
-        return 'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz'
-
-    def _get_path_hapmap_h37(self):
-        """ Get local path to HapMap for hg19 / GRCh37, downloading if necessary.
+    def _get_path_genetic_map_HapMapII_GRCh37(self):
+        """ Get local path to HapMap Phase II genetic map for hg19 / GRCh37 (HapMapII),
+        downloading if necessary.
 
         Returns
         -------
         str
-            path to hapmap_h37.tar.gz
+            path to genetic_map_HapMapII_GRCh37.tar.gz
 
         References
         ----------
@@ -363,50 +325,36 @@ class Resources(object):
           GRCh37. The original map was generated using LDhat as described in the 2007 HapMap
           paper (Nature, 18th Sept 2007). The conversion from b35 to GRCh37 was achieved using
           the UCSC liftOver tool. Adam Auton, 08/12/2010"
-
         """
+        return self._download_file(
+            'ftp://ftp.ncbi.nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37/'
+            'genetic_map_HapMapII_GRCh37.tar.gz', 'genetic_map_HapMapII_GRCh37.tar.gz')
 
-        return self._download_file(self._get_url_hapmap_h37(), 'hapmap_h37.tar.gz')
-
-    @staticmethod
-    def _get_url_hapmap_h37():
-        return 'ftp://ftp.ncbi.nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37/' \
-               'genetic_map_HapMapII_GRCh37.tar.gz'
-
-    def _get_path_knownGene_h37(self):
+    def _get_path_knownGene_hg19(self):
         """ Get local path to knownGene file for hg19 / GRCh37 from UCSC, downloading if necessary.
 
         Returns
         -------
         str
-            path to knownGene_h37.txt.gz
-
+            path to knownGene_hg19.txt.gz
         """
+        return self._download_file(
+            'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/knownGene.txt.gz',
+            'knownGene_hg19.txt.gz')
 
-        return self._download_file(self._get_url_knownGene_h37(), 'knownGene_h37.txt.gz')
-
-    @staticmethod
-    def _get_url_knownGene_h37():
-        return 'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/knownGene.txt.gz'
-
-
-    def _get_path_kgXref_h37(self):
+    def _get_path_kgXref_hg19(self):
         """ Get local path to kgXref file for hg19 / GRCh37 from UCSC, downloading if necessary.
 
         Returns
         -------
         str
-            path to kgXref_h37.txt.gz
-
+            path to kgXref_hg19.txt.gz
         """
+        return self._download_file(
+            'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/kgXref.txt.gz',
+            'kgXref_hg19.txt.gz')
 
-        return self._download_file(self._get_url_kgXref_h37(), 'kgXref_h37.txt.gz')
-
-    @staticmethod
-    def _get_url_kgXref_h37():
-        return 'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/kgXref.txt.gz'
-
-    def _download_file(self, url, filename, compress=False):
+    def _download_file(self, url, filename, compress=False, timeout=30):
         """ Download a file to the resources folder.
 
         Download data from `url`, save as `filename`, and optionally compress with gzip.
@@ -419,12 +367,13 @@ class Resources(object):
             name of file to save; if compress, ensure '.gz' is appended
         compress : bool
             compress with gzip
+        timeout : int
+            seconds for timeout of download request
 
         Returns
         -------
         str
             path to downloaded file, None if error
-
         """
         if not lineage.create_dir(self._resources_dir):
             return None
@@ -445,7 +394,8 @@ class Resources(object):
 
                 # get file if it hasn't already been downloaded
                 # http://stackoverflow.com/a/7244263
-                with urllib.request.urlopen(url) as response, open_func(destination, 'wb') as f:
+                with urllib.request.urlopen(url, timeout=timeout) as response, \
+                        open_func(destination, 'wb') as f:
                     data = response.read()  # a `bytes` object
                     f.write(data)
             except Exception as err:

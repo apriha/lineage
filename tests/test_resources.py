@@ -16,48 +16,67 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-import urllib.request
+import os
+import warnings
 
 
-class TestResources(object):
+def test_get_genetic_map_HapMapII_GRCh37(resource):
+    genetic_map_HapMapII_GRCh37 = resource.get_genetic_map_HapMapII_GRCh37()
+    assert len(genetic_map_HapMapII_GRCh37) == 25
 
-    @staticmethod
-    def url_exists(url):
-        # test existence of external resource without downloading
 
-        # https://stackoverflow.com/a/16778473
-        try:
-            with urllib.request.urlopen(url):
-                return True
-        except:
-            return False
+def test_get_cytoBand_hg19(resource):
+    cytoBand_hg19 = resource.get_cytoBand_hg19()
+    assert len(cytoBand_hg19) == 862
 
-    def test__get_url_cytoband_h37(self, resource):
-        assert self.url_exists(resource._get_url_cytoband_h37())
 
-    def test__get_url_hapmap_h37(self, resource):
-        assert self.url_exists(resource._get_url_hapmap_h37())
+def test_get_knownGene_hg19(resource):
+    knownGene_hg19 = resource.get_knownGene_hg19()
+    assert len(knownGene_hg19) == 82960
 
-    def test__get_knownGene_h37(self, resource):
-        assert self.url_exists(resource._get_url_knownGene_h37())
 
-    def test__kgXref_h37(self, resource):
-        assert self.url_exists(resource._get_url_kgXref_h37())
+def test_get_kgXref_hg19(resource):
+    kgXref_hg19 = resource.get_kgXref_hg19()
+    assert len(kgXref_hg19) == 82960
 
-    def test__get_url_dataset_user662_304(self, resource):
-        assert self.url_exists(resource._get_url_dataset_user662_304())
 
-    def test__get_url_dataset_user662_340(self, resource):
-        assert self.url_exists(resource._get_url_dataset_user662_340())
+def test_download_example_datasets(resource):
+    paths = resource.download_example_datasets()
 
-    def test__get_url_dataset_user662_341(self, resource):
-        assert self.url_exists(resource._get_url_dataset_user662_341())
+    for path in paths:
+        if path is None or not os.path.exists(path):
+            warnings.warn('Example dataset(s) not currently available')
+            return
 
-    def test__get_url_dataset_user663_305(self, resource):
-        assert self.url_exists(resource._get_url_dataset_user663_305())
+    assert True
 
-    def test__get_url_dataset_user4583_3482(self, resource):
-        assert self.url_exists(resource._get_url_dataset_user4583_3482())
 
-    def test__get_url_dataset_user4584_3483(self, resource):
-        assert self.url_exists(resource._get_url_dataset_user4584_3483())
+def test__load_genetic_map_None(resource):
+    result = resource._load_genetic_map(None)
+    assert result is None
+
+
+def test__load_cytoBand_None(resource):
+    result = resource._load_cytoBand(None)
+    assert result is None
+
+
+def test__load_knownGene_None(resource):
+    result = resource._load_knownGene(None)
+    assert result is None
+
+
+def test__load_kgXref_None(resource):
+    result = resource._load_kgXref(None)
+    assert result is None
+
+
+def test__download_file_compress(resource):
+    result = resource._download_file('', '', compress=True)
+    assert result is None
+
+
+def test__download_file_invalid_dir(resource):
+    resource._resources_dir = None
+    result = resource._download_file('', '')
+    assert result is None

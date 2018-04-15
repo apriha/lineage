@@ -79,9 +79,7 @@ def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, b
         title for plot
     build : {37}
         human genome assembly
-
     """
-
     # Height of each chromosome
     chrom_height = 1.25
 
@@ -213,9 +211,7 @@ def _patch_chromosomal_features(cytobands, one_chrom_match, two_chrom_match):
     df : pandas.DataFrame
         the start and stop positions of particular features on each
         chromosome
-
     """
-
     chromosomes = cytobands['chrom'].unique()
 
     df = pd.DataFrame()

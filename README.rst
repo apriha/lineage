@@ -1,5 +1,7 @@
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/lineage_banner.png
 
+|build| |codecov| |pypi| |python| |license|
+
 lineage
 =======
 ``lineage`` provides a framework for analyzing genotype (raw data) files from direct-to-consumer
@@ -10,7 +12,7 @@ primarily for the purposes of genetic genealogy.
 Capabilities
 ------------
 - Merge raw data files from different DNA testing companies, identifying discrepant SNPs in the process
-- Compute centiMorgans (cMs) of shared DNA between individuals using HapMap tables
+- Compute centiMorgans (cMs) of shared DNA between individuals using the HapMap Phase II genetic map
 - Plot shared DNA between individuals
 - Determine genes shared between individuals (i.e., genes transcribed from shared DNA segments)
 - Find discordant SNPs between child and parent(s)
@@ -54,10 +56,10 @@ Download Example Data
 Let's download some example data from `openSNP <https://opensnp.org>`_:
 
 >>> l.download_example_datasets()
-Downloading resources/662.23andme.304.csv.gz
-Downloading resources/662.23andme.340.csv.gz
+Downloading resources/662.23andme.304.txt.gz
+Downloading resources/662.23andme.340.txt.gz
 Downloading resources/662.ftdna-illumina.341.csv.gz
-Downloading resources/663.23andme.305.csv.gz
+Downloading resources/663.23andme.305.txt.gz
 Downloading resources/4583.ftdna-illumina.3482.csv.gz
 Downloading resources/4584.ftdna-illumina.3483.csv.gz
 
@@ -115,14 +117,14 @@ companies. Let's load the remaining two files.
 As the data gets added, it's compared to the existing data and discrepancies are saved to CSV
 files. (The discrepancy thresholds can be tuned via parameters.)
 
->>> user662.load_snps(['resources/662.23andme.304.csv.gz', 'resources/662.23andme.340.csv.gz'],
+>>> user662.load_snps(['resources/662.23andme.304.txt.gz', 'resources/662.23andme.340.txt.gz'],
 ...                   discrepant_genotypes_threshold=160)
-Loading resources/662.23andme.304.csv.gz
+Loading resources/662.23andme.304.txt.gz
 3 SNP positions being added differ; keeping original positions
 Saving output/User662_discrepant_positions_1.csv
 8 genotypes were discrepant; marking those as null
 Saving output/User662_discrepant_genotypes_1.csv
-Loading resources/662.23andme.340.csv.gz
+Loading resources/662.23andme.340.txt.gz
 27 SNP positions being added differ; keeping original positions
 Saving output/User662_discrepant_positions_2.csv
 156 genotypes were discrepant; marking those as null
@@ -144,8 +146,8 @@ Compare Individuals
 ```````````````````
 Let's create another ``Individual`` for the ``User663`` dataset:
 
->>> user663 = l.create_individual('User663', 'resources/663.23andme.305.csv.gz')
-Loading resources/663.23andme.305.csv.gz
+>>> user663 = l.create_individual('User663', 'resources/663.23andme.305.txt.gz')
+Loading resources/663.23andme.305.txt.gz
 
 Now we can perform some analysis between the ``User662`` and ``User663`` datasets.
 
@@ -178,8 +180,8 @@ With that background, let's find the shared DNA between the ``User662`` and ``Us
 calculating the centiMorgans of shared DNA and plotting the results:
 
 >>> l.find_shared_dna(user662, user663, cM_threshold=0.75, snp_threshold=1100)
-Downloading resources/hapmap_h37.tar.gz
-Downloading resources/cytoband_h37.txt.gz
+Downloading resources/genetic_map_HapMapII_GRCh37.tar.gz
+Downloading resources/cytoBand_hg19.txt.gz
 Saving output/shared_dna_User662_User663.png
 Saving output/shared_dna_one_chrom_User662_User663.csv
 
@@ -221,8 +223,8 @@ Now let's find the shared genes:
 >>> l.find_shared_dna(user4583, user4584, shared_genes=True)
 Saving output/shared_dna_User4583_User4584.png
 Saving output/shared_dna_one_chrom_User4583_User4584.csv
-Downloading resources/knownGene_h37.txt.gz
-Downloading resources/kgXref_h37.txt.gz
+Downloading resources/knownGene_hg19.txt.gz
+Downloading resources/kgXref_hg19.txt.gz
 Saving output/shared_genes_one_chrom_User4583_User4584.csv
 Saving output/shared_dna_two_chroms_User4583_User4584.csv
 Saving output/shared_genes_two_chroms_User4583_User4584.csv
@@ -259,3 +261,15 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+.. https://github.com/rtfd/readthedocs.org/blob/master/docs/badges.rst
+.. |build| image:: https://travis-ci.org/apriha/lineage.svg?branch=master
+   :target: https://travis-ci.org/apriha/lineage
+.. |codecov| image:: https://codecov.io/gh/apriha/lineage/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/apriha/lineage
+.. |pypi| image:: https://img.shields.io/pypi/v/lineage.svg
+   :target: https://pypi.python.org/pypi/lineage
+.. |python| image:: https://img.shields.io/pypi/pyversions/lineage.svg
+   :target: https://www.python.org
+.. |license| image:: https://img.shields.io/pypi/l/lineage.svg
+   :target: https://github.com/apriha/lineage/blob/master/LICENSE.txt

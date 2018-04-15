@@ -50,7 +50,6 @@ class Lineage(object):
             name / path of output directory
         resources_dir
             name / path of resources directory
-
         """
         self._output_dir = os.path.abspath(output_dir)
         self._resources = Resources(resources_dir=resources_dir)
@@ -70,7 +69,6 @@ class Lineage(object):
         -------
         Individual
             ``Individual`` initialized in the context of the `lineage` framework
-
         """
         return Individual(name, raw_data, self._output_dir, self._ensembl_rest_client)
 
@@ -80,14 +78,23 @@ class Lineage(object):
         Per openSNP, "the data is donated into the public domain using `CC0 1.0
         <http://creativecommons.org/publicdomain/zero/1.0/>`_."
 
+        Returns
+        -------
+        paths : list of str or None
+            paths to example datasets
+
         References
         ----------
         ..[1] Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP–A Crowdsourced Web Resource
           for Personal Genomics," PLOS ONE, 9(3): e89204,
           https://doi.org/10.1371/journal.pone.0089204
-
         """
-        self._resources.download_example_datasets()
+        paths = self._resources.download_example_datasets()
+
+        if None in paths:
+            print('Example dataset(s) not currently available')
+
+        return paths
 
     def find_discordant_snps(self, individual1, individual2, individual3=None, save_output=False):
         """ Find discordant SNPs between two or three individuals.
@@ -116,7 +123,6 @@ class Lineage(object):
         ..[2] David Pike, "Search for Discordant SNPs when given data
           for child and both parents," David Pike's Utilities,
           http://www.math.mun.ca/~dapike/FF23utils/trio-discord.php
-
         """
         self._remap_snps_to_GRCh37([individual1, individual2, individual3])
 
@@ -141,7 +147,7 @@ class Lineage(object):
                          (df[genotype1] != df[genotype2])) |
                         ((df[genotype1].str.len() == 2) &
                          (df[genotype2].str.len() == 2) &
-                         (df[genotype1].str[0] != df[genotype2].str[1]) &
+                         (df[genotype1].str[0] != df[genotype2].str[0]) &
                          (df[genotype1].str[0] != df[genotype2].str[1]) &
                          (df[genotype1].str[1] != df[genotype2].str[0]) &
                          (df[genotype1].str[1] != df[genotype2].str[1]))]
@@ -197,8 +203,8 @@ class Lineage(object):
                         snp_threshold=1100, shared_genes=False):
         """ Find the shared DNA between two individuals.
 
-        Computes the genetic distance in centiMorgans (cMs) between SNPs using the specified
-        assembly's HapMap. Applies thresholds to determine the shared DNA. Plots shared DNA.
+        Computes the genetic distance in centiMorgans (cMs) between SNPs using the HapMap Phase II
+        GRCh37 genetic map. Applies thresholds to determine the shared DNA. Plots shared DNA.
         Optionally determines shared genes (i.e., genes that are transcribed from the shared DNA).
 
         All output is saved to the output directory as `CSV` or `PNG` files.
@@ -214,7 +220,20 @@ class Lineage(object):
         shared_genes : bool
             determine shared genes
 
+        Returns
+        -------
+        one_chrom_shared_dna : list of dicts
+            segments of shared DNA on one chromosome
+        two_chrom_shared_dna : list of dicts
+            segments of shared DNA on two chromosomes
+        one_chrom_shared_genes : pandas.DataFrame
+            shared genes on one chromosome
+        two_chrom_shared_genes : pandas.DataFrame
+            shared genes on two chromosomes
         """
+        one_chrom_shared_genes = pd.DataFrame()
+        two_chrom_shared_genes = pd.DataFrame()
+
         self._remap_snps_to_GRCh37([individual1, individual2])
 
         df = individual1.snps
@@ -228,8 +247,8 @@ class Lineage(object):
 
         one_x_chrom = self._is_one_individual_male(df, genotype1, genotype2)
 
-        # determine the genetic distance between each SNP using HapMap tables
-        hapmap, df = self._compute_snp_distances(df)
+        # determine the genetic distance between each SNP using the HapMap Phase II genetic map
+        genetic_map, df = self._compute_snp_distances(df)
 
         # determine where individuals share an allele on one chromosome
         df['one_chrom_match'] = np.where(
@@ -249,13 +268,13 @@ class Lineage(object):
                (df[genotype1].str[1] == df[genotype2].str[0])))), True, False)
 
         # compute shared DNA between individuals
-        one_chrom_shared_dna = self._compute_shared_dna(df, hapmap, 'one_chrom_match',
+        one_chrom_shared_dna = self._compute_shared_dna(df, genetic_map, 'one_chrom_match',
                                                         cM_threshold, snp_threshold, one_x_chrom)
 
-        two_chrom_shared_dna = self._compute_shared_dna(df, hapmap, 'two_chrom_match',
+        two_chrom_shared_dna = self._compute_shared_dna(df, genetic_map, 'two_chrom_match',
                                                         cM_threshold, snp_threshold, one_x_chrom)
 
-        cytobands = self._resources.get_cytoband_h37()
+        cytobands = self._resources.get_cytoBand_hg19()
 
         # plot data
         if create_dir(self._output_dir):
@@ -271,27 +290,31 @@ class Lineage(object):
                                              individual1.get_var_name(),
                                              individual2.get_var_name())
             if shared_genes:
-                self._compute_shared_genes(one_chrom_shared_dna, 'one',
-                                           individual1.get_var_name(),
-                                           individual2.get_var_name())
+                one_chrom_shared_genes = self._compute_shared_genes(one_chrom_shared_dna, 'one',
+                                                                    individual1.get_var_name(),
+                                                                    individual2.get_var_name())
 
         if len(two_chrom_shared_dna) > 0:
             self._save_shared_dna_csv_format(two_chrom_shared_dna, 'two',
                                              individual1.get_var_name(),
                                              individual2.get_var_name())
             if shared_genes:
-                self._compute_shared_genes(two_chrom_shared_dna, 'two',
-                                           individual1.get_var_name(),
-                                           individual2.get_var_name())
+                two_chrom_shared_genes = self._compute_shared_genes(two_chrom_shared_dna, 'two',
+                                                                    individual1.get_var_name(),
+                                                                    individual2.get_var_name())
+
+        return one_chrom_shared_dna, two_chrom_shared_dna, \
+               one_chrom_shared_genes, two_chrom_shared_genes
 
     def _compute_shared_genes(self, shared_dna, type, individual1_name, individual2_name):
-        knownGenes = self._resources.get_knownGene_h37()
-        kgXref = self._resources.get_kgXref_h37()
+        knownGenes = self._resources.get_knownGene_hg19()
+        kgXref = self._resources.get_kgXref_hg19()
 
         # http://seqanswers.com/forums/showthread.php?t=22336
         df = knownGenes.join(kgXref)
 
-        shared_genes = []
+        shared_genes_dfs = []
+        shared_genes = pd.DataFrame()
 
         for shared_segment in shared_dna:
             # determine genes transcribed from this shared DNA segment
@@ -304,9 +327,11 @@ class Lineage(object):
                          'proteinID', 'description']]
 
             if len(temp) > 0:
-                shared_genes.append(temp)
+                shared_genes_dfs.append(temp)
 
-        if len(shared_genes) > 0:
+        if len(shared_genes_dfs) > 0:
+            shared_genes = pd.concat(shared_genes_dfs)
+
             if type == 'one':
                 chroms = 'one_chrom'
             else:
@@ -315,7 +340,9 @@ class Lineage(object):
             file = os.path.join(self._output_dir, 'shared_genes_' + chroms + '_' +
                                 individual1_name + '_' + individual2_name + '.csv')
 
-            save_df_as_csv(pd.concat(shared_genes), self._output_dir, file)
+            save_df_as_csv(shared_genes, self._output_dir, file)
+
+        return shared_genes
 
     def _save_shared_dna_csv_format(self, shared_dna, type, individual1_name, individual2_name):
         if type == 'one':
@@ -354,24 +381,26 @@ class Lineage(object):
 
 
     def _compute_snp_distances(self, df):
-        hapmap = self._resources.get_hapmap_h37()
+        genetic_map = self._resources.get_genetic_map_HapMapII_GRCh37()
 
         for chrom in df['chrom'].unique():
-            if chrom not in hapmap.keys():
+            if chrom not in genetic_map.keys():
                 continue
 
             # create a new dataframe from the positions for the current chromosome
             temp = pd.DataFrame(df.loc[(df['chrom'] == chrom)]['pos'].values, columns=['pos'])
 
-            # merge HapMap for this chrom
-            temp = temp.append(hapmap[chrom], ignore_index=True)
+            # merge genetic map for this chrom
+            temp = temp.append(genetic_map[chrom], ignore_index=True)
 
             # sort based on pos
             temp = temp.sort_values('pos')
 
-            # fill cM rates forward and backward
+            # fill recombination rates forward
             temp['rate'] = temp['rate'].fillna(method='ffill')
-            temp['rate'] = temp['rate'].fillna(method='bfill')
+
+            # assume recombination rate of 0 for SNPs upstream of first defined rate
+            temp['rate'] = temp['rate'].fillna(0)
 
             # get difference between positions
             pos_diffs = np.ediff1d(temp['pos'])
@@ -406,13 +435,13 @@ class Lineage(object):
             # add back into df
             df.loc[(df['chrom'] == chrom), 'cM_from_prev_snp'] = np.r_[0, cM_from_prev_snp][:-1]
 
-        return hapmap, df
+        return genetic_map, df
 
-    def _compute_shared_dna(self, df, hapmap, col, cM_threshold, snp_threshold, one_x_chrom):
+    def _compute_shared_dna(self, df, genetic_map, col, cM_threshold, snp_threshold, one_x_chrom):
         shared_dna = []
 
         for chrom in df['chrom'].unique():
-            if chrom not in hapmap.keys():
+            if chrom not in genetic_map.keys():
                 continue
 
             # skip calculating two chrom shared on the X chromosome if an individual is male
@@ -534,7 +563,6 @@ def save_df_as_csv(df, path, filename):
         path to directory where to save CSV file
     filename : str
         filename of CSV file
-
     """
     if create_dir(path):
         destination = os.path.join(path, filename)

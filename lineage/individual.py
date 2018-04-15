@@ -51,9 +51,7 @@ class Individual(object):
             path to output directory
         ensembl_rest_client : EnsemblRestClient
             client for making requests to the Ensembl REST API
-
         """
-
         self._name = name
         self._output_dir = output_dir
         self._ensembl_rest_client = ensembl_rest_client
@@ -75,7 +73,6 @@ class Individual(object):
         Returns
         -------
         str
-
         """
         return self._name
 
@@ -86,7 +83,6 @@ class Individual(object):
         Returns
         -------
         pandas.DataFrame
-
         """
         if self._snps is not None:
             return self._snps.copy()
@@ -100,7 +96,6 @@ class Individual(object):
         Returns
         -------
         int
-
         """
         return self._assembly
 
@@ -118,7 +113,6 @@ class Individual(object):
         discrepant_genotypes_threshold : int
             threshold for discrepant genotype data between existing data and data to be loaded,
             a large value could indicated mismatched individuals
-
         """
         if type(raw_data) is list:
             for file in raw_data:
@@ -133,21 +127,31 @@ class Individual(object):
             raise TypeError('invalid filetype')
 
     def save_snps(self):
-        """ Save SNPs to file. """
+        """ Save SNPs to file.
+
+        Returns
+        -------
+        bool
+            true if SNPs saved to file in output directory
+        """
         if self._snps is not None:
             try:
                 if lineage.create_dir(self._output_dir):
                     output_dir = self._output_dir
                 else:
-                    output_dir = ''
+                    return False
 
                 file = os.path.join(output_dir, self.get_var_name() + '.csv')
                 print('Saving ' + os.path.relpath(file))
                 self._snps.to_csv(file, na_rep='--', header=['chromosome', 'position', 'genotype'])
             except Exception as err:
                 print(err)
+                return False
         else:
             print('no SNPs to save...')
+            return False
+
+        return True
 
     def get_var_name(self):
         """ Clean a string so that it can be a valid Python variable
@@ -157,9 +161,7 @@ class Individual(object):
         -------
         str
             cleaned string that can be used as a variable name
-
         """
-
         # http://stackoverflow.com/a/3305731
         return re.sub('\W|^(?=\d)', '_', self.name)
 
@@ -181,6 +183,13 @@ class Individual(object):
         complement_bases : bool
             complement bases when remapping SNPs to the minus strand
 
+        Returns
+        -------
+        chromosomes_remapped : list of str
+            chromosomes remapped; empty if None
+        chromosomes_not_remapped : list of str
+            chromosomes not remapped; empty if None
+
         Notes
         -----
         An assembly is also know as a "build." For example:
@@ -196,18 +205,25 @@ class Individual(object):
         ----------
         ..[1] Ensembl, Assembly Map Endpoint,
           http://rest.ensembl.org/documentation/info/assembly_map
-
         """
+        chromosomes_remapped = []
+        chromosomes_not_remapped = []
+
+        if self._snps is None:
+            print('No SNPs to remap')
+            return chromosomes_remapped, chromosomes_not_remapped
+        else:
+            chromosomes_not_remapped = list(self._snps['chrom'].unique())
 
         if self._ensembl_rest_client is None:
             print('Need an ``EnsemblRestClient`` to remap SNPs')
-            return
+            return chromosomes_remapped, chromosomes_not_remapped
 
         valid_assemblies = ['NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38]
 
         if target_assembly not in valid_assemblies:
             print('Invalid target assembly')
-            return
+            return chromosomes_remapped, chromosomes_not_remapped
 
         if isinstance(target_assembly, int):
             if target_assembly == 36:
@@ -221,7 +237,7 @@ class Individual(object):
             source_assembly = 'GRCh' + str(self._assembly)
 
         if source_assembly == target_assembly:
-            return
+            return chromosomes_remapped, chromosomes_not_remapped
 
         for chrom in self._snps['chrom'].unique():
             print('Remapping chromosome ' + chrom + '...')
@@ -241,7 +257,11 @@ class Individual(object):
             response = self._ensembl_rest_client.perform_rest_action(endpoint)
 
             if response is None:
+                print('Chromosome ' + chrom + ' not remapped')
                 continue
+            else:
+                chromosomes_remapped.append(chrom)
+                chromosomes_not_remapped.remove(chrom)
 
             for mapping in response['mappings']:
                 orig_range_len = mapping['original']['end'] - mapping['original']['start']
@@ -287,6 +307,8 @@ class Individual(object):
         self._sort_snps()
         self._assembly = int(target_assembly[-2:])
 
+        return chromosomes_remapped, chromosomes_not_remapped
+
     def _complement_bases(self, genotype):
         if pd.isnull(genotype):
             return np.nan
@@ -302,6 +324,8 @@ class Individual(object):
                 complement += 'G'
             elif base == 'T':
                 complement += 'A'
+            else:
+                complement += base
 
         return complement
 
@@ -329,6 +353,8 @@ class Individual(object):
             return self._read_ancestry(file)
         elif line[:4] == 'RSID':
             return self._read_ftdna(file)
+        elif line[:4] == 'rsid':
+            return self._read_generic_csv(file)
         else:
             return None
 
@@ -347,9 +373,7 @@ class Individual(object):
         -------
         pandas.DataFrame
             individual's genetic data normalized for use with `lineage`
-
         """
-
         try:
             return pd.read_csv(file, comment='#', sep='\t', na_values='--',
                                names=['rsid', 'chrom', 'pos', 'genotype'],
@@ -373,9 +397,7 @@ class Individual(object):
         -------
         pandas.DataFrame
             individual's genetic data normalized for use with `lineage`
-
         """
-
         try:
             df = pd.read_csv(file, skiprows=1, na_values='--',
                              names=['rsid', 'chrom', 'pos', 'genotype'],
@@ -408,9 +430,7 @@ class Individual(object):
         -------
         pandas.DataFrame
             individual's genetic data normalized for use with `lineage`
-
         """
-
         try:
             df = pd.read_csv(file, comment='#', header=0, sep='\t', na_values=0,
                              names=['rsid', 'chrom', 'pos', 'allele1', 'allele2'],
@@ -435,6 +455,41 @@ class Individual(object):
             print(err)
             return None
 
+    @staticmethod
+    def _read_generic_csv(file):
+        """ Read and parse generic CSV file.
+
+        Notes
+        -----
+        Assumes columns are 'rsid', 'chrom' / 'chromosome', 'pos' / 'position', and 'genotype';
+        values are comma separated; unreported genotypes are indicated by '--'; and one header row
+        precedes data. For example:
+
+            rsid,chromosome,position,genotype
+            rs1,1,1,AA
+            rs2,1,2,CC
+            rs3,1,3,--
+
+        Parameters
+        ----------
+        file : str
+            path to file
+
+        Returns
+        -------
+        pandas.DataFrame
+            individual's genetic data normalized for use with `lineage`
+        """
+        try:
+            df = pd.read_csv(file, skiprows=1, na_values='--',
+                             names=['rsid', 'chrom', 'pos', 'genotype'],
+                             index_col=0, dtype={'chrom': object, 'pos': np.int64})
+
+            return df
+        except Exception as err:
+            print(err)
+            return None
+
     def _add_snps(self, snps, discrepant_snp_positions_threshold, discrepant_genotypes_threshold):
         """ Add SNPs to this Individual.
 
@@ -446,9 +501,7 @@ class Individual(object):
             see above
         discrepant_genotypes_threshold : int
             see above
-
         """
-
         if snps is None:
             return
 
@@ -541,7 +594,6 @@ class Individual(object):
         -------
         df : pandas.DataFrame
             SNPs with specified chromosome's single alleles doubled
-
         """
         # find all single alleles of the specified chromosome
         single_alleles = np.where((df['chrom'] == chrom) &
@@ -617,9 +669,7 @@ class Individual(object):
           for Biotechnology Information, National Library of Medicine. dbSNP accession: rs3094315,
           rs11928389, rs2500347, and rs964481 (dbSNP Build ID: 151). Available from:
           http://www.ncbi.nlm.nih.gov/SNP/
-
         """
-
         assembly = None
 
         rsids = ['rs3094315', 'rs11928389', 'rs2500347', 'rs964481']
