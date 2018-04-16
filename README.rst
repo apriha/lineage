@@ -1,6 +1,6 @@
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/lineage_banner.png
 
-|build| |codecov| |pypi| |python| |license|
+|build| |codecov| |docs| |pypi| |python| |license|
 
 lineage
 =======
@@ -130,7 +130,7 @@ Saving output/User662_discrepant_positions_2.csv
 156 genotypes were discrepant; marking those as null
 Saving output/User662_discrepant_genotypes_2.csv
 
-All `output files <https://apriha.github.io/lineage/output_files.html>`_ are saved to the output
+All `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are saved to the output
 directory.
 
 Save SNPs
@@ -189,7 +189,7 @@ Notice that the centiMorgan and SNP thresholds for each DNA segment can be tuned
 notice that two files were downloaded to facilitate the analysis and plotting - future analyses
 will used the downloaded files instead of downloading the files again.
 
-Here, the `output <https://apriha.github.io/lineage/output_files.html>`_ consists of a CSV file
+Here, the `output <https://lineage.readthedocs.io/en/latest/output_files.html>`_ consists of a CSV file
 that details the shared segments of DNA on one chromosome. Additionally, a plot is also generated
 that illustrates the shared DNA:
 
@@ -231,14 +231,14 @@ Saving output/shared_genes_two_chroms_User4583_User4584.csv
 
 The plot that illustrates the shared DNA is shown below. Note that in addition to outputting the
 shared DNA segments on either one or both chromosomes, the shared genes on either one or both
-chromosomes are also output. These `output files <https://apriha.github.io/lineage/output_files.html>`_
+chromosomes are also output. These `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_
 are detailed in the documentation.
 
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User4583_User4584.png
 
 Documentation
 -------------
-Documentation is available `here <https://apriha.github.io/lineage/>`_.
+Documentation is available `here <https://lineage.readthedocs.io/>`_.
 
 Acknowledgements
 ----------------
@@ -267,6 +267,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
    :target: https://travis-ci.org/apriha/lineage
 .. |codecov| image:: https://codecov.io/gh/apriha/lineage/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/apriha/lineage
+.. |docs| image:: https://readthedocs.org/projects/lineage/badge/?version=latest
+   :target: https://lineage.readthedocs.io/
 .. |pypi| image:: https://img.shields.io/pypi/v/lineage.svg
    :target: https://pypi.python.org/pypi/lineage
 .. |python| image:: https://img.shields.io/pypi/pyversions/lineage.svg
