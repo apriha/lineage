@@ -1,4 +1,3 @@
-# https://github.com/drdoctr/doctr/blob/master/.travis.yml
 # https://github.com/sympy/sympy/blob/master/.travis.yml
 # https://github.com/twisted/klein/blob/master/.travis.yml
 # https://github.com/codecov/example-python
@@ -8,56 +7,35 @@ language: python
 
 sudo: false
 
-env:
-  global:
-    - secure: "HdD8dimf6ac120e77MW2yXl+ZQC/abJ5s7Y+onPHDy/aKb2aOD+mXx1dw8441kNaJNvgyj3ALqqUG+PIQiwOytuvppxKdVJoVA0BFJy71dCZbBhMw4AFGFOaQxLnNMYzayD8PGCGrqlt5VCM1DtjUEWicHFfLBK7JOVPmYsepAEdoo4dVBGTqeguXsxhccz1G1Cqkh4M1tvFgTom/ie+B1M37lk0tmw/C4GigAb7ibbSo8FVlkSDBxEDgui5/Bmpt8zjg5ckYcxYRtqr81nhve4UmlJl2u98yzXwA1ZgAkObpu26oEDGWlcCWk5rsOc2Ky5pJggVm8XtLmWNBbdXo21jOcVf4+Uk9vpVy7clDqUSXZFw2P+b+co7zUkNZ+o0q/J8fSRJphYjVBnLhMsJVQ0fY7A1JSZkMuU8i1pV4Cr5UmXB8QSqsLs2h9qE/SE4M1dcs5wLGgvmF7Bx9aC3ZL4FTieMp47s0abSKUU+2CvrTIC/MGCkKDo2MHyjq6O5bzSrqPfgzmcEiSvowyFZ7Ho3MPRxASLOVHbuUuMWZ5owUOzN4O7lPvj5NqdK1gTYcFvTMsxQ1cJt1UDpGBjlbwfZV9ZV8J5gNjmnRXCX47erQWJr+SKd/ZHHBN1VMgJqEzuEeZhW+dtwNWiKhFo3qXJv1+rcOmDd6rEZiuI+qTc="
-
 matrix:
   include:
     - python: 3.5
     - python: 3.6
       env:
-        DOCS="true"
         DEPLOY="true"
 
 before_install:
   - pip install pytest pytest-cov
   - pip install codecov
-  - if [[ "${DOCS}" == "true" ]]; then
-      pip install sphinx;
-      pip install sphinx_rtd_theme;
-      pip install doctr;
-    fi
 
 install:
   - pip install .
 
 # configure Travis CI for matplotlib
-
 before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
   - sleep 3
 
-# build and deploy Sphinx documentation to GitHub Pages with doctr
-# https://github.com/drdoctr/doctr
-
 script:
   - set -e
   - pytest --cov=lineage tests
-  - if [[ "${DOCS}" == "true" ]]; then
-      cd docs;
-      make html;
-      cd ..;
-      doctr deploy .;
-    fi
 
 after_success:
   - codecov
 
 # automatically package and deploy to PyPI
 # https://www.appneta.com/blog/pypi-deployment-with-travis-ci/
-
 deploy:
   # test PyPI
   - provider: pypi
