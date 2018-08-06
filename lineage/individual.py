@@ -57,6 +57,7 @@ class Individual(object):
         self._ensembl_rest_client = ensembl_rest_client
         self._snps = None
         self._assembly = None
+        self._assembly_detected = False
         self._discrepant_positions_file_count = 0
         self._discrepant_genotypes_file_count = 0
 
@@ -98,6 +99,16 @@ class Individual(object):
         int
         """
         return self._assembly
+
+    @property
+    def assembly_detected(self):
+        """ Flag for whether the assembly of the most recently loaded file was detected.
+
+        Returns
+        -------
+        bool
+        """
+        return self._assembly_detected
 
     def load_snps(self, raw_data, discrepant_snp_positions_threshold=100,
                   discrepant_genotypes_threshold=10000):
@@ -671,6 +682,7 @@ class Individual(object):
           http://www.ncbi.nlm.nih.gov/SNP/
         """
         assembly = None
+        self._assembly_detected = False
 
         rsids = ['rs3094315', 'rs11928389', 'rs2500347', 'rs964481']
         df = pd.DataFrame({36: [742429, 50908372, 143649677, 27566744],
@@ -682,6 +694,7 @@ class Individual(object):
                 assembly = self._lookup_assembly_with_snp_pos(snps.loc[rsid].pos, df.loc[rsid])
 
             if assembly is not None:
+                self._assembly_detected = True
                 break
 
         return assembly
