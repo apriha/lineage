@@ -103,6 +103,16 @@ def test_snps_None(l):
     assert ind.snps is None
 
 
+def test_snp_count(l):
+    ind = l.create_individual('', 'tests/input/NCBI36.csv')
+    assert ind.snp_count == 4
+
+
+def test_snp_count_None(l):
+    ind = l.create_individual('')
+    assert ind.snp_count == 0
+
+
 def test_chromosomes(l):
     ind = l.create_individual('', 'tests/input/NCBI36.csv')
     assert ind.chromosomes == ['1', '3']

@@ -91,6 +91,19 @@ class Individual(object):
             return None
 
     @property
+    def snp_count(self):
+        """ Count the SNPs loaded for this ``Individual``.
+
+        Returns
+        -------
+        int
+        """
+        if self._snps is not None:
+            return len(self._snps)
+        else:
+            return 0
+
+    @property
     def chromosomes(self):
         """ Get the chromosomes of this ``Individual``'s SNPs.
 
