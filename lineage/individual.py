@@ -91,6 +91,19 @@ class Individual(object):
             return None
 
     @property
+    def chromosomes(self):
+        """ Get the chromosomes of this ``Individual``'s SNPs.
+
+        Returns
+        -------
+        list
+        """
+        if self._snps is not None:
+            return list(pd.unique(self.snps['chrom']))
+        else:
+            return []
+
+    @property
     def assembly(self):
         """ Get the assembly of this ``Individual``'s SNPs.
 

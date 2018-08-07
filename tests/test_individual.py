@@ -103,6 +103,16 @@ def test_snps_None(l):
     assert ind.snps is None
 
 
+def test_chromosomes(l):
+    ind = l.create_individual('', 'tests/input/NCBI36.csv')
+    assert ind.chromosomes == ['1', '3']
+
+
+def test_chromosomes_None(l):
+    ind = l.create_individual('')
+    assert ind.chromosomes == []
+
+
 def test_assembly(l):
     ind = l.create_individual('', 'tests/input/NCBI36.csv')
     assert ind.assembly == 36
