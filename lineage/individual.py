@@ -27,7 +27,7 @@ import pandas as pd
 from pandas.api.types import CategoricalDtype
 
 import lineage
-from lineage.snps import SNPs, get_assembly_name
+from lineage.snps import SNPs, get_assembly_name, get_chromosomes
 
 class Individual(object):
     """ Object used to represent and interact with an individual.
@@ -109,11 +109,9 @@ class Individual(object):
         Returns
         -------
         list
+            list of str chromosomes (e.g., ['1', '2', '3', 'MT'], empty list if no chromosomes
         """
-        if self._snps is not None:
-            return list(pd.unique(self.snps['chrom']))
-        else:
-            return []
+        return get_chromosomes(self._snps)
 
     @property
     def chromosomes_summary(self):

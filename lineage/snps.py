@@ -51,6 +51,17 @@ class SNPs(object):
         """
         return get_assembly_name(self.assembly)
 
+    @property
+    def chromosomes(self):
+        """ Chromosomes of ``SNPs``.
+
+        Returns
+        -------
+        list
+            list of str chromosomes (e.g., ['1', '2', '3', 'MT'], empty list if no chromosomes
+        """
+        return get_chromosomes(self.snps)
+
     def _read_raw_data(self, file):
         if not os.path.exists(file):
             print(file + ' does not exist; skipping')
@@ -292,3 +303,22 @@ def get_assembly_name(assembly):
         return 'GRCh38'
     else:
         return 'GRCh37'
+
+
+def get_chromosomes(snps):
+    """ Get the chromosomes of SNPs.
+
+    Parameters
+    ----------
+    snps : pandas.DataFrame
+
+    Returns
+    -------
+    list
+        list of str chromosomes (e.g., ['1', '2', '3', 'MT'], empty list if no chromosomes
+    """
+
+    if snps is not None:
+        return list(pd.unique(snps['chrom']))
+    else:
+        return []
