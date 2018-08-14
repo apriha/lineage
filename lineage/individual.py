@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import gzip
+from itertools import groupby, count
 import os
 import re
 import zipfile
@@ -115,6 +116,41 @@ class Individual(object):
             return list(pd.unique(self.snps['chrom']))
         else:
             return []
+
+    @property
+    def chromosomes_summary(self):
+        """ Summary of the chromosomes represented by this ``Individual``'s SNPs.
+
+        Returns
+        -------
+        str
+            human-readable list of chromosomes, empty str if no chromosomes
+        """
+        if self._snps is not None:
+            chroms = list(pd.unique(self.snps['chrom']))
+
+            int_chroms = [int(chrom) for chrom in chroms if chrom.isdigit()]
+            str_chroms = [chrom for chrom in chroms if not chrom.isdigit()]
+
+            # https://codereview.stackexchange.com/a/5202
+            def as_range(iterable):
+                l = list(iterable)
+                if len(l) > 1:
+                    return '{0}-{1}'.format(l[0], l[-1])
+                else:
+                    return '{0}'.format(l[0])
+
+            # create str representations
+            int_chroms = ', '.join(as_range(g) for _, g in
+                                   groupby(int_chroms, key=lambda n, c=count(): n - next(c)))
+            str_chroms = ', '.join(str_chroms)
+
+            if str_chroms != '':
+                int_chroms += ', '
+
+            return int_chroms + str_chroms
+        else:
+            return ''
 
     @property
     def assembly(self):
