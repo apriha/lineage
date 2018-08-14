@@ -27,7 +27,7 @@ import pandas as pd
 from pandas.api.types import CategoricalDtype
 
 import lineage
-from lineage.snps import SNPs
+from lineage.snps import SNPs, get_assembly_name
 
 class Individual(object):
     """ Object used to represent and interact with an individual.
@@ -159,6 +159,16 @@ class Individual(object):
         int
         """
         return self._assembly
+
+    @property
+    def assembly_name(self):
+        """ Get the name of the assembly of this ``Individual``'s SNPs.
+
+        Returns
+        -------
+        str
+        """
+        return get_assembly_name(self._assembly)
 
     def load_snps(self, raw_data, discrepant_snp_positions_threshold=100,
                   discrepant_genotypes_threshold=10000):

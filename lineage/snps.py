@@ -41,6 +41,16 @@ class SNPs(object):
             else:
                 self.assembly_detected = True
 
+    @property
+    def assembly_name(self):
+        """ Get the name of the assembly of ``SNPs``.
+
+        Returns
+        -------
+        str
+        """
+        return get_assembly_name(self.assembly)
+
     def _read_raw_data(self, file):
         if not os.path.exists(file):
             print(file + ' does not exist; skipping')
@@ -259,3 +269,26 @@ def detect_assembly(snps):
             break
 
     return assembly
+
+
+def get_assembly_name(assembly):
+    """ Get the name of an assembly.
+
+    Parameters
+    ----------
+    assembly : int {36, 37, 38}
+
+    Returns
+    -------
+    str
+        empty str if `assembly` is None
+    """
+
+    if assembly is None:
+        return ''
+    elif assembly == 36:
+        return 'NCBI36'
+    elif assembly == 38:
+        return 'GRCh38'
+    else:
+        return 'GRCh37'
