@@ -138,16 +138,6 @@ def test_assembly(l):
     assert ind.assembly == 36
 
 
-def test_assembly_detected_False(l):
-    ind = l.create_individual('')
-    assert not ind.assembly_detected
-
-
-def test_assembly_detected_True(l):
-    ind = l.create_individual('', 'tests/input/NCBI36.csv')
-    assert ind.assembly_detected
-
-
 def test_load_snps_list(l, snps_GRCh37):
     ind = l.create_individual('')
     ind.load_snps(['tests/input/GRCh37.csv', 'tests/input/GRCh37.csv'])

@@ -57,7 +57,6 @@ class Individual(object):
         self._ensembl_rest_client = ensembl_rest_client
         self._snps = None
         self._assembly = None
-        self._assembly_detected = False
         self._discrepant_positions_file_count = 0
         self._discrepant_genotypes_file_count = 0
 
@@ -160,16 +159,6 @@ class Individual(object):
         int
         """
         return self._assembly
-
-    @property
-    def assembly_detected(self):
-        """ Flag for whether the assembly of the most recently loaded file was detected.
-
-        Returns
-        -------
-        bool
-        """
-        return self._assembly_detected
 
     def load_snps(self, raw_data, discrepant_snp_positions_threshold=100,
                   discrepant_genotypes_threshold=10000):
@@ -416,19 +405,18 @@ class Individual(object):
         if snps.snps is None:
             return
 
-        # ensure there area always two X alleles
-        snps = self._double_single_alleles(snps.snps, 'X')
+        assembly = snps.assembly
 
-        assembly = self._detect_assembly(snps)
-
-        if assembly is None:
-            print('assembly not detected, assuming build 37')
-            assembly = 37
+        if not snps.assembly_detected:
+            print('assembly not detected, assuming build {}'.format(snps.assembly))
 
         if self._assembly is None:
             self._assembly = assembly
         elif self._assembly != assembly:
             print('assembly / build mismatch between current assembly of SNPs and SNPs being loaded')
+
+        # ensure there area always two X alleles
+        snps = self._double_single_alleles(snps.snps, 'X')
 
         if self._snps is None:
             self._snps = snps
@@ -545,63 +533,3 @@ class Individual(object):
     def _natural_sort_key(s, natural_sort_re=re.compile('([0-9]+)')):
         return [int(text) if text.isdigit() else text.lower()
                 for text in re.split(natural_sort_re, s)]
-
-    def _detect_assembly(self, snps):
-        """ Detect assembly of SNPs being loaded.
-
-        Use the coordinates of common SNPs to identify the assembly / build of a genotype file
-        that is being loaded.
-
-        Notes
-        -----
-        rs3094315 : plus strand in 36, 37, and 38
-        rs11928389 : plus strand in 36, minus strand in 37 and 38
-        rs2500347 : plus strand in 36 and 37, minus strand in 38
-        rs964481 : plus strand in 36, 37, and 38
-
-        Parameters
-        ----------
-        snps : pandas.DataFrame
-            SNPs to add
-
-        Returns
-        -------
-        int
-            detected assembly of SNPs, else None
-
-        References
-        ----------
-        ..[1] Yates et. al. (doi:10.1093/bioinformatics/btu613),
-          http://europepmc.org/search/?query=DOI:10.1093/bioinformatics/btu613
-        ..[2] Zerbino et. al. (doi.org/10.1093/nar/gkx1098), https://doi.org/10.1093/nar/gkx1098
-        ..[3] Sherry ST, Ward MH, Kholodov M, Baker J, Phan L, Smigielski EM, Sirotkin K.
-          dbSNP: the NCBI database of genetic variation. Nucleic Acids Res. 2001 Jan 1;29(1):308-11.
-        ..[4] Database of Single Nucleotide Polymorphisms (dbSNP). Bethesda (MD): National Center
-          for Biotechnology Information, National Library of Medicine. dbSNP accession: rs3094315,
-          rs11928389, rs2500347, and rs964481 (dbSNP Build ID: 151). Available from:
-          http://www.ncbi.nlm.nih.gov/SNP/
-        """
-        assembly = None
-        self._assembly_detected = False
-
-        rsids = ['rs3094315', 'rs11928389', 'rs2500347', 'rs964481']
-        df = pd.DataFrame({36: [742429, 50908372, 143649677, 27566744],
-                           37: [752566, 50927009, 144938320, 27656823],
-                           38: [817186, 50889578, 148946169, 27638706]}, index=rsids)
-
-        for rsid in rsids:
-            if rsid in snps.index:
-                assembly = self._lookup_assembly_with_snp_pos(snps.loc[rsid].pos, df.loc[rsid])
-
-            if assembly is not None:
-                self._assembly_detected = True
-                break
-
-        return assembly
-
-    @staticmethod
-    def _lookup_assembly_with_snp_pos(pos, s):
-        try:
-            return s.loc[s == pos].index[0]
-        except:
-            return None

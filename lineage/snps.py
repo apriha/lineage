@@ -30,6 +30,16 @@ class SNPs(object):
 
     def __init__(self, file):
         self.snps = self._read_raw_data(file)
+        self.assembly = None
+        self.assembly_detected = False
+
+        if self.snps is not None:
+            self.assembly = detect_assembly(self.snps)
+
+            if self.assembly is None:
+                self.assembly = 37  # assume GRCh37 if not detected
+            else:
+                self.assembly_detected = True
 
     def _read_raw_data(self, file):
         if not os.path.exists(file):
@@ -191,3 +201,61 @@ class SNPs(object):
         except Exception as err:
             print(err)
             return None
+
+
+def detect_assembly(snps):
+    """ Detect assembly of SNPs.
+
+    Use the coordinates of common SNPs to identify the assembly / build of a genotype file
+    that is being loaded.
+
+    Notes
+    -----
+    rs3094315 : plus strand in 36, 37, and 38
+    rs11928389 : plus strand in 36, minus strand in 37 and 38
+    rs2500347 : plus strand in 36 and 37, minus strand in 38
+    rs964481 : plus strand in 36, 37, and 38
+
+    Parameters
+    ----------
+    snps : pandas.DataFrame
+        SNPs to add
+
+    Returns
+    -------
+    int
+        detected assembly of SNPs, else None
+
+    References
+    ----------
+    ..[1] Yates et. al. (doi:10.1093/bioinformatics/btu613),
+      http://europepmc.org/search/?query=DOI:10.1093/bioinformatics/btu613
+    ..[2] Zerbino et. al. (doi.org/10.1093/nar/gkx1098), https://doi.org/10.1093/nar/gkx1098
+    ..[3] Sherry ST, Ward MH, Kholodov M, Baker J, Phan L, Smigielski EM, Sirotkin K.
+      dbSNP: the NCBI database of genetic variation. Nucleic Acids Res. 2001 Jan 1;29(1):308-11.
+    ..[4] Database of Single Nucleotide Polymorphisms (dbSNP). Bethesda (MD): National Center
+      for Biotechnology Information, National Library of Medicine. dbSNP accession: rs3094315,
+      rs11928389, rs2500347, and rs964481 (dbSNP Build ID: 151). Available from:
+      http://www.ncbi.nlm.nih.gov/SNP/
+    """
+    def lookup_assembly_with_snp_pos(pos, s):
+        try:
+            return s.loc[s == pos].index[0]
+        except:
+            return None
+
+    assembly = None
+
+    rsids = ['rs3094315', 'rs11928389', 'rs2500347', 'rs964481']
+    df = pd.DataFrame({36: [742429, 50908372, 143649677, 27566744],
+                       37: [752566, 50927009, 144938320, 27656823],
+                       38: [817186, 50889578, 148946169, 27638706]}, index=rsids)
+
+    for rsid in rsids:
+        if rsid in snps.index:
+            assembly = lookup_assembly_with_snp_pos(snps.loc[rsid].pos, df.loc[rsid])
+
+        if assembly is not None:
+            break
+
+    return assembly
