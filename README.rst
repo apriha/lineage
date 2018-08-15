@@ -179,8 +179,7 @@ mother and father for that segment.
 With that background, let's find the shared DNA between the ``User662`` and ``User663`` datasets,
 calculating the centiMorgans of shared DNA and plotting the results:
 
->>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = \
-l.find_shared_dna(user662, user663, cM_threshold=0.75, snp_threshold=1100)
+>>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = l.find_shared_dna(user662, user663, cM_threshold=0.75, snp_threshold=1100)
 Downloading resources/genetic_map_HapMapII_GRCh37.tar.gz
 Downloading resources/cytoBand_hg19.txt.gz
 Saving output/shared_dna_User662_User663.png
@@ -222,8 +221,7 @@ Loading resources/4584.ftdna-illumina.3483.csv.gz
 
 Now let's find the shared genes:
 
->>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = \
-l.find_shared_dna(user4583, user4584, shared_genes=True)
+>>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = l.find_shared_dna(user4583, user4584, shared_genes=True)
 Saving output/shared_dna_User4583_User4584.png
 Saving output/shared_dna_one_chrom_User4583_User4584.csv
 Downloading resources/knownGene_hg19.txt.gz
