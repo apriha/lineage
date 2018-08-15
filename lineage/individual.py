@@ -26,7 +26,8 @@ import pandas as pd
 from pandas.api.types import CategoricalDtype
 
 import lineage
-from lineage.snps import SNPs, get_assembly_name, get_chromosomes, get_chromosomes_summary
+from lineage.snps import (SNPs, get_assembly_name, get_chromosomes, get_chromosomes_summary,
+                          get_snp_count)
 
 class Individual(object):
     """ Object used to represent and interact with an individual.
@@ -90,16 +91,13 @@ class Individual(object):
 
     @property
     def snp_count(self):
-        """ Count the SNPs loaded for this ``Individual``.
+        """ Count of SNPs loaded for this ``Individual``.
 
         Returns
         -------
         int
         """
-        if self._snps is not None:
-            return len(self._snps)
-        else:
-            return 0
+        return get_snp_count(self._snps)
 
     @property
     def chromosomes(self):

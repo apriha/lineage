@@ -53,6 +53,16 @@ class SNPs(object):
         return get_assembly_name(self.assembly)
 
     @property
+    def snp_count(self):
+        """ Count of SNPs.
+
+        Returns
+        -------
+        int
+        """
+        return get_snp_count(self.snps)
+
+    @property
     def chromosomes(self):
         """ Chromosomes of ``SNPs``.
 
@@ -315,6 +325,24 @@ def get_assembly_name(assembly):
         return 'GRCh38'
     else:
         return 'GRCh37'
+
+
+def get_snp_count(snps):
+    """ Count of SNPs.
+
+    Parameters
+    ----------
+    snps : pandas.DataFrame
+
+    Returns
+    -------
+    int
+    """
+
+    if snps is not None:
+        return len(snps)
+    else:
+        return 0
 
 
 def get_chromosomes(snps):
