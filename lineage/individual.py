@@ -57,6 +57,7 @@ class Individual(object):
         self._ensembl_rest_client = ensembl_rest_client
         self._snps = None
         self._assembly = None
+        self._source = []
         self._discrepant_positions_file_count = 0
         self._discrepant_genotypes_file_count = 0
 
@@ -140,6 +141,16 @@ class Individual(object):
         str
         """
         return get_assembly_name(self._assembly)
+
+    @property
+    def source(self):
+        """ Summary of the SNP data source(s) for this ``Individual``'s SNPs.
+
+        Returns
+        -------
+        str
+        """
+        return ', '.join(self._source)
 
     def load_snps(self, raw_data, discrepant_snp_positions_threshold=100,
                   discrepant_genotypes_threshold=10000):
@@ -387,6 +398,7 @@ class Individual(object):
             return
 
         assembly = snps.assembly
+        source = snps.source
 
         if not snps.assembly_detected:
             print('assembly not detected, assuming build {}'.format(snps.assembly))
@@ -400,6 +412,7 @@ class Individual(object):
         snps = self._double_single_alleles(snps.snps, 'X')
 
         if self._snps is None:
+            self._source.append(source)
             self._snps = snps
         else:
             common_snps = self._snps.join(snps, how='inner', rsuffix='_added')
@@ -451,6 +464,7 @@ class Individual(object):
                 return
 
             # add new SNPs
+            self._source.append(source)
             self._snps = self._snps.combine_first(snps)
             self._snps.loc[discrepant_genotypes.index, 'genotype'] = np.nan
 

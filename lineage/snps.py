@@ -30,7 +30,7 @@ import pandas as pd
 class SNPs(object):
 
     def __init__(self, file):
-        self.snps = self._read_raw_data(file)
+        self.snps, self.source = self._read_raw_data(file)
         self.assembly = None
         self.assembly_detected = False
 
@@ -128,14 +128,18 @@ class SNPs(object):
         -------
         pandas.DataFrame
             individual's genetic data normalized for use with `lineage`
+        str
+            name of data source
         """
         try:
-            return pd.read_csv(file, comment='#', sep='\t', na_values='--',
+            df = pd.read_csv(file, comment='#', sep='\t', na_values='--',
                                names=['rsid', 'chrom', 'pos', 'genotype'],
                                index_col=0, dtype={'chrom': object})
+
+            return df, '23andMe'
         except Exception as err:
             print(err)
-            return None
+            return None, ''
 
     @staticmethod
     def _read_ftdna(file):
@@ -152,6 +156,8 @@ class SNPs(object):
         -------
         pandas.DataFrame
             individual's genetic data normalized for use with `lineage`
+        str
+            name of data source
         """
         try:
             df = pd.read_csv(file, skiprows=1, na_values='--',
@@ -165,10 +171,10 @@ class SNPs(object):
             # if second header existed, pos dtype will be object (should be np.int64)
             df['pos'] = df['pos'].astype(np.int64)
 
-            return df
+            return df, 'FTDNA'
         except Exception as err:
             print(err)
-            return None
+            return None, ''
 
     @staticmethod
     def _read_ancestry(file):
@@ -185,6 +191,8 @@ class SNPs(object):
         -------
         pandas.DataFrame
             individual's genetic data normalized for use with `lineage`
+        str
+            name of data source
         """
         try:
             df = pd.read_csv(file, comment='#', header=0, sep='\t', na_values=0,
@@ -205,10 +213,10 @@ class SNPs(object):
             df.ix[np.where(df['chrom'] == '25')[0], 'chrom'] = 'PAR'
             df.ix[np.where(df['chrom'] == '26')[0], 'chrom'] = 'MT'
 
-            return df
+            return df, 'AncestryDNA'
         except Exception as err:
             print(err)
-            return None
+            return None, ''
 
     @staticmethod
     def _read_generic_csv(file):
@@ -234,16 +242,18 @@ class SNPs(object):
         -------
         pandas.DataFrame
             individual's genetic data normalized for use with `lineage`
+        str
+            name of data source
         """
         try:
             df = pd.read_csv(file, skiprows=1, na_values='--',
                              names=['rsid', 'chrom', 'pos', 'genotype'],
                              index_col=0, dtype={'chrom': object, 'pos': np.int64})
 
-            return df
+            return df, 'generic'
         except Exception as err:
             print(err)
-            return None
+            return None, ''
 
 
 def detect_assembly(snps):

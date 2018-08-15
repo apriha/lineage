@@ -67,6 +67,7 @@ def test_name(l):
 def test_snps_23andme(l, generic_snps):
     # https://www.23andme.com
     ind = l.create_individual('', 'tests/input/23andme.txt')
+    assert ind.source == '23andMe'
     pd.testing.assert_frame_equal(ind.snps, generic_snps)
 
 
@@ -75,12 +76,14 @@ def test_snps_23andme_zip(l, generic_snps):
         # https://stackoverflow.com/a/16104667
         f.write('tests/input/23andme.txt', arcname='23andme.txt')
     ind = l.create_individual('', 'tests/input/23andme.txt.zip')
+    assert ind.source == '23andMe'
     pd.testing.assert_frame_equal(ind.snps, generic_snps)
 
 
 def test_snps_ftdna(l, generic_snps):
     # https://www.familytreedna.com
     ind = l.create_individual('', 'tests/input/ftdna.csv')
+    assert ind.source == 'FTDNA'
     pd.testing.assert_frame_equal(ind.snps, generic_snps)
 
 
@@ -89,13 +92,20 @@ def test_snps_ftdna_gzip(l, generic_snps):
         with gzip.open('tests/input/ftdna.csv.gz', 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
     ind = l.create_individual('', 'tests/input/ftdna.csv.gz')
+    assert ind.source == 'FTDNA'
     pd.testing.assert_frame_equal(ind.snps, generic_snps)
 
 
 def test_snps_ancestry(l, generic_snps):
     # https://www.ancestry.com
     ind = l.create_individual('', 'tests/input/ancestry.txt')
+    assert ind.source == 'AncestryDNA'
     pd.testing.assert_frame_equal(ind.snps, generic_snps)
+
+
+def test_source_generic(l):
+    ind = l.create_individual('', 'tests/input/NCBI36.csv')
+    assert ind.source == 'generic'
 
 
 def test_snps_None(l):
@@ -143,6 +153,7 @@ def test_load_snps_list(l, snps_GRCh37):
     ind = l.create_individual('')
     ind.load_snps(['tests/input/GRCh37.csv', 'tests/input/GRCh37.csv'])
     pd.testing.assert_frame_equal(ind.snps, snps_GRCh37)
+    assert ind.source == 'generic, generic'
 
 
 def test_load_snps_None(l):
