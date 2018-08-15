@@ -292,31 +292,6 @@ def test_remap_snps_invalid_assembly(l):
     assert len(chromosomes_not_remapped) == 2
 
 
-def test__read_23andme_None(l):
-    ind = l.create_individual('')
-    assert ind._read_23andme(None) is None
-
-
-def test__read_ftdna_None(l):
-    ind = l.create_individual('')
-    assert ind._read_ftdna(None) is None
-
-
-def test__read_ancestry_None(l):
-    ind = l.create_individual('')
-    assert ind._read_ancestry(None) is None
-
-
-def test__read_generic_csv_None(l):
-    ind = l.create_individual('')
-    assert ind._read_generic_csv(None) is None
-
-
-def test__lookup_assembly_with_snp_pos_None(l):
-    ind = l.create_individual('')
-    assert ind._lookup_assembly_with_snp_pos(None, None) is None
-
-
 def test___repr__(l):
     ind = l.create_individual('test')
     assert "Individual('test')" == ind.__repr__()
