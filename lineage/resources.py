@@ -23,6 +23,9 @@ References
   http://dx.doi.org/10.1038/35057062
 ..[4] hg19 (GRCh37): Hiram Clawson, Brooke Rhead, Pauline Fujita, Ann Zweig, Katrina
   Learned, Donna Karolchik and Robert Kuhn, https://genome.ucsc.edu/cgi-bin/hgGateway?db=hg19
+..[5] Yates et. al. (doi:10.1093/bioinformatics/btu613),
+  http://europepmc.org/search/?query=DOI:10.1093/bioinformatics/btu613
+..[6] Zerbino et. al. (doi.org/10.1093/nar/gkx1098), https://doi.org/10.1093/nar/gkx1098
 
 """
 
@@ -45,8 +48,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import gzip
+import json
 import os
 import tarfile
+import tempfile
 import urllib.request
 import zlib
 
@@ -58,7 +63,7 @@ import lineage
 class Resources(object):
     """ Object used to manage resources required by `lineage`. """
 
-    def __init__(self, resources_dir):
+    def __init__(self, resources_dir='resources', ensembl_rest_client=None):
         """ Initialize a ``Resources`` object.
 
         Parameters
@@ -71,6 +76,7 @@ class Resources(object):
         self._cytoBand_hg19 = None
         self._knownGene_hg19 = None
         self._kgXref_hg19 = None
+        self._ensembl_rest_client = ensembl_rest_client
 
     def get_genetic_map_HapMapII_GRCh37(self):
         """ Get International HapMap Consortium HapMap Phase II genetic map for Build 37.
@@ -124,6 +130,24 @@ class Resources(object):
             self._kgXref_hg19 = self._load_kgXref(self._get_path_kgXref_hg19())
 
         return self._kgXref_hg19
+
+    def get_assembly_mapping_data(self, source_assembly, target_assembly):
+        """ Get assembly mapping data.
+
+        Parameters
+        ----------
+        source_assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
+            assembly to remap from
+        target_assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
+            assembly to remap to
+
+        Returns
+        -------
+        dict
+            dict of json assembly mapping data if loading was successful, else None
+        """
+        return self._load_assembly_mapping_data(
+            self._get_path_assembly_mapping_data(source_assembly, target_assembly))
 
     def download_example_datasets(self):
         """ Download example datasets from `openSNP <https://opensnp.org>`_.
@@ -216,6 +240,39 @@ class Resources(object):
                         genetic_map[member.name[start_pos:end_pos]] = df
 
             return genetic_map
+        except Exception as err:
+            print(err)
+            return None
+
+    @staticmethod
+    def _load_assembly_mapping_data(filename):
+        """ Load assembly mapping data.
+
+        Parameters
+        ----------
+        filename : str
+            path to compressed archive with assembly mapping data
+
+        Returns
+        -------
+        assembly_mapping_data : dict
+            dict of assembly maps if loading was successful, else None
+
+        Notes
+        -----
+        Keys of returned dict are chromosomes and values are the corresponding assembly map.
+        """
+        try:
+            assembly_mapping_data = {}
+
+            with tarfile.open(filename, 'r') as tar:
+                # http://stackoverflow.com/a/2018576
+                for member in tar.getmembers():
+                    if '.json' in member.name:
+                        assembly_mapping_data[member.name.split('.')[0]] =\
+                            json.load(tar.extractfile(member))
+
+            return assembly_mapping_data
         except Exception as err:
             print(err)
             return None
@@ -353,6 +410,90 @@ class Resources(object):
         return self._download_file(
             'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/kgXref.txt.gz',
             'kgXref_hg19.txt.gz')
+
+    def _get_path_assembly_mapping_data(self, source_assembly, target_assembly, retries=10):
+        """ Get local path to assembly mapping data, downloading if necessary.
+
+        Parameters
+        ----------
+        source_assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
+            assembly to remap from
+        target_assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
+            assembly to remap to
+        retries : int
+            number of retries per chromosome to download assembly mapping data
+
+        Returns
+        -------
+        str
+            path to <source_assembly>_<target_assembly>.tar.gz
+
+        References
+        ----------
+        ..[1] Ensembl, Assembly Information Endpoint,
+          https://rest.ensembl.org/documentation/info/assembly_info
+        ..[2] Ensembl, Assembly Map Endpoint,
+          http://rest.ensembl.org/documentation/info/assembly_map
+
+        """
+        try:
+            if not lineage.create_dir(self._resources_dir):
+                return None
+
+            # get chromosomes with assembly mapping data
+            info_endpoint = '/info/assembly/human?'
+            response = self._ensembl_rest_client.perform_rest_action(info_endpoint)
+            chroms = response['karyotype']
+
+            assembly_mapping_data = source_assembly + '_' + target_assembly
+            destination = os.path.join(self._resources_dir, assembly_mapping_data + '.tar.gz')
+
+            if not os.path.exists(destination) or not self._all_chroms_in_tar(chroms, destination):
+                print('Downloading {}'.format(os.path.relpath(destination)))
+
+                with tarfile.open(destination, 'w:gz') as out_tar:
+                    for chrom in chroms:
+                        file = chrom + '.json'
+
+                        map_endpoint = '/map/human/' + source_assembly + '/' + chrom + '/' + \
+                                       target_assembly + '?'
+
+                        # get assembly mapping data
+                        response = None
+                        retry = 0
+                        while response is None and retry < retries:
+                            response = self._ensembl_rest_client.perform_rest_action(map_endpoint)
+                            retry += 1
+
+                        if response is not None:
+                            # open temp file, save json response to file, close temp file
+                            with tempfile.NamedTemporaryFile(delete=False, mode='w') as f:
+                                json.dump(response, f)
+
+                            # add temp file to archive
+                            out_tar.add(f.name, arcname=file)
+
+                            # remove temp file
+                            os.remove(f.name)
+        except Exception as err:
+            print(err)
+            return None
+
+        return destination
+
+    def _all_chroms_in_tar(self, chroms, filename):
+        try:
+            with tarfile.open(filename, 'r') as tar:
+                members = tar.getnames()
+
+            for chrom in chroms:
+                if chrom + '.json' not in members:
+                    return False
+        except Exception as err:
+            print(err)
+            return False
+
+        return True
 
     def _download_file(self, url, filename, compress=False, timeout=30):
         """ Download a file to the resources folder.

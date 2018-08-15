@@ -21,10 +21,5 @@ import pytest
 from lineage import Lineage
 
 @pytest.fixture(scope='module')
-def resource():
-    from lineage.resources import Resources
-    return Resources(resources_dir='resources')
-
-@pytest.fixture(scope='module')
 def l():
     return Lineage()

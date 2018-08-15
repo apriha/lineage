@@ -52,8 +52,9 @@ class Lineage(object):
             name / path of resources directory
         """
         self._output_dir = os.path.abspath(output_dir)
-        self._resources = Resources(resources_dir=resources_dir)
         self._ensembl_rest_client = EnsemblRestClient()
+        self._resources = Resources(resources_dir=resources_dir,
+                                    ensembl_rest_client=self._ensembl_rest_client)
 
     def create_individual(self, name, raw_data=None):
         """ Initialize an individual in the context of the `lineage` framework.
