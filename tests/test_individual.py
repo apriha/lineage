@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import gzip
+import os
 import shutil
 import zipfile
 
@@ -101,6 +102,15 @@ def test_snps_ancestry(l, generic_snps):
     ind = l.create_individual('', 'tests/input/ancestry.txt')
     assert ind.source == 'AncestryDNA'
     pd.testing.assert_frame_equal(ind.snps, generic_snps)
+
+
+def test_source_lineage(l):
+    ind = l.create_individual('', 'tests/input/chromosomes.csv')
+    assert ind.source == 'generic'
+    file = ind.save_snps()
+    ind_saved_snps = l.create_individual('', file)
+    assert ind_saved_snps.source == 'lineage'
+    pd.testing.assert_frame_equal(ind.snps, ind_saved_snps.snps)
 
 
 def test_source_generic(l):
@@ -198,7 +208,7 @@ def test_load_snps_assembly_mismatch_exceed_discrepant_genotypes_threshold(l):
 
 def test_save_snps(l, snps_GRCh37):
     ind = l.create_individual('test save snps', 'tests/input/GRCh37.csv')
-    assert ind.save_snps()
+    assert os.path.relpath(ind.save_snps()) == 'output/test_save_snps.csv'
     ind_saved_snps = l.create_individual('', 'output/test_save_snps.csv')
     pd.testing.assert_frame_equal(ind_saved_snps.snps, snps_GRCh37)
 
