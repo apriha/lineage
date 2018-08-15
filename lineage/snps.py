@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+from itertools import groupby, count
 import gzip
 import os
 import zipfile
@@ -61,6 +62,17 @@ class SNPs(object):
             list of str chromosomes (e.g., ['1', '2', '3', 'MT'], empty list if no chromosomes
         """
         return get_chromosomes(self.snps)
+
+    @property
+    def chromosomes_summary(self):
+        """ Summary of the chromosomes of ``SNPs``.
+
+        Returns
+        -------
+        str
+            human-readable listing of chromosomes (e.g., '1-3, MT'), empty str if no chromosomes
+        """
+        return get_chromosomes_summary(self.snps)
 
     def _read_raw_data(self, file):
         if not os.path.exists(file):
@@ -322,3 +334,43 @@ def get_chromosomes(snps):
         return list(pd.unique(snps['chrom']))
     else:
         return []
+
+
+def get_chromosomes_summary(snps):
+    """ Summary of the chromosomes of SNPs.
+
+    Parameters
+    ----------
+    snps : pandas.DataFrame
+
+    Returns
+    -------
+    str
+        human-readable listing of chromosomes (e.g., '1-3, MT'), empty str if no chromosomes
+    """
+
+    if snps is not None:
+        chroms = list(pd.unique(snps['chrom']))
+
+        int_chroms = [int(chrom) for chrom in chroms if chrom.isdigit()]
+        str_chroms = [chrom for chrom in chroms if not chrom.isdigit()]
+
+        # https://codereview.stackexchange.com/a/5202
+        def as_range(iterable):
+            l = list(iterable)
+            if len(l) > 1:
+                return '{0}-{1}'.format(l[0], l[-1])
+            else:
+                return '{0}'.format(l[0])
+
+        # create str representations
+        int_chroms = ', '.join(as_range(g) for _, g in
+                               groupby(int_chroms, key=lambda n, c=count(): n - next(c)))
+        str_chroms = ', '.join(str_chroms)
+
+        if str_chroms != '':
+            int_chroms += ', '
+
+        return int_chroms + str_chroms
+    else:
+        return ''

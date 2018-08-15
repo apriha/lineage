@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-from itertools import groupby, count
 import os
 import re
 
@@ -27,7 +26,7 @@ import pandas as pd
 from pandas.api.types import CategoricalDtype
 
 import lineage
-from lineage.snps import SNPs, get_assembly_name, get_chromosomes
+from lineage.snps import SNPs, get_assembly_name, get_chromosomes, get_chromosomes_summary
 
 class Individual(object):
     """ Object used to represent and interact with an individual.
@@ -120,33 +119,9 @@ class Individual(object):
         Returns
         -------
         str
-            human-readable list of chromosomes, empty str if no chromosomes
+            human-readable listing of chromosomes (e.g., '1-3, MT'), empty str if no chromosomes
         """
-        if self._snps is not None:
-            chroms = list(pd.unique(self.snps['chrom']))
-
-            int_chroms = [int(chrom) for chrom in chroms if chrom.isdigit()]
-            str_chroms = [chrom for chrom in chroms if not chrom.isdigit()]
-
-            # https://codereview.stackexchange.com/a/5202
-            def as_range(iterable):
-                l = list(iterable)
-                if len(l) > 1:
-                    return '{0}-{1}'.format(l[0], l[-1])
-                else:
-                    return '{0}'.format(l[0])
-
-            # create str representations
-            int_chroms = ', '.join(as_range(g) for _, g in
-                                   groupby(int_chroms, key=lambda n, c=count(): n - next(c)))
-            str_chroms = ', '.join(str_chroms)
-
-            if str_chroms != '':
-                int_chroms += ', '
-
-            return int_chroms + str_chroms
-        else:
-            return ''
+        return get_chromosomes_summary(self._snps)
 
     @property
     def assembly(self):
