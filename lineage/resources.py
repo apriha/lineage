@@ -269,8 +269,11 @@ class Resources(object):
                 # http://stackoverflow.com/a/2018576
                 for member in tar.getmembers():
                     if '.json' in member.name:
+                        with tar.extractfile(member) as tar_file:
+                            tar_bytes = tar_file.read()
+                        # https://stackoverflow.com/a/42683509/4727627
                         assembly_mapping_data[member.name.split('.')[0]] =\
-                            json.load(tar.extractfile(member))
+                            json.loads(tar_bytes.decode('utf-8'))
 
             return assembly_mapping_data
         except Exception as err:
