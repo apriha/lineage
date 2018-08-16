@@ -30,6 +30,7 @@ import pandas as pd
 from lineage.ensembl import EnsemblRestClient
 from lineage.individual import Individual
 from lineage.resources import Resources
+from lineage.snps import sort_snps
 from lineage.visualization import plot_chromosomes
 
 # set version string with Versioneer
@@ -71,7 +72,7 @@ class Lineage(object):
         Individual
             ``Individual`` initialized in the context of the `lineage` framework
         """
-        return Individual(name, raw_data, self._output_dir, self._ensembl_rest_client)
+        return Individual(name, raw_data, self._output_dir)
 
     def download_example_datasets(self):
         """ Download example datasets from `openSNP <https://opensnp.org>`_.
@@ -96,6 +97,171 @@ class Lineage(object):
             print('Example dataset(s) not currently available')
 
         return paths
+
+    def remap_snps(self, individual, target_assembly, complement_bases=True):
+        """ Remap the SNP coordinates of an individual from one assembly to another.
+
+        This method uses the assembly map endpoint of the Ensembl REST API service (via
+        ``Resources``'s ``EnsemblRestClient``) to convert SNP coordinates / positions from one
+        assembly to another. After remapping, the coordinates / positions for the individual's
+        SNPs will be that of the target assembly.
+
+        If the SNPs are already mapped relative to the target assembly, remapping will not be
+        performed.
+
+        Parameters
+        ----------
+        target_assembly : {'NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38}
+            assembly to remap to
+        complement_bases : bool
+            complement bases when remapping SNPs to the minus strand
+
+        Returns
+        -------
+        chromosomes_remapped : list of str
+            chromosomes remapped; empty if None
+        chromosomes_not_remapped : list of str
+            chromosomes not remapped; empty if None
+
+        Notes
+        -----
+        An assembly is also know as a "build." For example:
+
+        Assembly NCBI36 = Build 36
+        Assembly GRCh37 = Build 37
+        Assembly GRCh38 = Build 38
+
+        See https://www.ncbi.nlm.nih.gov/assembly for more information about assemblies and
+        remapping.
+
+        References
+        ----------
+        ..[1] Ensembl, Assembly Map Endpoint,
+          http://rest.ensembl.org/documentation/info/assembly_map
+        """
+        chromosomes_remapped = []
+        chromosomes_not_remapped = []
+
+        snps = individual.snps
+
+        if snps is None:
+            print('No SNPs to remap')
+            return chromosomes_remapped, chromosomes_not_remapped
+        else:
+            chromosomes_not_remapped = list(snps['chrom'].unique())
+
+        valid_assemblies = ['NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38]
+
+        if target_assembly not in valid_assemblies:
+            print('Invalid target assembly')
+            return chromosomes_remapped, chromosomes_not_remapped
+
+        if isinstance(target_assembly, int):
+            if target_assembly == 36:
+                target_assembly = 'NCBI36'
+            else:
+                target_assembly = 'GRCh' + str(target_assembly)
+
+        if individual.assembly == 36:
+            source_assembly = 'NCBI36'
+        else:
+            source_assembly = 'GRCh' + str(individual.assembly)
+
+        if source_assembly == target_assembly:
+            return chromosomes_remapped, chromosomes_not_remapped
+
+        assembly_mapping_data = \
+            self._resources.get_assembly_mapping_data(source_assembly, target_assembly)
+
+        if assembly_mapping_data is None:
+            return chromosomes_remapped, chromosomes_not_remapped
+
+        for chrom in snps['chrom'].unique():
+            # extract SNPs for this chrom for faster remapping
+            temp = pd.DataFrame(snps.loc[snps['chrom'] == chrom])
+
+            temp['remapped'] = False
+
+            if chrom in assembly_mapping_data:
+                chromosomes_remapped.append(chrom)
+                chromosomes_not_remapped.remove(chrom)
+                mappings = assembly_mapping_data[chrom]
+            else:
+                print('Chromosome ' + chrom + ' not remapped')
+                continue
+
+            pos_start = int(temp['pos'].describe()['min'])
+            pos_end = int(temp['pos'].describe()['max'])
+
+            for mapping in mappings['mappings']:
+                # skip if mapping is outside of range of SNP positions
+                if mapping['original']['end'] <= pos_start or \
+                        mapping['original']['start'] >= pos_end:
+                    continue
+
+                orig_range_len = mapping['original']['end'] - mapping['original']['start']
+                mapped_range_len = mapping['mapped']['end'] - mapping['mapped']['start']
+
+                orig_region = mapping['original']['seq_region_name']
+                mapped_region = mapping['mapped']['seq_region_name']
+
+                if orig_region != mapped_region:
+                    print('discrepant chroms')
+                    continue
+
+                if orig_range_len != mapped_range_len:
+                    print('discrepant coords')  # observed when mapping NCBI36 -> GRCh38
+                    continue
+
+                # find the SNPs that are being remapped for this mapping
+                snp_indices = temp.loc[~temp['remapped'] &
+                                   (temp['pos'] >= mapping['original']['start']) &
+                                   (temp['pos'] <= mapping['original']['end'])].index
+
+                if len(snp_indices) > 0:
+                    # remap the SNPs
+                    if mapping['mapped']['strand'] == -1:
+                        # flip and (optionally) complement since we're mapping to minus strand
+                        diff_from_start = temp.loc[snp_indices, 'pos'] - mapping['original']['start']
+                        temp.loc[snp_indices, 'pos'] = mapping['mapped']['end'] - diff_from_start
+
+                        if complement_bases:
+                            snps.loc[snp_indices, 'genotype'] = \
+                                temp.loc[snp_indices, 'genotype'].apply(self._complement_bases)
+                    else:
+                        # mapping is on same (plus) strand, so just remap based on offset
+                        offset = mapping['mapped']['start'] - mapping['original']['start']
+                        temp.loc[snp_indices, 'pos'] = temp['pos'] + offset
+
+                    # mark these SNPs as remapped
+                    temp.loc[snp_indices, 'remapped'] = True
+
+            # update SNP positions for this chrom
+            snps.loc[temp.index, 'pos'] = temp['pos']
+
+        individual._set_snps(sort_snps(snps), int(target_assembly[-2:]))
+
+        return chromosomes_remapped, chromosomes_not_remapped
+
+    def _complement_bases(self, genotype):
+        if pd.isnull(genotype):
+            return np.nan
+
+        complement = ''
+
+        for base in list(genotype):
+            if base == 'A':
+                complement += 'T'
+            elif base == 'G':
+                complement += 'C'
+            elif base == 'C':
+                complement += 'G'
+            elif base == 'T':
+                complement += 'A'
+            else:
+                complement += base
+
+        return complement
 
     def find_discordant_snps(self, individual1, individual2, individual3=None, save_output=False):
         """ Find discordant SNPs between two or three individuals.
