@@ -24,11 +24,10 @@ import re
 
 import numpy as np
 import pandas as pd
-from pandas.api.types import CategoricalDtype
 
 import lineage
 from lineage.snps import (SNPs, get_assembly_name, get_chromosomes, get_chromosomes_summary,
-                          get_snp_count)
+                          get_snp_count, sort_snps)
 
 class Individual(object):
     """ Object used to represent and interact with an individual.
@@ -493,7 +492,7 @@ class Individual(object):
             # combine_first converts position to float64, so convert it back to int64
             self._snps['pos'] = self._snps['pos'].astype(np.int64)
 
-        self._sort_snps()
+        self._snps = sort_snps(self._snps)
 
     @staticmethod
     def _double_single_alleles(df, chrom):
@@ -519,34 +518,3 @@ class Individual(object):
         df.ix[single_alleles, 'genotype'] = df.ix[single_alleles, 'genotype'] * 2
 
         return df
-
-    def _sort_snps(self):
-        """ Sort this individual's SNPs. """
-
-        sorted_list = sorted(self._snps['chrom'].unique(), key=self._natural_sort_key)
-
-        # move PAR and MT to the end of the dataframe
-        if 'PAR' in sorted_list:
-            sorted_list.remove('PAR')
-            sorted_list.append('PAR')
-
-        if 'MT' in sorted_list:
-            sorted_list.remove('MT')
-            sorted_list.append('MT')
-
-        # convert chrom column to category for sorting
-        # https://stackoverflow.com/a/26707444
-        self._snps['chrom'] = \
-            self._snps['chrom'].astype(CategoricalDtype(categories=sorted_list, ordered=True))
-
-        # sort based on ordered chromosome list and position
-        self._snps = self._snps.sort_values(['chrom', 'pos'])
-
-        # convert chromosome back to object
-        self._snps['chrom'] = self._snps['chrom'].astype(object)
-
-    # https://stackoverflow.com/a/16090640
-    @staticmethod
-    def _natural_sort_key(s, natural_sort_re=re.compile('([0-9]+)')):
-        return [int(text) if text.isdigit() else text.lower()
-                for text in re.split(natural_sort_re, s)]

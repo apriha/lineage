@@ -21,11 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from itertools import groupby, count
 import gzip
 import os
+import re
 import zipfile
 
 import numpy as np
 import pandas as pd
-
+from pandas.api.types import CategoricalDtype
 
 class SNPs(object):
 
@@ -424,3 +425,35 @@ def get_chromosomes_summary(snps):
         return int_chroms + str_chroms
     else:
         return ''
+
+def sort_snps(snps):
+    """ Sort SNPs based on ordered chromosome list and position. """
+
+    sorted_list = sorted(snps['chrom'].unique(), key=_natural_sort_key)
+
+    # move PAR and MT to the end of the dataframe
+    if 'PAR' in sorted_list:
+        sorted_list.remove('PAR')
+        sorted_list.append('PAR')
+
+    if 'MT' in sorted_list:
+        sorted_list.remove('MT')
+        sorted_list.append('MT')
+
+    # convert chrom column to category for sorting
+    # https://stackoverflow.com/a/26707444
+    snps['chrom'] = \
+        snps['chrom'].astype(CategoricalDtype(categories=sorted_list, ordered=True))
+
+    # sort based on ordered chromosome list and position
+    snps = snps.sort_values(['chrom', 'pos'])
+
+    # convert chromosome back to object
+    snps['chrom'] = snps['chrom'].astype(object)
+
+    return snps
+
+# https://stackoverflow.com/a/16090640
+def _natural_sort_key(s, natural_sort_re=re.compile('([0-9]+)')):
+    return [int(text) if text.isdigit() else text.lower()
+            for text in re.split(natural_sort_re, s)]
