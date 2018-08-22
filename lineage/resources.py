@@ -498,7 +498,7 @@ class Resources(object):
 
         return True
 
-    def _download_file(self, url, filename, compress=False, timeout=30):
+    def _download_file(self, url, filename, compress=False, timeout=120):
         """ Download a file to the resources folder.
 
         Download data from `url`, save as `filename`, and optionally compress with gzip.
