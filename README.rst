@@ -36,8 +36,8 @@ On Linux systems, the following system-level installs may also be required::
 
 Installation
 ------------
-``lineage`` is `available <https://pypi.python.org/pypi/lineage/>`_ on the
-`Python Package Index <https://pypi.python.org/pypi>`_. Install ``lineage`` (and its required
+``lineage`` is `available <https://pypi.org/project/lineage/>`_ on the
+`Python Package Index <https://pypi.org>`_. Install ``lineage`` (and its required
 Python dependencies) via ``pip``::
 
     $ pip install lineage
