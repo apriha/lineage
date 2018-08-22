@@ -11,9 +11,11 @@ matrix:
   include:
     - python: 3.5
     - python: 3.6
-    - python: 3.7
       env:
         DEPLOY="true"
+    - python: 3.7
+      dist: xenial
+      sudo: true
 
 before_install:
   - pip install pytest pytest-cov
