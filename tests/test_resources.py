@@ -37,7 +37,7 @@ def resource_assembly_mapping():
 
 def test_get_genetic_map_HapMapII_GRCh37(resource):
     genetic_map_HapMapII_GRCh37 = resource.get_genetic_map_HapMapII_GRCh37()
-    assert len(genetic_map_HapMapII_GRCh37) == 25
+    assert len(genetic_map_HapMapII_GRCh37) == 23
 
 
 def test_get_cytoBand_hg19(resource):
