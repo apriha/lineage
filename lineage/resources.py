@@ -257,6 +257,12 @@ class Resources(object):
                         end_pos = member.name.index('.')
                         genetic_map[member.name[start_pos:end_pos]] = df
 
+            # X chrom consists of X PAR regions and X non-PAR region
+            genetic_map['X'] = pd.concat([genetic_map['X_par1'], genetic_map['X'],
+                                          genetic_map['X_par2']])
+            del genetic_map['X_par1']
+            del genetic_map['X_par2']
+
             return genetic_map
         except Exception as err:
             print(err)
