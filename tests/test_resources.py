@@ -67,6 +67,14 @@ def test_get_assembly_mapping_data(resource_assembly_mapping):
     assert len(assembly_mapping_data) == 25
 
 
+def test_get_all_resources(resource_assembly_mapping):
+    resources = resource_assembly_mapping.get_all_resources()
+    for k, v in resources.items():
+        if v is None:
+            assert False
+    assert True
+
+
 def test__all_chroms_in_tar(resource_assembly_mapping):
     assert not resource_assembly_mapping._all_chroms_in_tar(['PAR'], 'resources/NCBI36_GRCh37.tar.gz')
 

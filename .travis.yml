@@ -13,6 +13,9 @@ matrix:
     - python: 3.6
       env:
         DEPLOY="true"
+    - python: 3.7
+      dist: xenial
+      sudo: true
 
 before_install:
   - pip install pytest pytest-cov
@@ -29,6 +32,14 @@ before_script:
 
 script:
   - set -e
+  - |
+    if [ -z ${DEPLOY+x} ]; then  # https://stackoverflow.com/a/13864829/4727627
+      curl -sSf -o resources.tar.gz https://s3.amazonaws.com/lineage-public/resources.tar.gz
+      if [ -f resources.tar.gz ]; then
+        tar -xzf resources.tar.gz
+        rm resources.tar.gz
+      fi
+    fi
   - pytest --cov=lineage tests
 
 after_success:

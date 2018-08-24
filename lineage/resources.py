@@ -48,6 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import gzip
+import itertools
 import json
 import os
 import tarfile
@@ -204,6 +205,23 @@ class Resources(object):
             print(err)
 
         return paths
+
+    def get_all_resources(self):
+        """ Get / download all resources used throughout `lineage`.
+
+        Returns
+        -------
+        dict
+            dict of resources
+        """
+        resources = {}
+        resources['genetic_map_HapMapII_GRCh37'] = self.get_genetic_map_HapMapII_GRCh37()
+        resources['cytoBand_hg19'] = self.get_cytoBand_hg19()
+        resources['knownGene_hg19'] = self.get_knownGene_hg19()
+        resources['kgXref_hg19'] = self.get_kgXref_hg19()
+        for source, target in itertools.permutations(['NCBI36', 'GRCh37', 'GRCh38'], 2):
+            resources[source + '_' + target] = self.get_assembly_mapping_data(source, target)
+        return resources
 
     @staticmethod
     def _load_genetic_map(filename):

@@ -23,7 +23,7 @@ Dependencies
 ``lineage`` requires `Python <https://www.python.org>`_ 3.5+ and the following Python packages:
 
 - `numpy <http://www.numpy.org>`_
-- `pandas <http://pandas.pydata.org>`_ 0.21.0+
+- `pandas <http://pandas.pydata.org>`_
 - `matplotlib <http://matplotlib.org>`_
 
 On Linux systems, the following system-level installs may also be required::
@@ -36,8 +36,8 @@ On Linux systems, the following system-level installs may also be required::
 
 Installation
 ------------
-``lineage`` is `available <https://pypi.python.org/pypi/lineage/>`_ on the
-`Python Package Index <https://pypi.python.org/pypi>`_. Install ``lineage`` (and its required
+``lineage`` is `available <https://pypi.org/project/lineage/>`_ on the
+`Python Package Index <https://pypi.org>`_. Install ``lineage`` (and its required
 Python dependencies) via ``pip``::
 
     $ pip install lineage

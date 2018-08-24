@@ -497,7 +497,7 @@ class Lineage(object):
                 shared_genes_dfs.append(temp)
 
         if len(shared_genes_dfs) > 0:
-            shared_genes = pd.concat(shared_genes_dfs)
+            shared_genes = pd.concat(shared_genes_dfs, sort=True)
 
             if type == 'one':
                 chroms = 'one_chrom'
@@ -558,7 +558,7 @@ class Lineage(object):
             temp = pd.DataFrame(df.loc[(df['chrom'] == chrom)]['pos'].values, columns=['pos'])
 
             # merge genetic map for this chrom
-            temp = temp.append(genetic_map[chrom], ignore_index=True)
+            temp = temp.append(genetic_map[chrom], ignore_index=True, sort=True)
 
             # sort based on pos
             temp = temp.sort_values('pos')

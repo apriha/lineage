@@ -81,6 +81,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
         'Topic :: Scientific/Engineering :: Information Analysis',
@@ -91,8 +92,8 @@ setup(
              'inheritance ancestry',
     packages=['lineage'],
     install_requires=[
-        'numpy',
-        'pandas>=0.21.0',
-        'matplotlib'
+        'numpy==1.15.1',
+        'pandas==0.23.4',
+        'matplotlib==2.2.3'
     ]
 )
