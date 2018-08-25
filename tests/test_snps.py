@@ -68,9 +68,12 @@ def test_chromosomes_summary(snps):
 
 
 def test_sex_Male_Y_chrom(l):
-    ind = simulate_snps(l.create_individual('ind1'), chrom='Y', pos_start=1, pos_max=59373566,
-                        pos_step=10000)
-    assert ind.sex == 'Male'
+    ind = simulate_snps(l.create_individual('test_snps_sex_Male_Y_chrom'), chrom='Y', pos_start=1,
+                        pos_max=59373566, pos_step=10000)
+    ind.save_snps()
+    from lineage.snps import SNPs
+    snps = SNPs('output/test_snps_sex_Male_Y_chrom.csv')
+    assert snps.sex == 'Male'
 
 
 def test__read_raw_data(snps_none):
