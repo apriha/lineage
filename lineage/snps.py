@@ -312,7 +312,7 @@ def detect_assembly(snps):
       dbSNP: the NCBI database of genetic variation. Nucleic Acids Res. 2001 Jan 1;29(1):308-11.
     ..[4] Database of Single Nucleotide Polymorphisms (dbSNP). Bethesda (MD): National Center
       for Biotechnology Information, National Library of Medicine. dbSNP accession: rs3094315,
-      rs11928389, rs2500347, and rs964481 (dbSNP Build ID: 151). Available from:
+      rs11928389, rs2500347, rs964481, and rs28736870 (dbSNP Build ID: 151). Available from:
       http://www.ncbi.nlm.nih.gov/SNP/
     """
     def lookup_assembly_with_snp_pos(pos, s):

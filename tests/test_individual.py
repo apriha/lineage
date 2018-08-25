@@ -270,7 +270,7 @@ def test_get_var_name(l):
 def test_remap_snps_36_to_37(l, snps_GRCh37):
     ind = l.create_individual('', 'tests/input/NCBI36.csv')
     chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(37)
-    assert ind.assembly == 37  # TODO: handle partial remapping; see #24
+    assert ind.assembly == 37
     assert ind.assembly_name == 'GRCh37'
     if len(chromosomes_remapped) == 2:
         assert len(chromosomes_not_remapped) == 0
@@ -280,7 +280,7 @@ def test_remap_snps_36_to_37(l, snps_GRCh37):
 def test_remap_snps_37_to_36(l, snps_NCBI36):
     ind = l.create_individual('', 'tests/input/GRCh37.csv')
     chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(36)
-    assert ind.assembly == 36  # TODO: handle partial remapping; see #24
+    assert ind.assembly == 36
     assert ind.assembly_name == 'NCBI36'
     if len(chromosomes_remapped) == 2:
         assert len(chromosomes_not_remapped) == 0
@@ -290,7 +290,7 @@ def test_remap_snps_37_to_36(l, snps_NCBI36):
 def test_remap_snps_37_to_38(l, snps_GRCh38):
     ind = l.create_individual('', 'tests/input/GRCh37.csv')
     chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(38)
-    assert ind.assembly == 38  # TODO: handle partial remapping; see #24
+    assert ind.assembly == 38
     assert ind.assembly_name == 'GRCh38'
     if len(chromosomes_remapped) == 2:
         assert len(chromosomes_not_remapped) == 0
@@ -300,10 +300,22 @@ def test_remap_snps_37_to_38(l, snps_GRCh38):
 def test_remap_snps_37_to_38_via_lineage(l, snps_GRCh38):
     ind = l.create_individual('', 'tests/input/GRCh37.csv')
     chromosomes_remapped, chromosomes_not_remapped = l.remap_snps(ind, 38)
-    assert ind.assembly == 38  # TODO: handle partial remapping; see #24
+    assert ind.assembly == 38
     assert ind.assembly_name == 'GRCh38'
     if len(chromosomes_remapped) == 2:
         assert len(chromosomes_not_remapped) == 0
+        pd.testing.assert_frame_equal(ind.snps, snps_GRCh38)
+
+
+def test_remap_snps_37_to_38_with_PAR_SNP(l, snps_GRCh38):
+    ind = l.create_individual('', 'tests/input/GRCh37_PAR.csv')
+    assert ind.snp_count == 5
+    chromosomes_remapped, chromosomes_not_remapped = l.remap_snps(ind, 38)
+    assert ind.assembly == 38
+    assert ind.assembly_name == 'GRCh38'
+    if len(chromosomes_remapped) == 2:
+        assert len(chromosomes_not_remapped) == 1
+        assert ind.snp_count == 4
         pd.testing.assert_frame_equal(ind.snps, snps_GRCh38)
 
 

@@ -187,7 +187,9 @@ class Lineage(object):
                 chromosomes_not_remapped.remove(chrom)
                 mappings = assembly_mapping_data[chrom]
             else:
-                print('Chromosome ' + chrom + ' not remapped')
+                print('Chromosome ' + chrom + ' not remapped; '
+                      'removing chromosome from SNPs for consistency')
+                snps = snps.drop(snps.loc[snps['chrom'] == chrom].index)
                 continue
 
             pos_start = int(temp['pos'].describe()['min'])
