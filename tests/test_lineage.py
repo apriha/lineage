@@ -181,6 +181,50 @@ def test_find_shared_dna_one_chrom_shared(l):
     shutil.rmtree('output')
 
 
+def test_find_shared_dna_X_chrom_two_individuals_male(l):
+    ind1 = simulate_snps(l.create_individual('ind1'), chrom='X', pos_max=155270560, genotype='AA')
+    ind2 = simulate_snps(l.create_individual('ind2'), chrom='X', pos_max=155270560, genotype='AA')
+
+    one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = \
+        l.find_shared_dna(ind1, ind2, shared_genes=True)
+
+    assert len(one_chrom_shared_dna) == 1  # PAR1, non-PAR, PAR2
+    assert len(two_chrom_shared_dna) == 1  # PAR1
+    assert len(one_chrom_shared_genes) == 3022
+    assert len(two_chrom_shared_genes) == 54
+    np.testing.assert_allclose(one_chrom_shared_dna[0]['cMs'], 202.022891)
+    np.testing.assert_allclose(two_chrom_shared_dna[0]['cMs'], 20.837792)
+    assert os.path.exists('output/shared_dna_one_chrom_ind1_ind2.csv')
+    assert os.path.exists('output/shared_dna_two_chroms_ind1_ind2.csv')
+    assert os.path.exists('output/shared_genes_one_chrom_ind1_ind2.csv')
+    assert os.path.exists('output/shared_genes_two_chroms_ind1_ind2.csv')
+    assert os.path.exists('output/shared_dna_ind1_ind2.png')
+
+    shutil.rmtree('output')
+
+
+def test_find_shared_dna_X_chrom_two_individuals_female(l):
+    ind1 = simulate_snps(l.create_individual('ind1'), chrom='X', pos_max=155270560, genotype='AC')
+    ind2 = simulate_snps(l.create_individual('ind2'), chrom='X', pos_max=155270560, genotype='AC')
+
+    one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = \
+        l.find_shared_dna(ind1, ind2, shared_genes=True)
+
+    assert len(one_chrom_shared_dna) == 1  # PAR1, non-PAR, PAR2
+    assert len(two_chrom_shared_dna) == 1  # PAR1, non-PAR, PAR2
+    assert len(one_chrom_shared_genes) == 3022
+    assert len(two_chrom_shared_genes) == 3022
+    np.testing.assert_allclose(one_chrom_shared_dna[0]['cMs'], 202.022891)
+    np.testing.assert_allclose(two_chrom_shared_dna[0]['cMs'], 202.022891)
+    assert os.path.exists('output/shared_dna_one_chrom_ind1_ind2.csv')
+    assert os.path.exists('output/shared_dna_two_chroms_ind1_ind2.csv')
+    assert os.path.exists('output/shared_genes_one_chrom_ind1_ind2.csv')
+    assert os.path.exists('output/shared_genes_two_chroms_ind1_ind2.csv')
+    assert os.path.exists('output/shared_dna_ind1_ind2.png')
+
+    shutil.rmtree('output')
+
+
 def test_find_shared_dna_two_chrom_shared_discrepant_snps(l):
     # simulate discrepant SNPs so that stitching of adjacent shared DNA segments is performed
     ind1 = simulate_snps(l.create_individual('ind1'))

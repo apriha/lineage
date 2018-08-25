@@ -25,6 +25,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from tests.test_lineage import simulate_snps
+
 
 def create_snp_df(rsid, chrom, pos, genotype):
     df = pd.DataFrame({'rsid': rsid, 'chrom': chrom, 'pos': pos, 'genotype': genotype},
@@ -135,7 +137,7 @@ def test_snp_count_None(l):
 
 def test_chromosomes(l):
     ind = l.create_individual('', 'tests/input/chromosomes.csv')
-    assert ind.chromosomes == ['1', '2', '3', '5', 'MT']
+    assert ind.chromosomes == ['1', '2', '3', '5', 'PAR', 'MT']
 
 
 def test_chromosomes_None(l):
@@ -145,7 +147,7 @@ def test_chromosomes_None(l):
 
 def test_chromosomes_summary(l):
     ind = l.create_individual('', 'tests/input/chromosomes.csv')
-    assert ind.chromosomes_summary == '1-3, 5, MT'
+    assert ind.chromosomes_summary == '1-3, 5, PAR, MT'
 
 
 def test_chromosomes_summary_None(l):
@@ -170,6 +172,36 @@ def test_load_snps_None(l):
     ind = l.create_individual('')
     with pytest.raises(TypeError):
         ind.load_snps(None)
+
+
+def test_sex_Male_Y_chrom(l):
+    ind = simulate_snps(l.create_individual(''), chrom='Y', pos_start=1, pos_max=59373566,
+                        pos_step=10000)
+    assert ind.sex == 'Male'
+
+
+def test_sex_Female_Y_chrom(l):
+    ind = simulate_snps(l.create_individual(''), chrom='Y', pos_start=1, pos_max=59373566,
+                        pos_step=10000, null_snp_step=1)
+    assert ind.sex == 'Female'
+
+
+def test_sex_Female_X_chrom(l):
+    ind = simulate_snps(l.create_individual(''), chrom='X', pos_start=1, pos_max=155270560,
+                        pos_step=10000, genotype='AC')
+    assert ind.sex == 'Female'
+
+
+def test_sex_Male_X_chrom(l):
+    ind = simulate_snps(l.create_individual(''), chrom='X', pos_start=1, pos_max=155270560,
+                        pos_step=10000, genotype='AA')
+    assert ind.sex == 'Male'
+
+
+def test_sex_not_determined(l):
+    ind = simulate_snps(l.create_individual(''), chrom='1', pos_start=1, pos_max=249250621,
+                        pos_step=10000)
+    assert ind.sex == ''
 
 
 def test_load_snps_non_existent_file(l, snps_GRCh37):
