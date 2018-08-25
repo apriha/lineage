@@ -26,7 +26,7 @@ import numpy as np
 
 import lineage
 from lineage.snps import (SNPs, get_assembly_name, get_chromosomes, get_chromosomes_summary,
-                          get_snp_count, sort_snps)
+                          get_snp_count, sort_snps, determine_sex)
 
 class Individual(object):
     """ Object used to represent and interact with an individual.
@@ -147,6 +147,17 @@ class Individual(object):
         str
         """
         return ', '.join(self._source)
+
+    @property
+    def sex(self):
+        """ Sex of this ``Individual`` derived from this ``Individual``'s SNPs.
+
+        Returns
+        -------
+        str
+            'Male' or 'Female' if detected, else empty str
+        """
+        return determine_sex(self._snps)
 
     def load_snps(self, raw_data, discrepant_snp_positions_threshold=100,
                   discrepant_genotypes_threshold=10000):

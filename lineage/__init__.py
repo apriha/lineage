@@ -412,7 +412,7 @@ class Lineage(object):
 
         df = df.rename(columns={'genotype': genotype1, 'genotype2': genotype2})
 
-        one_x_chrom = self._is_one_individual_male(df, genotype1, genotype2)
+        one_x_chrom = self._is_one_individual_male([individual1, individual2])
 
         # determine the genetic distance between each SNP using the HapMap Phase II genetic map
         genetic_map, df = self._compute_snp_distances(df)
@@ -531,21 +531,11 @@ class Lineage(object):
                             stop=shared_segment['end'], cMs=shared_segment['cMs'],
                             snps=shared_segment['snps']))
 
-    def _is_one_individual_male(self, df, genotype1, genotype2, heterozygous_x_snp_threshold=100):
-        # determine if at least one individual is male by counting heterozygous X SNPs
-
-        if len(df.loc[(df['chrom'] == 'X') &
-                      (df[genotype1].notnull()) &
-                      (df[genotype1].str[0] != df[genotype1].str[1])]) < heterozygous_x_snp_threshold:
-            return True
-        else:
-            if len(df.loc[(df['chrom'] == 'X') &
-                          (df[genotype2].notnull()) &
-                          (df[genotype2].str[0] != df[genotype2].str[1])]) < heterozygous_x_snp_threshold:
+    def _is_one_individual_male(self, individuals):
+        for individual in individuals:
+            if individual.sex == 'Male':
                 return True
-            else:
-                return False
-
+        return False
 
     def _compute_snp_distances(self, df):
         genetic_map = self._resources.get_genetic_map_HapMapII_GRCh37()

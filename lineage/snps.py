@@ -85,6 +85,17 @@ class SNPs(object):
         """
         return get_chromosomes_summary(self.snps)
 
+    @property
+    def sex(self):
+        """ Sex derived from ``SNPs``.
+
+        Returns
+        -------
+        str
+            'Male' or 'Female' if detected, else empty str
+        """
+        return determine_sex(self.snps)
+
     def _read_raw_data(self, file):
         try:
             if not os.path.exists(file):
@@ -425,6 +436,47 @@ def get_chromosomes_summary(snps):
         return int_chroms + str_chroms
     else:
         return ''
+
+def determine_sex(snps, y_snps_not_null_threshold=0.1, heterozygous_x_snps_threshold=0.01):
+    """ Determine sex from SNPs using thresholds.
+
+    Parameters
+    ----------
+    snps : pandas.DataFrame
+    y_snps_not_null_threshold : float
+        percentage Y SNPs that are not null; above this threshold, Male is determined
+    heterozygous_x_snps_threshold : float
+        percentage heterozygous X SNPs; above this threshold, Female is determined
+
+    Returns
+    -------
+    str
+        'Male' or 'Female' if detected, else empty str
+    """
+
+    y_snps = len(snps.loc[(snps['chrom'] == 'Y')])
+
+    if y_snps > 0:
+        y_snps_not_null = len(snps.loc[(snps['chrom'] == 'Y') & (snps['genotype'].notnull())])
+
+        if y_snps_not_null / y_snps > y_snps_not_null_threshold:
+            return 'Male'
+        else:
+            return 'Female'
+
+    x_snps = len(snps.loc[snps['chrom'] == 'X'])
+
+    if x_snps == 0:
+        return ''
+
+    heterozygous_x_snps = len(snps.loc[(snps['chrom'] == 'X') &
+                                       (snps['genotype'].notnull()) &
+                                       (snps['genotype'].str[0] != snps['genotype'].str[1])])
+
+    if heterozygous_x_snps / x_snps > heterozygous_x_snps_threshold:
+        return 'Female'
+    else:
+        return 'Male'
 
 def sort_snps(snps):
     """ Sort SNPs based on ordered chromosome list and position. """
