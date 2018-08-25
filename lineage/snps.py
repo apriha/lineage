@@ -153,7 +153,7 @@ class SNPs(object):
                                names=['rsid', 'chrom', 'pos', 'genotype'],
                                index_col=0, dtype={'chrom': object})
 
-        return df, '23andMe'
+        return sort_snps(df), '23andMe'
 
     @staticmethod
     def _read_ftdna(file):
@@ -184,7 +184,7 @@ class SNPs(object):
         # if second header existed, pos dtype will be object (should be np.int64)
         df['pos'] = df['pos'].astype(np.int64)
 
-        return df, 'FTDNA'
+        return sort_snps(df), 'FTDNA'
 
     @staticmethod
     def _read_ancestry(file):
@@ -222,7 +222,7 @@ class SNPs(object):
         df.ix[np.where(df['chrom'] == '25')[0], 'chrom'] = 'PAR'
         df.ix[np.where(df['chrom'] == '26')[0], 'chrom'] = 'MT'
 
-        return df, 'AncestryDNA'
+        return sort_snps(df), 'AncestryDNA'
 
     @staticmethod
     def _read_lineage_csv(file):
@@ -244,7 +244,7 @@ class SNPs(object):
                          names=['rsid', 'chrom', 'pos', 'genotype'],
                          index_col=0, dtype={'chrom': object, 'pos': np.int64})
 
-        return df, 'lineage'
+        return sort_snps(df), 'lineage'
 
     @staticmethod
     def _read_generic_csv(file):
@@ -277,7 +277,7 @@ class SNPs(object):
                          names=['rsid', 'chrom', 'pos', 'genotype'],
                          index_col=0, dtype={'chrom': object, 'pos': np.int64})
 
-        return df, 'generic'
+        return sort_snps(df), 'generic'
 
 
 def detect_assembly(snps):
