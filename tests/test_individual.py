@@ -175,31 +175,31 @@ def test_load_snps_None(l):
 
 
 def test_sex_Male_Y_chrom(l):
-    ind = simulate_snps(l.create_individual('ind1'), chrom='Y', pos_start=1, pos_max=59373566,
+    ind = simulate_snps(l.create_individual(''), chrom='Y', pos_start=1, pos_max=59373566,
                         pos_step=10000)
     assert ind.sex == 'Male'
 
 
 def test_sex_Female_Y_chrom(l):
-    ind = simulate_snps(l.create_individual('ind1'), chrom='Y', pos_start=1, pos_max=59373566,
+    ind = simulate_snps(l.create_individual(''), chrom='Y', pos_start=1, pos_max=59373566,
                         pos_step=10000, null_snp_step=1)
     assert ind.sex == 'Female'
 
 
 def test_sex_Female_X_chrom(l):
-    ind = simulate_snps(l.create_individual('ind1'), chrom='X', pos_start=1, pos_max=155270560,
+    ind = simulate_snps(l.create_individual(''), chrom='X', pos_start=1, pos_max=155270560,
                         pos_step=10000, genotype='AC')
     assert ind.sex == 'Female'
 
 
 def test_sex_Male_X_chrom(l):
-    ind = simulate_snps(l.create_individual('ind1'), chrom='X', pos_start=1, pos_max=155270560,
+    ind = simulate_snps(l.create_individual(''), chrom='X', pos_start=1, pos_max=155270560,
                         pos_step=10000, genotype='AA')
     assert ind.sex == 'Male'
 
 
 def test_sex_not_determined(l):
-    ind = simulate_snps(l.create_individual('ind1'), chrom='1', pos_start=1, pos_max=249250621,
+    ind = simulate_snps(l.create_individual(''), chrom='1', pos_start=1, pos_max=249250621,
                         pos_step=10000)
     assert ind.sex == ''
 
