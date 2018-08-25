@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import pandas as pd
 import pytest
 
+from tests.test_lineage import simulate_snps
 
 def create_snp_df(rsid, chrom, pos, genotype):
     df = pd.DataFrame({'rsid': rsid, 'chrom': chrom, 'pos': pos, 'genotype': genotype},
@@ -64,6 +65,12 @@ def test_chromosomes(snps):
 
 def test_chromosomes_summary(snps):
     assert snps.chromosomes_summary == '1-3, 5, PAR, MT'
+
+
+def test_sex_Male_Y_chrom(l):
+    ind = simulate_snps(l.create_individual('ind1'), chrom='Y', pos_start=1, pos_max=59373566,
+                        pos_step=10000)
+    assert ind.sex == 'Male'
 
 
 def test__read_raw_data(snps_none):
