@@ -601,9 +601,11 @@ class Lineage(object):
             if chrom not in genetic_map.keys():
                 continue
 
-            # skip calculating two chrom shared on the X chromosome if an individual is male
+            # set two_chrom_match in non-PAR region to False if an individual is male
             if chrom == 'X' and col == 'two_chrom_match' and one_x_chrom:
-                continue
+                # https://www.ncbi.nlm.nih.gov/grc/human
+                df.loc[(df['chrom'] == 'X') & (df['pos'] > 2699520) & (df['pos'] < 154931044),
+                       'two_chrom_match'] = False
 
             # get consecutive strings of trues
             # http://stackoverflow.com/a/17151327
