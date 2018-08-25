@@ -137,7 +137,7 @@ def test_snp_count_None(l):
 
 def test_chromosomes(l):
     ind = l.create_individual('', 'tests/input/chromosomes.csv')
-    assert ind.chromosomes == ['1', '2', '3', '5', 'MT']
+    assert ind.chromosomes == ['1', '2', '3', '5', 'PAR', 'MT']
 
 
 def test_chromosomes_None(l):
@@ -147,7 +147,7 @@ def test_chromosomes_None(l):
 
 def test_chromosomes_summary(l):
     ind = l.create_individual('', 'tests/input/chromosomes.csv')
-    assert ind.chromosomes_summary == '1-3, 5, MT'
+    assert ind.chromosomes_summary == '1-3, 5, PAR, MT'
 
 
 def test_chromosomes_summary_None(l):

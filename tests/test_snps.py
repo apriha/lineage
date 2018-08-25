@@ -55,15 +55,15 @@ def test_assembly_name(snps_GRCh38):
 
 
 def test_snp_count(snps):
-    assert snps.snp_count == 5
+    assert snps.snp_count == 6
 
 
 def test_chromosomes(snps):
-    assert snps.chromosomes == ['1', '2', '3', '5', 'MT']
+    assert snps.chromosomes == ['1', '2', '3', '5', 'PAR', 'MT']
 
 
 def test_chromosomes_summary(snps):
-    assert snps.chromosomes_summary == '1-3, 5, MT'
+    assert snps.chromosomes_summary == '1-3, 5, PAR, MT'
 
 
 def test__read_raw_data(snps_none):
