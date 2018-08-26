@@ -55,6 +55,13 @@ def test_get_kgXref_hg19(resource):
     assert len(kgXref_hg19) == 82960
 
 
+def test_get_assembly_mapping_data_no_EnsemblRestClient(resource):
+    if os.path.exists('resources/NCBI36_GRCh37.tar.gz'):
+        os.remove('resources/NCBI36_GRCh37.tar.gz')
+    assembly_mapping_data = resource.get_assembly_mapping_data('NCBI36', 'GRCh37')
+    assert assembly_mapping_data == None
+
+
 def test_get_assembly_mapping_data_bad_tar(resource_assembly_mapping):
     with open('resources/NCBI36_GRCh37.tar.gz', 'w'):
         pass
@@ -77,11 +84,6 @@ def test_get_all_resources(resource_assembly_mapping):
 
 def test__all_chroms_in_tar(resource_assembly_mapping):
     assert not resource_assembly_mapping._all_chroms_in_tar(['PAR'], 'resources/NCBI36_GRCh37.tar.gz')
-
-
-def test_get_assembly_mapping_data_no_EnsemblRestClient(resource):
-    assembly_mapping_data = resource.get_assembly_mapping_data('NCBI36', 'GRCh37')
-    assert assembly_mapping_data == None
 
 
 def test_get_assembly_mapping_data_invalid_dir(resource_assembly_mapping):

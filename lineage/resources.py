@@ -463,21 +463,20 @@ class Resources(object):
           http://rest.ensembl.org/documentation/info/assembly_map
 
         """
-        try:
-            if not lineage.create_dir(self._resources_dir):
-                return None
 
-            # get chromosomes with assembly mapping data
-            info_endpoint = '/info/assembly/human?'
-            response = self._ensembl_rest_client.perform_rest_action(info_endpoint)
-            chroms = response['karyotype']
+        if not lineage.create_dir(self._resources_dir):
+            return None
 
-            assembly_mapping_data = source_assembly + '_' + target_assembly
-            destination = os.path.join(self._resources_dir, assembly_mapping_data + '.tar.gz')
+        chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14',
+                  '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'MT']
 
-            if not os.path.exists(destination) or not self._all_chroms_in_tar(chroms, destination):
-                print('Downloading {}'.format(os.path.relpath(destination)))
+        assembly_mapping_data = source_assembly + '_' + target_assembly
+        destination = os.path.join(self._resources_dir, assembly_mapping_data + '.tar.gz')
 
+        if not os.path.exists(destination) or not self._all_chroms_in_tar(chroms, destination):
+            print('Downloading {}'.format(os.path.relpath(destination)))
+
+            try:
                 with tarfile.open(destination, 'w:gz') as out_tar:
                     for chrom in chroms:
                         file = chrom + '.json'
@@ -502,9 +501,9 @@ class Resources(object):
 
                             # remove temp file
                             os.remove(f.name)
-        except Exception as err:
-            print(err)
-            return None
+            except Exception as err:
+                print(err)
+                return None
 
         return destination
 
