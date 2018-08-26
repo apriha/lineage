@@ -25,6 +25,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from lineage.snps import sort_snps
 from tests.test_lineage import simulate_snps
 
 
@@ -46,6 +47,13 @@ def snps_NCBI36():
     return create_snp_df(rsid=['rs3094315', 'rs2500347', 'rsIndelTest', 'rs11928389'],
                          chrom=['1', '1', '1', '3'], pos=[742429, 143649677, 143649678, 50908372],
                          genotype=['AA', np.nan, 'ID', 'AG'])
+
+
+@pytest.fixture(scope='module')
+def snps_NCBI36_discrepant_snps():
+    return create_snp_df(rsid=['rs3094315', 'rs2500347', 'rsIndelTest', 'rs11928389'],
+                         chrom=['1', '1', '1', '3'], pos=[742429, 143649677, 143649678, 50908372],
+                         genotype=['AA', np.nan, 'ID', np.nan])
 
 
 @pytest.fixture(scope='module')
@@ -224,25 +232,85 @@ def test_load_snps_invalid_file(l, snps_GRCh37):
     pd.testing.assert_frame_equal(ind.snps, snps_GRCh37)
 
 
-def test_load_snps_assembly_mismatch(l):
-    ind = l.create_individual('')
+def test_load_snps_assembly_mismatch(del_output_dir, l, snps_NCBI36_discrepant_snps):
+    ind = l.create_individual('ind')
     ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
-    assert True  # TODO: assert based on discrepant SNPs; see #14
+    assert not os.path.exists('output/ind_discrepant_positions_1.csv')
+    assert not os.path.exists('output/ind_discrepant_genotypes_1.csv')
+    assert len(ind.discrepant_positions) == 4
+    assert len(ind.discrepant_genotypes) == 1
+    pd.testing.assert_frame_equal(ind.snps, snps_NCBI36_discrepant_snps)
 
 
-def test_load_snps_assembly_mismatch_exceed_discrepant_positions_threshold(l):
-    ind = l.create_individual('')
+def test_load_snps_assembly_mismatch_save_output(del_output_dir, l, snps_NCBI36_discrepant_snps):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'], save_output=True)
+    assert os.path.exists('output/ind_discrepant_positions_1.csv')
+    assert os.path.exists('output/ind_discrepant_genotypes_1.csv')
+    assert len(ind.discrepant_positions) == 4
+    assert len(ind.discrepant_genotypes) == 1
+    pd.testing.assert_frame_equal(ind.snps, snps_NCBI36_discrepant_snps)
+
+
+def test_load_snps_assembly_mismatch_exceed_discrepant_positions_threshold(del_output_dir, l,
+                                                                           snps_NCBI36):
+    ind = l.create_individual('ind')
     ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'],
                   discrepant_snp_positions_threshold=0)
-    assert True  # TODO: assert based on discrepant SNPs; see #14
+    assert not os.path.exists('output/ind_discrepant_positions_1.csv')
+    assert not os.path.exists('output/ind_discrepant_genotypes_1.csv')
+    assert len(ind.discrepant_positions) == 4
+    assert len(ind.discrepant_genotypes) == 0
+    pd.testing.assert_frame_equal(ind.snps, snps_NCBI36)
 
 
-def test_load_snps_assembly_mismatch_exceed_discrepant_genotypes_threshold(l):
-    ind = l.create_individual('')
+def test_load_snps_assembly_mismatch_exceed_discrepant_genotypes_threshold(del_output_dir, l,
+                                                                           snps_NCBI36):
+    ind = l.create_individual('ind')
     ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'],
                   discrepant_genotypes_threshold=0)
-    assert True  # TODO: assert based on discrepant SNPs; see #14
+    assert not os.path.exists('output/ind_discrepant_positions_1.csv')
+    assert not os.path.exists('output/ind_discrepant_genotypes_1.csv')
+    assert len(ind.discrepant_positions) == 4
+    assert len(ind.discrepant_genotypes) == 1
+    pd.testing.assert_frame_equal(ind.snps, snps_NCBI36)
 
+
+def test_merging_files_discrepant_snps(l):
+    df = pd.read_csv('tests/input/discrepant_snps.csv', skiprows=1, na_values='--',
+                     names=['rsid', 'chrom', 'pos_file1', 'pos_file2',
+                            'genotype_file1', 'genotype_file2', 'discrepant_position',
+                            'discrepant_genotype', 'expected_position', 'expected_genotype'],
+                     index_col=0,
+                     dtype={'chrom': object, 'pos_file1': np.int64, 'pos_file2': np.int64,
+                            'discrepant_position': bool, 'discrepant_genotype': bool})
+
+    df1 = df[['chrom', 'pos_file1', 'genotype_file1']]
+    df2 = df[['chrom', 'pos_file2', 'genotype_file2']]
+
+    df1.to_csv('tests/input/discrepant_snps1.csv', na_rep='--',
+               header=['chromosome', 'position', 'genotype'])
+
+    df2.to_csv('tests/input/discrepant_snps2.csv', na_rep='--',
+               header=['chromosome', 'position', 'genotype'])
+
+    ind = l.create_individual('', ['tests/input/discrepant_snps1.csv',
+                                   'tests/input/discrepant_snps2.csv'])
+
+    expected = df[['chrom', 'discrepant_position', 'discrepant_genotype', 'expected_position',
+              'expected_genotype']]
+    expected = expected.rename(columns={'expected_position': 'pos',
+                                        'expected_genotype': 'genotype'})
+    expected = sort_snps(expected)
+
+    pd.testing.assert_index_equal(ind.discrepant_positions.index,
+                                  expected.loc[expected['discrepant_position'] == True].index)
+
+    pd.testing.assert_index_equal(ind.discrepant_genotypes.index,
+                                  expected.loc[expected['discrepant_genotype'] == True].index)
+
+    pd.testing.assert_series_equal(ind.snps['pos'], expected['pos'])
+    pd.testing.assert_series_equal(ind.snps['genotype'], expected['genotype'])
 
 def test_save_snps(l, snps_GRCh37):
     ind = l.create_individual('test save snps', 'tests/input/GRCh37.csv')

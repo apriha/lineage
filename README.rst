@@ -97,24 +97,23 @@ Merge Raw Data Files
 The dataset for ``User662`` consists of three raw data files from two different DNA testing
 companies. Let's load the remaining two files.
 
-As the data gets added, it's compared to the existing data and discrepancies are saved to CSV
-files. (The discrepancy thresholds can be tuned via parameters.)
+As the data gets added, it's compared to the existing data, and SNP position and genotype
+discrepancies are identified. (The discrepancy thresholds can be tuned via parameters.)
 
+>>> user662.snp_count
+708092
 >>> user662.load_snps(['resources/662.23andme.304.txt.gz', 'resources/662.23andme.340.txt.gz'],
 ...                   discrepant_genotypes_threshold=160)
 Loading resources/662.23andme.304.txt.gz
 3 SNP positions being added differ; keeping original positions
-Saving output/User662_discrepant_positions_1.csv
 8 genotypes were discrepant; marking those as null
-Saving output/User662_discrepant_genotypes_1.csv
 Loading resources/662.23andme.340.txt.gz
 27 SNP positions being added differ; keeping original positions
-Saving output/User662_discrepant_positions_2.csv
 156 genotypes were discrepant; marking those as null
-Saving output/User662_discrepant_genotypes_2.csv
-
-All `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are saved to the output
-directory.
+>>> len(user662.discrepant_positions)
+30
+>>> user662.snp_count
+1006960
 
 Save SNPs
 `````````
@@ -124,6 +123,9 @@ SNPs to a CSV file:
 
 >>> saved_snps = user662.save_snps()
 Saving output/User662.csv
+
+All `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are saved to the output
+directory.
 
 Compare Individuals
 ```````````````````

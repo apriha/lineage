@@ -16,10 +16,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+import os
+import shutil
+
 import pytest
 
 from lineage import Lineage
 
+
+def del_output_dir_helper():
+    if os.path.exists('output'):
+        shutil.rmtree('output')
+
+
 @pytest.fixture(scope='module')
 def l():
     return Lineage()
+
+
+@pytest.fixture
+def del_output_dir():
+    """ Delete output directory if it exists during setup / teardown. """
+    del_output_dir_helper()
+    yield
+    del_output_dir_helper()
