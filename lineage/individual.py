@@ -248,7 +248,7 @@ class Individual(object):
                 comment = comment.format(lineage.__version__,
                                          datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
                                          self.assembly_name,
-                                         '{:,}'.format(self.snp_count),
+                                         self.snp_count,
                                          self.chromosomes_summary,
                                          self.source)
 
@@ -395,7 +395,7 @@ class Individual(object):
                 (common_snps['pos'] != common_snps['pos_added'])]
 
             if 0 < len(discrepant_positions) < discrepant_snp_positions_threshold:
-                print(str(len(discrepant_positions)) + ' SNP positions being added differ; '
+                print(str(len(discrepant_positions)) + ' SNP positions were discrepant; '
                       'keeping original positions')
 
                 if save_output:
@@ -425,7 +425,7 @@ class Individual(object):
                    (common_snps['genotype'].str[1] == common_snps['genotype_added'].str[0])))]
 
             if 0 < len(discrepant_genotypes) < discrepant_genotypes_threshold:
-                print(str(len(discrepant_genotypes)) + ' genotypes were discrepant; '
+                print(str(len(discrepant_genotypes)) + ' SNP genotypes were discrepant; '
                       'marking those as null')
 
                 if save_output:

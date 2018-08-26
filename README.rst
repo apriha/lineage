@@ -103,13 +103,13 @@ discrepancies are identified. (The discrepancy thresholds can be tuned via param
 >>> user662.snp_count
 708092
 >>> user662.load_snps(['resources/662.23andme.304.txt.gz', 'resources/662.23andme.340.txt.gz'],
-...                   discrepant_genotypes_threshold=160)
+...                   discrepant_genotypes_threshold=300)
 Loading resources/662.23andme.304.txt.gz
-3 SNP positions being added differ; keeping original positions
-8 genotypes were discrepant; marking those as null
+3 SNP positions were discrepant; keeping original positions
+8 SNP genotypes were discrepant; marking those as null
 Loading resources/662.23andme.340.txt.gz
-27 SNP positions being added differ; keeping original positions
-156 genotypes were discrepant; marking those as null
+27 SNP positions were discrepant; keeping original positions
+156 SNP genotypes were discrepant; marking those as null
 >>> len(user662.discrepant_positions)
 30
 >>> user662.snp_count
