@@ -183,7 +183,7 @@ class Individual(object):
         return self._discrepant_genotypes
 
     def load_snps(self, raw_data, discrepant_snp_positions_threshold=100,
-                  discrepant_genotypes_threshold=10000):
+                  discrepant_genotypes_threshold=10000, save_output=False):
         """ Load raw genotype data.
 
         Parameters
@@ -196,23 +196,25 @@ class Individual(object):
         discrepant_genotypes_threshold : int
             threshold for discrepant genotype data between existing data and data to be loaded,
             a large value could indicated mismatched individuals
+        save_output : bool
+            specifies whether to save discrepant SNP output to CSV files in the output directory
         """
         if type(raw_data) is list:
             for file in raw_data:
                 self._load_snps_helper(file, discrepant_snp_positions_threshold,
-                                       discrepant_genotypes_threshold)
+                                       discrepant_genotypes_threshold, save_output)
         elif type(raw_data) is str:
             self._load_snps_helper(raw_data, discrepant_snp_positions_threshold,
-                                   discrepant_genotypes_threshold)
+                                   discrepant_genotypes_threshold, save_output)
         else:
             raise TypeError('invalid filetype')
 
     def _load_snps_helper(self, file, discrepant_snp_positions_threshold,
-                          discrepant_genotypes_threshold):
+                          discrepant_genotypes_threshold, save_output):
         print('Loading ' + os.path.relpath(file))
         discrepant_positions, discrepant_genotypes = \
             self._add_snps(SNPs(file), discrepant_snp_positions_threshold,
-                           discrepant_genotypes_threshold)
+                           discrepant_genotypes_threshold, save_output)
 
         self._discrepant_positions = self._discrepant_positions.append(discrepant_positions,
                                                                        sort=True)
@@ -342,7 +344,8 @@ class Individual(object):
         self._snps = snps
         self._assembly = assembly
 
-    def _add_snps(self, snps, discrepant_snp_positions_threshold, discrepant_genotypes_threshold):
+    def _add_snps(self, snps, discrepant_snp_positions_threshold,
+                  discrepant_genotypes_threshold, save_output):
         """ Add SNPs to this Individual.
 
         Parameters
@@ -352,6 +355,8 @@ class Individual(object):
         discrepant_snp_positions_threshold : int
             see above
         discrepant_genotypes_threshold : int
+            see above
+        save_output
             see above
 
         Returns
@@ -393,10 +398,11 @@ class Individual(object):
                 print(str(len(discrepant_positions)) + ' SNP positions being added differ; '
                       'keeping original positions')
 
-                self._discrepant_positions_file_count += 1
-                lineage.save_df_as_csv(discrepant_positions, self._output_dir,
-                                       self.get_var_name() + '_discrepant_positions_' + str(
-                                           self._discrepant_positions_file_count) + '.csv')
+                if save_output:
+                    self._discrepant_positions_file_count += 1
+                    lineage.save_df_as_csv(discrepant_positions, self._output_dir,
+                                           self.get_var_name() + '_discrepant_positions_' + str(
+                                               self._discrepant_positions_file_count) + '.csv')
             elif len(discrepant_positions) >= discrepant_snp_positions_threshold:
                 print('too many SNPs differ in position; ensure same genome build is being used')
                 return discrepant_positions, discrepant_genotypes
@@ -422,10 +428,11 @@ class Individual(object):
                 print(str(len(discrepant_genotypes)) + ' genotypes were discrepant; '
                       'marking those as null')
 
-                self._discrepant_genotypes_file_count += 1
-                lineage.save_df_as_csv(discrepant_genotypes, self._output_dir,
-                                       self.get_var_name() + '_discrepant_genotypes_' + str(
-                                           self._discrepant_genotypes_file_count) + '.csv')
+                if save_output:
+                    self._discrepant_genotypes_file_count += 1
+                    lineage.save_df_as_csv(discrepant_genotypes, self._output_dir,
+                                           self.get_var_name() + '_discrepant_genotypes_' + str(
+                                               self._discrepant_genotypes_file_count) + '.csv')
             elif len(discrepant_genotypes) >= discrepant_genotypes_threshold:
                 print('too many SNPs differ in their genotype; ensure file is for same '
                       'individual')
