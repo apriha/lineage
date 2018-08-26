@@ -23,6 +23,7 @@ import os
 import re
 
 import numpy as np
+import pandas as pd
 
 import lineage
 from lineage.snps import (SNPs, get_assembly_name, get_chromosomes, get_chromosomes_summary,
@@ -56,6 +57,8 @@ class Individual(object):
         self._source = []
         self._discrepant_positions_file_count = 0
         self._discrepant_genotypes_file_count = 0
+        self._discrepant_positions = pd.DataFrame()
+        self._discrepant_genotypes = pd.DataFrame()
 
         if raw_data is not None:
             self.load_snps(raw_data)
@@ -159,6 +162,26 @@ class Individual(object):
         """
         return determine_sex(self._snps)
 
+    @property
+    def discrepant_positions(self):
+        """ SNPs with discrepant positions discovered while loading SNPs.
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        return self._discrepant_positions
+
+    @property
+    def discrepant_genotypes(self):
+        """ SNPs with discrepant genotypes discovered while loading SNPs.
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        return self._discrepant_genotypes
+
     def load_snps(self, raw_data, discrepant_snp_positions_threshold=100,
                   discrepant_genotypes_threshold=10000):
         """ Load raw genotype data.
@@ -176,15 +199,25 @@ class Individual(object):
         """
         if type(raw_data) is list:
             for file in raw_data:
-                print('Loading ' + os.path.relpath(file))
-                self._add_snps(SNPs(file), discrepant_snp_positions_threshold,
-                               discrepant_genotypes_threshold)
+                self._load_snps_helper(file, discrepant_snp_positions_threshold,
+                                       discrepant_genotypes_threshold)
         elif type(raw_data) is str:
-            print('Loading ' + os.path.relpath(raw_data))
-            self._add_snps(SNPs(raw_data), discrepant_snp_positions_threshold,
-                           discrepant_genotypes_threshold)
+            self._load_snps_helper(raw_data, discrepant_snp_positions_threshold,
+                                   discrepant_genotypes_threshold)
         else:
             raise TypeError('invalid filetype')
+
+    def _load_snps_helper(self, file, discrepant_snp_positions_threshold,
+                          discrepant_genotypes_threshold):
+        print('Loading ' + os.path.relpath(file))
+        discrepant_positions, discrepant_genotypes = \
+            self._add_snps(SNPs(file), discrepant_snp_positions_threshold,
+                           discrepant_genotypes_threshold)
+
+        self._discrepant_positions = self._discrepant_positions.append(discrepant_positions,
+                                                                       sort=True)
+        self._discrepant_genotypes = self._discrepant_genotypes.append(discrepant_genotypes,
+                                                                       sort=True)
 
     def save_snps(self):
         """ Save SNPs to file.
@@ -320,9 +353,17 @@ class Individual(object):
             see above
         discrepant_genotypes_threshold : int
             see above
+
+        Returns
+        -------
+        discrepant_positions : pandas.DataFrame
+        discrepant_genotypes : pandas.DataFrame
         """
+        discrepant_positions = pd.DataFrame()
+        discrepant_genotypes = pd.DataFrame()
+
         if snps.snps is None:
-            return
+            return discrepant_positions, discrepant_genotypes
 
         assembly = snps.assembly
         source = snps.source
@@ -358,7 +399,7 @@ class Individual(object):
                                            self._discrepant_positions_file_count) + '.csv')
             elif len(discrepant_positions) >= discrepant_snp_positions_threshold:
                 print('too many SNPs differ in position; ensure same genome build is being used')
-                return
+                return discrepant_positions, discrepant_genotypes
 
             # remove null genotypes
             common_snps = common_snps.loc[~common_snps['genotype'].isnull() &
@@ -388,7 +429,7 @@ class Individual(object):
             elif len(discrepant_genotypes) >= discrepant_genotypes_threshold:
                 print('too many SNPs differ in their genotype; ensure file is for same '
                       'individual')
-                return
+                return discrepant_positions, discrepant_genotypes
 
             # add new SNPs
             self._source.append(source)
@@ -399,6 +440,8 @@ class Individual(object):
             self._snps['pos'] = self._snps['pos'].astype(np.int64)
 
         self._snps = sort_snps(self._snps)
+
+        return discrepant_positions, discrepant_genotypes
 
     @staticmethod
     def _double_single_alleles(df, chrom):
