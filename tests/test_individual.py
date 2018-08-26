@@ -232,7 +232,7 @@ def test_load_snps_invalid_file(l, snps_GRCh37):
     pd.testing.assert_frame_equal(ind.snps, snps_GRCh37)
 
 
-def test_load_snps_assembly_mismatch(del_output_dir, l, snps_NCBI36_discrepant_snps):
+def test_load_snps_assembly_mismatch(l, snps_NCBI36_discrepant_snps):
     ind = l.create_individual('ind')
     ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
     assert not os.path.exists('output/ind_discrepant_positions_1.csv')
@@ -242,7 +242,7 @@ def test_load_snps_assembly_mismatch(del_output_dir, l, snps_NCBI36_discrepant_s
     pd.testing.assert_frame_equal(ind.snps, snps_NCBI36_discrepant_snps)
 
 
-def test_load_snps_assembly_mismatch_save_output(del_output_dir, l, snps_NCBI36_discrepant_snps):
+def test_load_snps_assembly_mismatch_save_output(l, snps_NCBI36_discrepant_snps):
     ind = l.create_individual('ind')
     ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'], save_output=True)
     assert os.path.exists('output/ind_discrepant_positions_1.csv')
@@ -252,8 +252,7 @@ def test_load_snps_assembly_mismatch_save_output(del_output_dir, l, snps_NCBI36_
     pd.testing.assert_frame_equal(ind.snps, snps_NCBI36_discrepant_snps)
 
 
-def test_load_snps_assembly_mismatch_exceed_discrepant_positions_threshold(del_output_dir, l,
-                                                                           snps_NCBI36):
+def test_load_snps_assembly_mismatch_exceed_discrepant_positions_threshold(l, snps_NCBI36):
     ind = l.create_individual('ind')
     ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'],
                   discrepant_snp_positions_threshold=0)
@@ -264,8 +263,7 @@ def test_load_snps_assembly_mismatch_exceed_discrepant_positions_threshold(del_o
     pd.testing.assert_frame_equal(ind.snps, snps_NCBI36)
 
 
-def test_load_snps_assembly_mismatch_exceed_discrepant_genotypes_threshold(del_output_dir, l,
-                                                                           snps_NCBI36):
+def test_load_snps_assembly_mismatch_exceed_discrepant_genotypes_threshold(l, snps_NCBI36):
     ind = l.create_individual('ind')
     ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'],
                   discrepant_genotypes_threshold=0)

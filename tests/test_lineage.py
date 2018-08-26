@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import os
-import shutil
 import warnings
 
 import numpy as np
@@ -135,8 +134,6 @@ def test_find_discordant_snps(l):
     assert os.path.exists('output/discordant_snps_ind1_ind2.csv')
     assert os.path.exists('output/discordant_snps_ind1_ind2_ind3.csv')
 
-    shutil.rmtree('output')
-
 
 def test_find_shared_dna_two_chrom_shared(l):
     ind1 = simulate_snps(l.create_individual('ind1'))
@@ -157,8 +154,6 @@ def test_find_shared_dna_two_chrom_shared(l):
     assert os.path.exists('output/shared_genes_two_chroms_ind1_ind2.csv')
     assert os.path.exists('output/shared_dna_ind1_ind2.png')
 
-    shutil.rmtree('output')
-
 
 def test_find_shared_dna_one_chrom_shared(l):
     ind1 = simulate_snps(l.create_individual('ind1'))
@@ -177,8 +172,6 @@ def test_find_shared_dna_one_chrom_shared(l):
     assert os.path.exists('output/shared_genes_one_chrom_ind1_ind2.csv')
     assert not os.path.exists('output/shared_genes_two_chroms_ind1_ind2.csv')
     assert os.path.exists('output/shared_dna_ind1_ind2.png')
-
-    shutil.rmtree('output')
 
 
 def test_find_shared_dna_X_chrom_two_individuals_male(l):
@@ -200,8 +193,6 @@ def test_find_shared_dna_X_chrom_two_individuals_male(l):
     assert os.path.exists('output/shared_genes_two_chroms_ind1_ind2.csv')
     assert os.path.exists('output/shared_dna_ind1_ind2.png')
 
-    shutil.rmtree('output')
-
 
 def test_find_shared_dna_X_chrom_two_individuals_female(l):
     ind1 = simulate_snps(l.create_individual('ind1'), chrom='X', pos_max=155270560, genotype='AC')
@@ -221,8 +212,6 @@ def test_find_shared_dna_X_chrom_two_individuals_female(l):
     assert os.path.exists('output/shared_genes_one_chrom_ind1_ind2.csv')
     assert os.path.exists('output/shared_genes_two_chroms_ind1_ind2.csv')
     assert os.path.exists('output/shared_dna_ind1_ind2.png')
-
-    shutil.rmtree('output')
 
 
 def test_find_shared_dna_two_chrom_shared_discrepant_snps(l):
@@ -246,8 +235,6 @@ def test_find_shared_dna_two_chrom_shared_discrepant_snps(l):
     assert os.path.exists('output/shared_genes_two_chroms_ind1_ind2.csv')
     assert os.path.exists('output/shared_dna_ind1_ind2.png')
 
-    shutil.rmtree('output')
-
 
 def test_find_shared_dna_no_shared_dna(l):
     ind1 = simulate_snps(l.create_individual('ind1'))
@@ -265,5 +252,3 @@ def test_find_shared_dna_no_shared_dna(l):
     assert not os.path.exists('output/shared_genes_one_chrom_ind1_ind2.csv')
     assert not os.path.exists('output/shared_genes_two_chroms_ind1_ind2.csv')
     assert os.path.exists('output/shared_dna_ind1_ind2.png')
-
-    shutil.rmtree('output')
