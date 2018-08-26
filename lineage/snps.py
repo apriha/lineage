@@ -43,16 +43,16 @@ class SNPs(object):
             assign PAR SNPs to the X and Y chromosomes
         """
         self.snps, self.source = self._read_raw_data(file)
-        self.assembly = None
-        self.assembly_detected = False
+        self.build = None
+        self.build_detected = False
 
         if self.snps is not None:
-            self.assembly = detect_assembly(self.snps)
+            self.build = detect_build(self.snps)
 
-            if self.assembly is None:
-                self.assembly = 37  # assume GRCh37 if not detected
+            if self.build is None:
+                self.build = 37  # assume Build 37 / GRCh37 if not detected
             else:
-                self.assembly_detected = True
+                self.build_detected = True
 
             if assign_par_snps:
                 self._assign_par_snps()
@@ -65,7 +65,7 @@ class SNPs(object):
         -------
         str
         """
-        return get_assembly_name(self.assembly)
+        return get_assembly_name(self.build)
 
     @property
     def snp_count(self):
@@ -328,9 +328,9 @@ class SNPs(object):
                                 assigned = False
 
                             if assigned:
-                                if not self.assembly_detected:
-                                    self.assembly = self._extract_assembly(item)
-                                    self.assembly_detected = True
+                                if not self.build_detected:
+                                    self.build = self._extract_build(item)
+                                    self.build_detected = True
                                 continue
 
                 except Exception as err:
@@ -345,15 +345,15 @@ class SNPs(object):
                 return True
         return False
 
-    def _extract_assembly(self, item):
+    def _extract_build(self, item):
         assembly_name = item['placement_annot']['seq_id_traits_by_assembly'][0]['assembly_name']
         assembly_name = assembly_name.split('.')[0]
         return int(assembly_name[-2:])
 
-def detect_assembly(snps):
-    """ Detect assembly of SNPs.
+def detect_build(snps):
+    """ Detect build of SNPs.
 
-    Use the coordinates of common SNPs to identify the assembly / build of a genotype file
+    Use the coordinates of common SNPs to identify the build / assembly of a genotype file
     that is being loaded.
 
     Notes
@@ -371,7 +371,7 @@ def detect_assembly(snps):
     Returns
     -------
     int
-        detected assembly of SNPs, else None
+        detected build of SNPs, else None
 
     References
     ----------
@@ -385,13 +385,13 @@ def detect_assembly(snps):
       rs11928389, rs2500347, and rs964481 (dbSNP Build ID: 151). Available from:
       http://www.ncbi.nlm.nih.gov/SNP/
     """
-    def lookup_assembly_with_snp_pos(pos, s):
+    def lookup_build_with_snp_pos(pos, s):
         try:
             return s.loc[s == pos].index[0]
         except:
             return None
 
-    assembly = None
+    build = None
 
     rsids = ['rs3094315', 'rs11928389', 'rs2500347', 'rs964481']
     df = pd.DataFrame({36: [742429, 50908372, 143649677, 27566744],
@@ -400,32 +400,32 @@ def detect_assembly(snps):
 
     for rsid in rsids:
         if rsid in snps.index:
-            assembly = lookup_assembly_with_snp_pos(snps.loc[rsid].pos, df.loc[rsid])
+            build = lookup_build_with_snp_pos(snps.loc[rsid].pos, df.loc[rsid])
 
-        if assembly is not None:
+        if build is not None:
             break
 
-    return assembly
+    return build
 
 
-def get_assembly_name(assembly):
-    """ Get the name of an assembly.
+def get_assembly_name(build):
+    """ Get the assembly name of a build.
 
     Parameters
     ----------
-    assembly : int {36, 37, 38}
+    build : int {36, 37, 38}
 
     Returns
     -------
     str
-        empty str if `assembly` is None
+        empty str if `build` is None
     """
 
-    if assembly is None:
+    if build is None:
         return ''
-    elif assembly == 36:
+    elif build == 36:
         return 'NCBI36'
-    elif assembly == 38:
+    elif build == 38:
         return 'GRCh38'
     else:
         return 'GRCh37'

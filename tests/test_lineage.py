@@ -25,7 +25,7 @@ import pandas as pd
 
 
 def get_discordant_snps(ind, df):
-    ind._assembly = 37
+    ind._build = 37
 
     snps = df.loc[:, ['chrom', 'pos', ind.name]]
     snps = snps.rename(columns={ind.name: 'genotype'})
@@ -38,7 +38,7 @@ def get_discordant_snps(ind, df):
 def simulate_snps(ind, chrom='1', pos_start=1, pos_max=248140902, pos_step=100, genotype='AA',
                   insert_nulls=True, null_snp_step=101, complement_genotype_one_chrom=False,
                   complement_genotype_two_chroms=False, complement_snp_step=50):
-    ind._assembly = 37
+    ind._build = 37
 
     positions = np.arange(pos_start, pos_max, pos_step, dtype=np.int64)
     snps = pd.DataFrame({'chrom': chrom}, index=['rs' + str(x + 1) for x in range(len(positions))])

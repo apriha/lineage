@@ -16,7 +16,7 @@ Capabilities
 - Plot shared DNA between individuals
 - Determine genes shared between individuals (i.e., genes transcribed from shared DNA segments)
 - Find discordant SNPs between child and parent(s)
-- Remap SNPs between assemblies / builds (e.g., convert SNPs from build 36 to build 37, etc.)
+- Remap SNPs between assemblies / builds (e.g., convert SNPs from Build 36 to Build 37, etc.)
 
 Dependencies
 ------------
@@ -80,11 +80,11 @@ Remap SNPs
 Oops! The data we just loaded is Build 36, but we want Build 37 since the other files in the
 datasets are Build 37... Let's remap the SNPs:
 
->>> user662.assembly
+>>> user662.build
 36
 >>> chromosomes_remapped, chromosomes_not_remapped = user662.remap_snps(37)
 Downloading resources/NCBI36_GRCh37.tar.gz
->>> user662.assembly
+>>> user662.build
 37
 >>> user662.assembly_name
 'GRCh37'

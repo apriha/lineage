@@ -53,7 +53,7 @@ class Individual(object):
         self._name = name
         self._output_dir = output_dir
         self._snps = None
-        self._assembly = None
+        self._build = None
         self._source = []
         self._discrepant_positions_file_count = 0
         self._discrepant_genotypes_file_count = 0
@@ -122,14 +122,14 @@ class Individual(object):
         return get_chromosomes_summary(self._snps)
 
     @property
-    def assembly(self):
-        """ Get the assembly of this ``Individual``'s SNPs.
+    def build(self):
+        """ Get the build of this ``Individual``'s SNPs.
 
         Returns
         -------
         int
         """
-        return self._assembly
+        return self._build
 
     @property
     def assembly_name(self):
@@ -139,7 +139,7 @@ class Individual(object):
         -------
         str
         """
-        return get_assembly_name(self._assembly)
+        return get_assembly_name(self._build)
 
     @property
     def source(self):
@@ -327,8 +327,8 @@ class Individual(object):
         l = Lineage()
         return l.remap_snps(self, target_assembly, complement_bases)
 
-    def _set_snps(self, snps, assembly=37):
-        """ Set `_snps` and `_assembly` properties of this ``Individual``.
+    def _set_snps(self, snps, build=37):
+        """ Set `_snps` and `_build` properties of this ``Individual``.
 
         Notes
         -----
@@ -338,11 +338,11 @@ class Individual(object):
         ----------
         snps : pandas.DataFrame
             individual's genetic data normalized for use with `lineage`
-        assembly : int
-            assembly of this ``Individual``'s SNPs
+        build : int
+            build of this ``Individual``'s SNPs
         """
         self._snps = snps
-        self._assembly = assembly
+        self._build = build
 
     def _add_snps(self, snps, discrepant_snp_positions_threshold,
                   discrepant_genotypes_threshold, save_output):
@@ -370,16 +370,16 @@ class Individual(object):
         if snps.snps is None:
             return discrepant_positions, discrepant_genotypes
 
-        assembly = snps.assembly
+        build = snps.build
         source = snps.source
 
-        if not snps.assembly_detected:
-            print('assembly not detected, assuming build {}'.format(snps.assembly))
+        if not snps.build_detected:
+            print('build not detected, assuming build {}'.format(snps.build))
 
-        if self._assembly is None:
-            self._assembly = assembly
-        elif self._assembly != assembly:
-            print('assembly / build mismatch between current assembly of SNPs and SNPs being loaded')
+        if self._build is None:
+            self._build = build
+        elif self._build != build:
+            print('build / assembly mismatch between current build of SNPs and SNPs being loaded')
 
         # ensure there area always two X alleles
         snps = self._double_single_alleles(snps.snps, 'X')
