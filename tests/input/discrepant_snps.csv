@@ -1,4 +1,4 @@
-﻿rsid,chromosome,position_file1,position_file2,genotype_file1,genotype_file2,discrepant_position,discrepant_genotype,expected_position,expected_genotype
+rsid,chromosome,position_file1,position_file2,genotype_file1,genotype_file2,discrepant_position,discrepant_genotype,expected_position,expected_genotype
 rs1,1,1,1,--,--,False,False,1,--
 rs2,1,2,2,--,AA,False,False,2,AA
 rs3,1,3,3,AA,--,False,False,3,AA

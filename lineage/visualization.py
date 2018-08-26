@@ -78,7 +78,7 @@ def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, b
     title : str
         title for plot
     build : {37}
-        human genome assembly
+        human genome build
     """
     # Height of each chromosome
     chrom_height = 1.25

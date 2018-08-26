@@ -16,7 +16,7 @@ Capabilities
 - Plot shared DNA between individuals
 - Determine genes shared between individuals (i.e., genes transcribed from shared DNA segments)
 - Find discordant SNPs between child and parent(s)
-- Remap SNPs between assemblies / builds (e.g., convert SNPs from build 36 to build 37, etc.)
+- Remap SNPs between assemblies / builds (e.g., convert SNPs from Build 36 to Build 37, etc.)
 
 Dependencies
 ------------
@@ -80,13 +80,13 @@ Remap SNPs
 Oops! The data we just loaded is Build 36, but we want Build 37 since the other files in the
 datasets are Build 37... Let's remap the SNPs:
 
->>> user662.assembly
+>>> user662.build
 36
 >>> chromosomes_remapped, chromosomes_not_remapped = user662.remap_snps(37)
 Downloading resources/NCBI36_GRCh37.tar.gz
->>> user662.assembly
+>>> user662.build
 37
->>> user662.assembly_name
+>>> user662.assembly
 'GRCh37'
 
 SNPs can be re-mapped between Build 36 (``NCBI36``), Build 37 (``GRCh37``), and Build 38
@@ -103,13 +103,13 @@ discrepancies are identified. (The discrepancy thresholds can be tuned via param
 >>> user662.snp_count
 708092
 >>> user662.load_snps(['resources/662.23andme.304.txt.gz', 'resources/662.23andme.340.txt.gz'],
-...                   discrepant_genotypes_threshold=160)
+...                   discrepant_genotypes_threshold=300)
 Loading resources/662.23andme.304.txt.gz
-3 SNP positions being added differ; keeping original positions
-8 genotypes were discrepant; marking those as null
+3 SNP positions were discrepant; keeping original positions
+8 SNP genotypes were discrepant; marking those as null
 Loading resources/662.23andme.340.txt.gz
-27 SNP positions being added differ; keeping original positions
-156 genotypes were discrepant; marking those as null
+27 SNP positions were discrepant; keeping original positions
+156 SNP genotypes were discrepant; marking those as null
 >>> len(user662.discrepant_positions)
 30
 >>> user662.snp_count

@@ -87,7 +87,7 @@ class Lineage(object):
 
         References
         ----------
-        ..[1] Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP–A Crowdsourced Web Resource
+        ..[1] Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP-A Crowdsourced Web Resource
           for Personal Genomics," PLOS ONE, 9(3): e89204,
           https://doi.org/10.1371/journal.pone.0089204
         """
@@ -162,10 +162,10 @@ class Lineage(object):
             else:
                 target_assembly = 'GRCh' + str(target_assembly)
 
-        if individual.assembly == 36:
+        if individual.build == 36:
             source_assembly = 'NCBI36'
         else:
-            source_assembly = 'GRCh' + str(individual.assembly)
+            source_assembly = 'GRCh' + str(individual.build)
 
         if source_assembly == target_assembly:
             return chromosomes_remapped, chromosomes_not_remapped

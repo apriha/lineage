@@ -34,7 +34,7 @@ def l():
     return Lineage()
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def del_output_dir():
     """ Delete output directory if it exists during setup / teardown. """
     del_output_dir_helper()

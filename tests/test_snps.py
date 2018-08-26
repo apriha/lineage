@@ -51,8 +51,8 @@ def snps_none():
     return SNPs(None)
 
 
-def test_assembly_name(snps_GRCh38):
-    assert snps_GRCh38.assembly_name == 'GRCh38'
+def test_assembly(snps_GRCh38):
+    assert snps_GRCh38.assembly == 'GRCh38'
 
 
 def test_snp_count(snps):
@@ -67,11 +67,11 @@ def test_chromosomes_summary(snps):
     assert snps.chromosomes_summary == '1-3, 5, PAR, MT'
 
 
-def test_assembly_detected_PAR_snps():
+def test_build_detected_PAR_snps():
     from lineage.snps import SNPs
     snps = SNPs('tests/input/GRCh37_PAR.csv')
-    assert snps.assembly == 37
-    assert snps.assembly_detected
+    assert snps.build == 37
+    assert snps.build_detected
 
 
 def test_sex_Male_Y_chrom(l):
@@ -88,11 +88,11 @@ def test__read_raw_data(snps_none):
     assert snps_none.source == ''
 
 
-def test__lookup_assembly_with_snp_pos_None(snps_discrepant_pos):
-    from lineage.snps import detect_assembly
-    assert detect_assembly(snps_discrepant_pos) is None
+def test__lookup_build_with_snp_pos_None(snps_discrepant_pos):
+    from lineage.snps import detect_build
+    assert detect_build(snps_discrepant_pos) is None
 
 
-def test_get_assembly_name_None():
-    from lineage.snps import get_assembly_name
-    assert get_assembly_name(None) is ''
+def test_get_assembly_None():
+    from lineage.snps import get_assembly
+    assert get_assembly(None) is ''
