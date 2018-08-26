@@ -280,7 +280,7 @@ def test_discrepant_snps(l):
     df = pd.read_csv('tests/input/discrepant_snps.csv', skiprows=1, na_values='--',
                      names=['rsid', 'chrom', 'pos_file1', 'pos_file2',
                             'genotype_file1', 'genotype_file2', 'discrepant_position',
-                            'discrepant_genotype'], index_col=0,
+                            'discrepant_genotype', 'null_genotype'], index_col=0,
                      dtype={'chrom': object, 'pos_file1': np.int64, 'pos_file2': np.int64,
                             'discrepant_position': bool, 'discrepant_genotype': bool})
 
@@ -299,12 +299,15 @@ def test_discrepant_snps(l):
     pd.testing.assert_index_equal(df.loc[df['discrepant_position'] == True].index,
                                   ind.discrepant_positions.index)
 
-    df1 = df[['chrom', 'pos_file1', 'genotype_file1', 'discrepant_genotype']]
-    df1 = df1.loc[df1['discrepant_genotype'] == True]
+    df1 = df[['chrom', 'pos_file1', 'genotype_file1', 'discrepant_genotype', 'null_genotype']]
     df1 = df1.rename(columns={'pos_file1': 'pos'})
     df1 = sort_snps(df1)
 
-    pd.testing.assert_index_equal(df1.index, ind.discrepant_genotypes.index)
+    pd.testing.assert_index_equal(df1.loc[df1['discrepant_genotype'] == True].index,
+                                  ind.discrepant_genotypes.index)
+
+    pd.testing.assert_index_equal(df1.loc[df1['null_genotype'] == True].index,
+                                  ind.snps.loc[ind.snps['genotype'].isnull()].index)
 
 
 def test_save_snps(l, snps_GRCh37):
