@@ -299,7 +299,7 @@ def test_discrepant_snps(l):
     pd.testing.assert_index_equal(df.loc[df['discrepant_position'] == True].index,
                                   ind.discrepant_positions.index)
 
-    df1['discrepant_genotype'] = df['discrepant_genotype']
+    df1 = df[['chrom', 'pos_file1', 'genotype_file1', 'discrepant_genotype']]
     df1 = df1.loc[df1['discrepant_genotype'] == True]
     df1 = df1.rename(columns={'pos_file1': 'pos'})
     df1 = sort_snps(df1)
