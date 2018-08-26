@@ -183,7 +183,7 @@ class Individual(object):
         return self._discrepant_genotypes
 
     def load_snps(self, raw_data, discrepant_snp_positions_threshold=100,
-                  discrepant_genotypes_threshold=10000, save_output=False):
+                  discrepant_genotypes_threshold=500, save_output=False):
         """ Load raw genotype data.
 
         Parameters
