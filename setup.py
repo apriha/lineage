@@ -68,10 +68,10 @@ setup(
     long_description=long_description,
     url='https://github.com/apriha/lineage',
     author='Andrew Riha',
-    author_email='apriha@apriha.com',
+    author_email='apriha@gmail.com',
     license='GPLv3',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Intended Audience :: End Users/Desktop',
         'Intended Audience :: Healthcare Industry',
@@ -88,8 +88,8 @@ setup(
         'Topic :: Scientific/Engineering :: Visualization',
         'Topic :: Utilities'
     ],
-    keywords='genetic genealogy bioinformatics dna chromosomes genetics '
-             'inheritance ancestry',
+    keywords='dna genes genetics genealogy snps chromosomes genotype '
+             'bioinformatics ancestry',
     packages=['lineage'],
     install_requires=[
         'numpy==1.15.1',
