@@ -86,7 +86,7 @@ datasets are Build 37... Let's remap the SNPs:
 Downloading resources/NCBI36_GRCh37.tar.gz
 >>> user662.build
 37
->>> user662.assembly_name
+>>> user662.assembly
 'GRCh37'
 
 SNPs can be re-mapped between Build 36 (``NCBI36``), Build 37 (``GRCh37``), and Build 38

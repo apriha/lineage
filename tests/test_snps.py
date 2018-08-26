@@ -51,8 +51,8 @@ def snps_none():
     return SNPs(None)
 
 
-def test_assembly_name(snps_GRCh38):
-    assert snps_GRCh38.assembly_name == 'GRCh38'
+def test_assembly(snps_GRCh38):
+    assert snps_GRCh38.assembly == 'GRCh38'
 
 
 def test_snp_count(snps):
@@ -93,6 +93,6 @@ def test__lookup_build_with_snp_pos_None(snps_discrepant_pos):
     assert detect_build(snps_discrepant_pos) is None
 
 
-def test_get_assembly_name_None():
-    from lineage.snps import get_assembly_name
-    assert get_assembly_name(None) is ''
+def test_get_assembly_None():
+    from lineage.snps import get_assembly
+    assert get_assembly(None) is ''

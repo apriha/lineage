@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 
 import lineage
-from lineage.snps import (SNPs, get_assembly_name, get_chromosomes, get_chromosomes_summary,
+from lineage.snps import (SNPs, get_assembly, get_chromosomes, get_chromosomes_summary,
                           get_snp_count, sort_snps, determine_sex)
 
 class Individual(object):
@@ -132,14 +132,14 @@ class Individual(object):
         return self._build
 
     @property
-    def assembly_name(self):
-        """ Get the name of the assembly of this ``Individual``'s SNPs.
+    def assembly(self):
+        """ Get the assembly of this ``Individual``'s SNPs.
 
         Returns
         -------
         str
         """
-        return get_assembly_name(self._build)
+        return get_assembly(self._build)
 
     @property
     def source(self):
@@ -247,7 +247,7 @@ class Individual(object):
 
                 comment = comment.format(lineage.__version__,
                                          datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
-                                         self.assembly_name,
+                                         self.assembly,
                                          self.snp_count,
                                          self.chromosomes_summary,
                                          self.source)

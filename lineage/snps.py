@@ -58,14 +58,14 @@ class SNPs(object):
                 self._assign_par_snps()
 
     @property
-    def assembly_name(self):
-        """ Get the name of the assembly of ``SNPs``.
+    def assembly(self):
+        """ Get the assembly of ``SNPs``.
 
         Returns
         -------
         str
         """
-        return get_assembly_name(self.build)
+        return get_assembly(self.build)
 
     @property
     def snp_count(self):
@@ -408,8 +408,8 @@ def detect_build(snps):
     return build
 
 
-def get_assembly_name(build):
-    """ Get the assembly name of a build.
+def get_assembly(build):
+    """ Get the assembly of a build.
 
     Parameters
     ----------
