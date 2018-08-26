@@ -62,6 +62,12 @@ def snps_GRCh38():
                          genotype=['AA', 'ID', np.nan, 'TC'])
 
 
+@pytest.fixture(scope='module')
+def snps_GRCh38_PAR():
+    return create_snp_df(rsid=['rs28736870', 'rs113313554'], chrom=['X', 'Y'],
+                         pos=[304103, 624523], genotype=['AA', 'AA'])
+
+
 def test_name(l):
     ind = l.create_individual('test')
     assert ind.name == 'test'
@@ -307,16 +313,16 @@ def test_remap_snps_37_to_38_via_lineage(l, snps_GRCh38):
         pd.testing.assert_frame_equal(ind.snps, snps_GRCh38)
 
 
-def test_remap_snps_37_to_38_with_PAR_SNP(l, snps_GRCh38):
+def test_remap_snps_37_to_38_with_PAR_SNP(l, snps_GRCh38_PAR):
     ind = l.create_individual('', 'tests/input/GRCh37_PAR.csv')
-    assert ind.snp_count == 5
+    assert ind.snp_count == 3
     chromosomes_remapped, chromosomes_not_remapped = l.remap_snps(ind, 38)
     assert ind.assembly == 38
     assert ind.assembly_name == 'GRCh38'
     if len(chromosomes_remapped) == 2:
         assert len(chromosomes_not_remapped) == 1
-        assert ind.snp_count == 4
-        pd.testing.assert_frame_equal(ind.snps, snps_GRCh38)
+        assert ind.snp_count == 2
+        pd.testing.assert_frame_equal(ind.snps, snps_GRCh38_PAR)
 
 
 def test_remap_snps_37_to_37(l, snps_GRCh37):

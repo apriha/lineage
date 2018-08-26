@@ -67,6 +67,13 @@ def test_chromosomes_summary(snps):
     assert snps.chromosomes_summary == '1-3, 5, PAR, MT'
 
 
+def test_assembly_detected_PAR_snps():
+    from lineage.snps import SNPs
+    snps = SNPs('tests/input/GRCh37_PAR.csv')
+    assert snps.assembly == 37
+    assert snps.assembly_detected
+
+
 def test_sex_Male_Y_chrom(l):
     ind = simulate_snps(l.create_individual('test_snps_sex_Male_Y_chrom'), chrom='Y', pos_start=1,
                         pos_max=59373566, pos_step=10000)

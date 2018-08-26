@@ -28,9 +28,20 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 
+from lineage.ensembl import EnsemblRestClient
+
 class SNPs(object):
 
-    def __init__(self, file):
+    def __init__(self, file, assign_par_snps=True):
+        """ Object used to read and parse genotype / raw data files.
+
+        Parameters
+        ----------
+        file : str
+            path to file to load
+        assign_par_snps : bool
+            assign PAR SNPs to the X and Y chromosomes
+        """
         self.snps, self.source = self._read_raw_data(file)
         self.assembly = None
         self.assembly_detected = False
@@ -42,6 +53,9 @@ class SNPs(object):
                 self.assembly = 37  # assume GRCh37 if not detected
             else:
                 self.assembly_detected = True
+
+            if assign_par_snps:
+                self._assign_par_snps()
 
     @property
     def assembly_name(self):
@@ -279,6 +293,62 @@ class SNPs(object):
 
         return sort_snps(df), 'generic'
 
+    def _assign_par_snps(self):
+        """ Assign PAR SNPs to the X or Y chromosome using SNP position.
+
+        References
+        -----
+        ..[1] National Center for Biotechnology Information, Variation Services, RefSNP,
+          https://api.ncbi.nlm.nih.gov/variation/v0/
+        ..[2] Yates et. al. (doi:10.1093/bioinformatics/btu613),
+          http://europepmc.org/search/?query=DOI:10.1093/bioinformatics/btu613
+        ..[3] Zerbino et. al. (doi.org/10.1093/nar/gkx1098), https://doi.org/10.1093/nar/gkx1098
+        ..[4] Sherry ST, Ward MH, Kholodov M, Baker J, Phan L, Smigielski EM, Sirotkin K.
+          dbSNP: the NCBI database of genetic variation. Nucleic Acids Res. 2001 Jan 1;
+          29(1):308-11.
+        ..[5] Database of Single Nucleotide Polymorphisms (dbSNP). Bethesda (MD): National Center
+          for Biotechnology Information, National Library of Medicine. dbSNP accession: rs28736870,
+          rs113313554, and rs758419898 (dbSNP Build ID: 151). Available from:
+          http://www.ncbi.nlm.nih.gov/SNP/
+        """
+        rest_client = EnsemblRestClient(server='https://api.ncbi.nlm.nih.gov')
+        for rsid in self.snps.loc[self.snps['chrom'] == 'PAR'].index.values:
+            if 'rs' in rsid:
+                try:
+                    id = rsid.split('rs')[1]
+                    response = rest_client.perform_rest_action('/variation/v0/beta/refsnp/' + id)
+
+                    if response is not None:
+                        for item in response['primary_snapshot_data']['placements_with_allele']:
+                            if 'NC_000023' in item['seq_id']:
+                                assigned = self._assign_snp(rsid, item['alleles'], 'X')
+                            elif 'NC_000024' in item['seq_id']:
+                                assigned = self._assign_snp(rsid, item['alleles'], 'Y')
+                            else:
+                                assigned = False
+
+                            if assigned:
+                                if not self.assembly_detected:
+                                    self.assembly = self._extract_assembly(item)
+                                    self.assembly_detected = True
+                                continue
+
+                except Exception as err:
+                    print(err)
+
+    def _assign_snp(self, rsid, alleles, chrom):
+        for allele in alleles:
+            allele_pos = allele['allele']['spdi']['position']
+            # ref SNP positions seem to be 0-based...
+            if allele_pos == self.snps.loc[rsid].pos - 1:
+                self.snps.loc[rsid, 'chrom'] = chrom
+                return True
+        return False
+
+    def _extract_assembly(self, item):
+        assembly_name = item['placement_annot']['seq_id_traits_by_assembly'][0]['assembly_name']
+        assembly_name = assembly_name.split('.')[0]
+        return int(assembly_name[-2:])
 
 def detect_assembly(snps):
     """ Detect assembly of SNPs.
@@ -312,7 +382,7 @@ def detect_assembly(snps):
       dbSNP: the NCBI database of genetic variation. Nucleic Acids Res. 2001 Jan 1;29(1):308-11.
     ..[4] Database of Single Nucleotide Polymorphisms (dbSNP). Bethesda (MD): National Center
       for Biotechnology Information, National Library of Medicine. dbSNP accession: rs3094315,
-      rs11928389, rs2500347, rs964481, and rs28736870 (dbSNP Build ID: 151). Available from:
+      rs11928389, rs2500347, and rs964481 (dbSNP Build ID: 151). Available from:
       http://www.ncbi.nlm.nih.gov/SNP/
     """
     def lookup_assembly_with_snp_pos(pos, s):
