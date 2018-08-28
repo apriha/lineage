@@ -48,18 +48,6 @@ after_success:
 # automatically package and deploy to PyPI
 # https://www.appneta.com/blog/pypi-deployment-with-travis-ci/
 deploy:
-  # test PyPI
-  - provider: pypi
-    server: https://test.pypi.org/legacy/
-    user: "apriha"
-    password:
-      secure: "rAYkKbW1Grw0Yfbd21HR9F4CPHILQZi27U6Nemm2lMUKG2N12LedSNV5v2AiAvCaMVuyn25z+o9zjHgDDfX96g7jX/lOHb4NujQNvWqbNR2PhNdwjaT3A3vs9vGUDLAP552krFx+QWOT9boP2UAX24RTRs3voI9insY/mWmtzgo7K4ogCD+Dt42Hk2MaITXzCay1rzwQoX/WV/CpvYoFDuieEyttJ9nA8aN5pU9lV4Y+DyF1eoyqW5iLAN31RrFSqO5DtdbYtJPlij17iKwCrCkuvNaPZ9pAKpz/uceHLm9T1F0JQkOa7dG7axXjRV/smeYpdIJv7OOcwVDKraVj5vU/o8ucwUzsVnWJvzOpMTdVYYP9IaEyOUr/gapEpGy4Er+YUyT4jJc40t1EbWjFuJt/bhbkDFZzviWD/2SHODtkKqpFJlVaoN7GdMLo6CAY0gBkEUNZbggXnc9WwrxRVFrGnBK4cpl7ucqGK5eHTHrIWc9k4egDBAUtKo8bYtl5IN97cpVWr0eVLgVSrq59DnfuzuKs/9uQXEtjmcqe45Zrrw/ullYYRCriNgldCUhTCNXUGqdgiPEfG8hQGqw4wJj+m28xCTVq5cAanE4VjmmWKCHIHhon7oV285/hjijr5L2rZF5tJn8fjcwS8TB9kxPbOXKo/aOKydtDoCQwCXw="
-    skip_cleanup: true
-    distributions: "sdist bdist_wheel"
-    on:
-      branch: master
-      tags: false
-      condition: $DEPLOY = "true"
   # production PyPI
   - provider: pypi
     user: "apriha"
