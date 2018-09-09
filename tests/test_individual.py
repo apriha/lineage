@@ -120,12 +120,28 @@ def test_snps_ancestry(l, generic_snps):
     pd.testing.assert_frame_equal(ind.snps, generic_snps)
 
 
-def test_source_lineage(l):
-    ind = l.create_individual('', 'tests/input/chromosomes.csv')
+def test_source_lineage_file(l):
+    ind = l.create_individual('', 'tests/input/GRCh37.csv')
     assert ind.source == 'generic'
+    ind.load_snps('tests/input/23andme.txt')
+    assert ind.source == 'generic, 23andMe'
     file = ind.save_snps()
     ind_saved_snps = l.create_individual('', file)
-    assert ind_saved_snps.source == 'lineage'
+    assert ind_saved_snps.source == 'generic, 23andMe'
+    pd.testing.assert_frame_equal(ind.snps, ind_saved_snps.snps)
+
+
+def test_source_lineage_file_gzip(l):
+    ind = l.create_individual('', 'tests/input/GRCh37.csv')
+    assert ind.source == 'generic'
+    ind.load_snps('tests/input/23andme.txt')
+    assert ind.source == 'generic, 23andMe'
+    file = ind.save_snps()
+    with open(file, 'rb') as f_in:
+        with gzip.open(file + '.gz', 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    ind_saved_snps = l.create_individual('', file + '.gz')
+    assert ind_saved_snps.source == 'generic, 23andMe'
     pd.testing.assert_frame_equal(ind.snps, ind_saved_snps.snps)
 
 

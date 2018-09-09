@@ -371,7 +371,7 @@ class Individual(object):
             return discrepant_positions, discrepant_genotypes
 
         build = snps.build
-        source = snps.source
+        source = [s.strip() for s in snps.source.split(',')]
 
         if not snps.build_detected:
             print('build not detected, assuming build {}'.format(snps.build))
@@ -385,7 +385,7 @@ class Individual(object):
         snps = self._double_single_alleles(snps.snps, 'X')
 
         if self._snps is None:
-            self._source.append(source)
+            self._source.extend(source)
             self._snps = snps
         else:
             common_snps = self._snps.join(snps, how='inner', rsuffix='_added')
@@ -439,7 +439,7 @@ class Individual(object):
                 return discrepant_positions, discrepant_genotypes
 
             # add new SNPs
-            self._source.append(source)
+            self._source.extend(source)
             self._snps = self._snps.combine_first(snps)
             self._snps.loc[discrepant_genotypes.index, 'genotype'] = np.nan
 
