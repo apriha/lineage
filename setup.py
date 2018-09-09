@@ -63,6 +63,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='lineage',
     version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     description='tools for genetic genealogy and the analysis of consumer DNA '
                 'test results',
     long_description=long_description,
