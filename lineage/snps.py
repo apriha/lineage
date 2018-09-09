@@ -120,30 +120,47 @@ class SNPs(object):
             if '.zip' in file:
                 with zipfile.ZipFile(file) as z:
                     with z.open(z.namelist()[0], 'r') as f:
-                        # https://stackoverflow.com/a/606199
-                        line = f.readline().decode('utf-8')
+                        first_line, comments = self._extract_comments(f, True)
             elif '.gz' in file:
                 with gzip.open(file, 'rt') as f:
-                    line = f.readline()
+                    first_line, comments = self._extract_comments(f, False)
             else:
                 with open(file, 'r') as f:
-                    line = f.readline()
+                    first_line, comments = self._extract_comments(f, False)
 
-            if '23andMe' in line:
+            if '23andMe' in first_line:
                 return self._read_23andme(file)
-            elif 'Ancestry' in line:
+            elif 'Ancestry' in first_line:
                 return self._read_ancestry(file)
-            elif line[:4] == 'RSID':
+            elif first_line.startswith('RSID'):
                 return self._read_ftdna(file)
-            elif 'lineage' in line:
+            elif 'lineage' in first_line:
                 return self._read_lineage_csv(file)
-            elif line[:4] == 'rsid':
+            elif first_line.startswith('rsid'):
                 return self._read_generic_csv(file)
             else:
                 return None, ''
         except Exception as err:
             print(err)
             return None, ''
+
+    def _extract_comments(self, f, decode):
+        line = self._read_line(f, decode)
+        first_line = line
+        comments = ''
+
+        while line.startswith('#'):
+            comments += line
+            line = self._read_line(f, decode)
+
+        return first_line, comments
+
+    def _read_line(self, f, decode):
+        if decode:
+            # https://stackoverflow.com/a/606199
+            return f.readline().decode('utf-8')
+        else:
+            return f.readline()
 
     @staticmethod
     def _read_23andme(file):
