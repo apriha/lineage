@@ -53,6 +53,7 @@ import json
 import os
 import tarfile
 import tempfile
+import urllib.error
 import urllib.request
 import zlib
 
@@ -552,8 +553,6 @@ class Resources(object):
 
         if not os.path.exists(destination):
             try:
-                self._print_download_msg(destination)
-
                 if compress:
                     open_func = gzip.open
                 else:
@@ -563,8 +562,16 @@ class Resources(object):
                 # http://stackoverflow.com/a/7244263
                 with urllib.request.urlopen(url, timeout=timeout) as response, \
                         open_func(destination, 'wb') as f:
+                    self._print_download_msg(destination)
                     data = response.read()  # a `bytes` object
                     f.write(data)
+            except urllib.error.URLError as err:
+                print(err)
+                destination = None
+                # try HTTP if an FTP error occurred
+                if 'ftp://' in url:
+                    destination = self._download_file(url.replace('ftp://', 'http://'),
+                                                      filename, compress=compress, timeout=timeout)
             except Exception as err:
                 print(err)
                 return None
