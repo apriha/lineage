@@ -58,6 +58,8 @@ import os
 
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from matplotlib.collections import BrokenBarHCollection
 from matplotlib import patches
