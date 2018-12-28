@@ -724,8 +724,15 @@ def save_df_as_csv(df, path, filename):
         path to directory where to save CSV file
     filename : str
         filename of CSV file
+
+    Returns
+    -------
+    str
+        path to saved file, else empty str
     """
+    destination = ''
     if create_dir(path):
         destination = os.path.join(path, filename)
         print('Saving ' + os.path.relpath(destination))
         df.to_csv(destination, na_rep='--')
+    return destination
