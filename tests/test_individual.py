@@ -350,6 +350,84 @@ def test_save_snps_exception(l):
     assert not ind.save_snps()
 
 
+def test_save_discrepant_positions(l):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
+    assert len(ind.discrepant_positions) == 4
+    discrepant_positions_file = ind.save_discrepant_positions()
+    assert os.path.relpath(discrepant_positions_file) == 'output/discrepant_positions_ind.csv'
+    assert os.path.exists(discrepant_positions_file)
+
+
+def test_save_discrepant_positions_specify_file(l):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
+    assert len(ind.discrepant_positions) == 4
+    discrepant_positions_file = ind.save_discrepant_positions('discrepant_positions.csv')
+    assert os.path.relpath(discrepant_positions_file) == 'output/discrepant_positions.csv'
+    assert os.path.exists(discrepant_positions_file)
+
+
+def test_save_discrepant_positions_no_discrepant_snps(l):
+    ind = l.create_individual('ind')
+    assert len(ind.discrepant_positions) == 0
+    discrepant_positions_file = ind.save_discrepant_positions()
+    assert not discrepant_positions_file
+
+
+def test_save_discrepant_positions_invalid_output_dir(l):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
+    assert len(ind.discrepant_positions) == 4
+    ind._output_dir = None
+    assert not ind.save_discrepant_positions()
+
+
+def test_save_discrepant_positions_exception(l):
+    ind = l.create_individual('')
+    ind._discrepant_positions = 'invalid'
+    assert not ind.save_discrepant_positions()
+
+
+def test_save_discrepant_genotypes(l):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
+    assert len(ind.discrepant_genotypes) == 1
+    discrepant_genotypes_file = ind.save_discrepant_genotypes()
+    assert os.path.relpath(discrepant_genotypes_file) == 'output/discrepant_genotypes_ind.csv'
+    assert os.path.exists(discrepant_genotypes_file)
+
+
+def test_save_discrepant_genotypes_specify_file(l):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
+    assert len(ind.discrepant_genotypes) == 1
+    discrepant_genotypes_file = ind.save_discrepant_genotypes('discrepant_genotypes.csv')
+    assert os.path.relpath(discrepant_genotypes_file) == 'output/discrepant_genotypes.csv'
+    assert os.path.exists(discrepant_genotypes_file)
+
+
+def test_save_discrepant_genotypes_no_discrepant_snps(l):
+    ind = l.create_individual('ind')
+    assert len(ind.discrepant_genotypes) == 0
+    discrepant_genotypes_file = ind.save_discrepant_genotypes()
+    assert not discrepant_genotypes_file
+
+
+def test_save_discrepant_genotypes_invalid_output_dir(l):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
+    assert len(ind.discrepant_genotypes) == 1
+    ind._output_dir = None
+    assert not ind.save_discrepant_genotypes()
+
+
+def test_save_discrepant_genotypes_exception(l):
+    ind = l.create_individual('')
+    ind._discrepant_genotypes = 'invalid'
+    assert not ind.save_discrepant_genotypes()
+
+
 def test_get_var_name(l):
     ind = l.create_individual('test a. name')
     assert ind.get_var_name() == 'test_a__name'
