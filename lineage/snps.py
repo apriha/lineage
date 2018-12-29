@@ -549,29 +549,32 @@ def determine_sex(snps, y_snps_not_null_threshold=0.1, heterozygous_x_snps_thres
         'Male' or 'Female' if detected, else empty str
     """
 
-    y_snps = len(snps.loc[(snps['chrom'] == 'Y')])
+    if snps is not None:
+        y_snps = len(snps.loc[(snps['chrom'] == 'Y')])
 
-    if y_snps > 0:
-        y_snps_not_null = len(snps.loc[(snps['chrom'] == 'Y') & (snps['genotype'].notnull())])
+        if y_snps > 0:
+            y_snps_not_null = len(snps.loc[(snps['chrom'] == 'Y') & (snps['genotype'].notnull())])
 
-        if y_snps_not_null / y_snps > y_snps_not_null_threshold:
-            return 'Male'
-        else:
+            if y_snps_not_null / y_snps > y_snps_not_null_threshold:
+                return 'Male'
+            else:
+                return 'Female'
+
+        x_snps = len(snps.loc[snps['chrom'] == 'X'])
+
+        if x_snps == 0:
+            return ''
+
+        heterozygous_x_snps = len(snps.loc[(snps['chrom'] == 'X') &
+                                           (snps['genotype'].notnull()) &
+                                           (snps['genotype'].str[0] != snps['genotype'].str[1])])
+
+        if heterozygous_x_snps / x_snps > heterozygous_x_snps_threshold:
             return 'Female'
-
-    x_snps = len(snps.loc[snps['chrom'] == 'X'])
-
-    if x_snps == 0:
-        return ''
-
-    heterozygous_x_snps = len(snps.loc[(snps['chrom'] == 'X') &
-                                       (snps['genotype'].notnull()) &
-                                       (snps['genotype'].str[0] != snps['genotype'].str[1])])
-
-    if heterozygous_x_snps / x_snps > heterozygous_x_snps_threshold:
-        return 'Female'
+        else:
+            return 'Male'
     else:
-        return 'Male'
+        return ''
 
 def sort_snps(snps):
     """ Sort SNPs based on ordered chromosome list and position. """

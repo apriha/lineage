@@ -55,16 +55,40 @@ def test_assembly(snps_GRCh38):
     assert snps_GRCh38.assembly == 'GRCh38'
 
 
+def test_assembly_no_snps(snps_none):
+    assert snps_none.assembly == ''
+
+
 def test_snp_count(snps):
     assert snps.snp_count == 6
+
+
+def test_snp_count_no_snps(snps_none):
+    assert snps_none.snp_count == 0
 
 
 def test_chromosomes(snps):
     assert snps.chromosomes == ['1', '2', '3', '5', 'PAR', 'MT']
 
 
+def test_chromosomes_no_snps(snps_none):
+    assert snps_none.chromosomes == []
+
+
 def test_chromosomes_summary(snps):
     assert snps.chromosomes_summary == '1-3, 5, PAR, MT'
+
+
+def test_chromosomes_summary_no_snps(snps_none):
+    assert snps_none.chromosomes_summary == ''
+
+
+def test_build_no_snps(snps_none):
+    assert snps_none.build is None
+
+
+def test_build_detected_no_snps(snps_none):
+    assert snps_none.build_detected == False
 
 
 def test_build_detected_PAR_snps():
@@ -72,6 +96,10 @@ def test_build_detected_PAR_snps():
     snps = SNPs('tests/input/GRCh37_PAR.csv')
     assert snps.build == 37
     assert snps.build_detected
+
+
+def test_sex_no_snps(snps_none):
+    assert snps_none.sex == ''
 
 
 def test_sex_Male_Y_chrom(l):
