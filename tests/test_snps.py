@@ -111,6 +111,28 @@ def test_sex_Male_Y_chrom(l):
     assert snps.sex == 'Male'
 
 
+def test_get_summary(snps_GRCh38):
+    assert snps_GRCh38.get_summary() == {'source': 'generic',
+                                         'assembly': 'GRCh38',
+                                         'build': 38,
+                                         'build_detected': True,
+                                         'snp_count': 4,
+                                         'chromosomes': '1, 3',
+                                         'sex': ''}
+
+
+def test_get_summary_no_snps(snps_none):
+    assert snps_none.get_summary() is None
+
+
+def test_is_valid_True(snps_GRCh38):
+    assert snps_GRCh38.is_valid()
+
+
+def test_is_valid_False(snps_none):
+    assert not snps_none.is_valid()
+
+
 def test__read_raw_data(snps_none):
     assert snps_none.snps is None
     assert snps_none.source == ''
