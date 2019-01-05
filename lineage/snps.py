@@ -110,6 +110,40 @@ class SNPs(object):
         """
         return determine_sex(self.snps)
 
+    def get_summary(self):
+        """ Get summary of ``SNPs``.
+
+        Returns
+        -------
+        dict
+            summary info, else None if ``SNPs`` is not valid
+        """
+        if not self.is_valid():
+            return None
+        else:
+            return {'source': self.source,
+                    'assembly': self.assembly,
+                    'build': self.build,
+                    'build_detected': self.build_detected,
+                    'snp_count': self.snp_count,
+                    'chromosomes': self.chromosomes_summary,
+                    'sex': self.sex}
+
+    def is_valid(self):
+        """ Determine if ``SNPs`` is valid.
+
+        ``SNPs`` is valid when the input file has been successfully parsed.
+
+        Returns
+        -------
+        bool
+            True if ``SNPs`` is valid
+        """
+        if self.snps is None:
+            return False
+        else:
+            return True
+
     def _read_raw_data(self, file):
         try:
             if not os.path.exists(file):
