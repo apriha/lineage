@@ -157,6 +157,26 @@ def test_find_shared_dna_two_chrom_shared(l):
     assert os.path.exists('output/shared_dna_ind1_ind2.png')
 
 
+def test_find_shared_dna_two_chrom_shared_no_output(l):
+    ind1 = simulate_snps(l.create_individual('ind1'))
+    ind2 = simulate_snps(l.create_individual('ind2'))
+
+    one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = \
+        l.find_shared_dna(ind1, ind2, shared_genes=True, save_output=False)
+
+    assert len(one_chrom_shared_dna) == 1
+    assert len(two_chrom_shared_dna) == 1
+    assert len(one_chrom_shared_genes) == 7918
+    assert len(two_chrom_shared_genes) == 7918
+    np.testing.assert_allclose(one_chrom_shared_dna[0]['cMs'], 285.356293)
+    np.testing.assert_allclose(two_chrom_shared_dna[0]['cMs'], 285.356293)
+    assert not os.path.exists('output/shared_dna_one_chrom_ind1_ind2.csv')
+    assert not os.path.exists('output/shared_dna_two_chroms_ind1_ind2.csv')
+    assert not os.path.exists('output/shared_genes_one_chrom_ind1_ind2.csv')
+    assert not os.path.exists('output/shared_genes_two_chroms_ind1_ind2.csv')
+    assert not os.path.exists('output/shared_dna_ind1_ind2.png')
+
+
 def test_find_shared_dna_one_chrom_shared(l):
     ind1 = simulate_snps(l.create_individual('ind1'))
     ind2 = simulate_snps(l.create_individual('ind2'), complement_genotype_one_chrom=True)

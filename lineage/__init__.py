@@ -369,7 +369,7 @@ class Lineage(object):
         return df
 
     def find_shared_dna(self, individual1, individual2, cM_threshold=0.75,
-                        snp_threshold=1100, shared_genes=False):
+                        snp_threshold=1100, shared_genes=False, save_output=True):
         """ Find the shared DNA between two individuals.
 
         Computes the genetic distance in centiMorgans (cMs) between SNPs using the HapMap Phase II
@@ -388,6 +388,8 @@ class Lineage(object):
             minimum SNPs for each shared DNA segment
         shared_genes : bool
             determine shared genes
+        save_output : bool
+            specifies whether to save output files in the output directory
 
         Returns
         -------
@@ -446,36 +448,42 @@ class Lineage(object):
         cytobands = self._resources.get_cytoBand_hg19()
 
         # plot data
-        if create_dir(self._output_dir):
-            plot_chromosomes(one_chrom_shared_dna, two_chrom_shared_dna, cytobands,
-                             os.path.join(self._output_dir, 'shared_dna_' +
-                                          individual1.get_var_name() + '_' +
-                                          individual2.get_var_name() + '.png'),
-                             individual1.name + ' / ' + individual2.name + ' shared DNA', 37)
+        if save_output:
+            if create_dir(self._output_dir):
+                plot_chromosomes(one_chrom_shared_dna, two_chrom_shared_dna, cytobands,
+                                 os.path.join(self._output_dir, 'shared_dna_' +
+                                              individual1.get_var_name() + '_' +
+                                              individual2.get_var_name() + '.png'),
+                                 individual1.name + ' / ' + individual2.name + ' shared DNA', 37)
 
         # save results in CSV format
         if len(one_chrom_shared_dna) > 0:
-            self._save_shared_dna_csv_format(one_chrom_shared_dna, 'one',
-                                             individual1.get_var_name(),
-                                             individual2.get_var_name())
+            if save_output:
+                self._save_shared_dna_csv_format(one_chrom_shared_dna, 'one',
+                                                 individual1.get_var_name(),
+                                                 individual2.get_var_name())
             if shared_genes:
                 one_chrom_shared_genes = self._compute_shared_genes(one_chrom_shared_dna, 'one',
                                                                     individual1.get_var_name(),
-                                                                    individual2.get_var_name())
+                                                                    individual2.get_var_name(),
+                                                                    save_output)
 
         if len(two_chrom_shared_dna) > 0:
-            self._save_shared_dna_csv_format(two_chrom_shared_dna, 'two',
-                                             individual1.get_var_name(),
-                                             individual2.get_var_name())
+            if save_output:
+                self._save_shared_dna_csv_format(two_chrom_shared_dna, 'two',
+                                                 individual1.get_var_name(),
+                                                 individual2.get_var_name())
             if shared_genes:
                 two_chrom_shared_genes = self._compute_shared_genes(two_chrom_shared_dna, 'two',
                                                                     individual1.get_var_name(),
-                                                                    individual2.get_var_name())
+                                                                    individual2.get_var_name(),
+                                                                    save_output)
 
         return one_chrom_shared_dna, two_chrom_shared_dna, \
                one_chrom_shared_genes, two_chrom_shared_genes
 
-    def _compute_shared_genes(self, shared_dna, type, individual1_name, individual2_name):
+    def _compute_shared_genes(self, shared_dna, type, individual1_name, individual2_name,
+                              save_output):
         knownGenes = self._resources.get_knownGene_hg19()
         kgXref = self._resources.get_kgXref_hg19()
 
@@ -501,15 +509,16 @@ class Lineage(object):
         if len(shared_genes_dfs) > 0:
             shared_genes = pd.concat(shared_genes_dfs, sort=True)
 
-            if type == 'one':
-                chroms = 'one_chrom'
-            else:
-                chroms = 'two_chroms'
+            if save_output:
+                if type == 'one':
+                    chroms = 'one_chrom'
+                else:
+                    chroms = 'two_chroms'
 
-            file = os.path.join(self._output_dir, 'shared_genes_' + chroms + '_' +
-                                individual1_name + '_' + individual2_name + '.csv')
+                file = 'shared_genes_' + chroms + '_' + individual1_name + '_' + \
+                       individual2_name + '.csv'
 
-            save_df_as_csv(shared_genes, self._output_dir, file)
+                save_df_as_csv(shared_genes, self._output_dir, file)
 
         return shared_genes
 
