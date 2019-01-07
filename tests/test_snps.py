@@ -105,9 +105,9 @@ def test_sex_no_snps(snps_none):
 def test_sex_Male_Y_chrom(l):
     ind = simulate_snps(l.create_individual('test_snps_sex_Male_Y_chrom'), chrom='Y', pos_start=1,
                         pos_max=59373566, pos_step=10000)
-    ind.save_snps()
+    file = ind.save_snps()
     from lineage.snps import SNPs
-    snps = SNPs('output/test_snps_sex_Male_Y_chrom.csv')
+    snps = SNPs(file)
     assert snps.sex == 'Male'
 
 

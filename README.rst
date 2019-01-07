@@ -122,7 +122,7 @@ identifying discrepancies along the way. Let's save the merged dataset consistin
 SNPs to a CSV file:
 
 >>> saved_snps = user662.save_snps()
-Saving output/User662.csv
+Saving output/User662_lineage_GRCh37.csv
 
 All `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are saved to the output
 directory.

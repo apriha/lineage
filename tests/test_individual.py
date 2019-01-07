@@ -328,8 +328,15 @@ def test_merging_files_discrepant_snps(l):
 
 def test_save_snps(l, snps_GRCh37):
     ind = l.create_individual('test save snps', 'tests/input/GRCh37.csv')
-    assert os.path.relpath(ind.save_snps()) == 'output/test_save_snps.csv'
-    ind_saved_snps = l.create_individual('', 'output/test_save_snps.csv')
+    assert os.path.relpath(ind.save_snps()) == 'output/test_save_snps_lineage_GRCh37.csv'
+    ind_saved_snps = l.create_individual('', 'output/test_save_snps_lineage_GRCh37.csv')
+    pd.testing.assert_frame_equal(ind_saved_snps.snps, snps_GRCh37)
+
+
+def test_save_snps_specify_file(l, snps_GRCh37):
+    ind = l.create_individual('test save snps', 'tests/input/GRCh37.csv')
+    assert os.path.relpath(ind.save_snps('snps.csv')) == 'output/snps.csv'
+    ind_saved_snps = l.create_individual('', 'output/snps.csv')
     pd.testing.assert_frame_equal(ind_saved_snps.snps, snps_GRCh37)
 
 
@@ -355,7 +362,7 @@ def test_save_discrepant_positions(l):
     ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
     assert len(ind.discrepant_positions) == 4
     discrepant_positions_file = ind.save_discrepant_positions()
-    assert os.path.relpath(discrepant_positions_file) == 'output/discrepant_positions_ind.csv'
+    assert os.path.relpath(discrepant_positions_file) == 'output/ind_discrepant_positions.csv'
     assert os.path.exists(discrepant_positions_file)
 
 
@@ -393,7 +400,7 @@ def test_save_discrepant_genotypes(l):
     ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
     assert len(ind.discrepant_genotypes) == 1
     discrepant_genotypes_file = ind.save_discrepant_genotypes()
-    assert os.path.relpath(discrepant_genotypes_file) == 'output/discrepant_genotypes_ind.csv'
+    assert os.path.relpath(discrepant_genotypes_file) == 'output/ind_discrepant_genotypes.csv'
     assert os.path.exists(discrepant_genotypes_file)
 
 

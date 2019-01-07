@@ -59,9 +59,10 @@ Save SNPs
 The SNPs for an :class:`~lineage.individual.Individual` can be saved with
 :meth:`~lineage.individual.Individual.save_snps`. One CSV file is output when SNPs are saved.
 
-<name>.csv
-``````````
-Where ``name`` is the name of the :class:`~lineage.individual.Individual`.
+<name>_lineage_<assembly>.csv
+`````````````````````````````
+Where ``name`` is the name of the :class:`~lineage.individual.Individual` and ``assembly`` is the
+assembly of the SNPs being saved.
 
 ==========  ===========
 Column      Description

@@ -713,7 +713,7 @@ def create_dir(path):
         return False
 
 
-def save_df_as_csv(df, path, filename):
+def save_df_as_csv(df, path, filename, comment=None, **kwargs):
     """ Save dataframe to a CSV file.
 
     Parameters
@@ -724,15 +724,40 @@ def save_df_as_csv(df, path, filename):
         path to directory where to save CSV file
     filename : str
         filename of CSV file
+    comment : str
+        header comment(s); one or more lines starting with '#'
+    **kwargs
+        additional parameters to `pandas.DataFrame.to_csv`
 
     Returns
     -------
     str
         path to saved file, else empty str
     """
-    destination = ''
-    if create_dir(path):
-        destination = os.path.join(path, filename)
-        print('Saving ' + os.path.relpath(destination))
-        df.to_csv(destination, na_rep='--')
-    return destination
+    if isinstance(df, pd.DataFrame) and len(df) > 0:
+        try:
+            if not create_dir(path):
+                return ''
+
+            destination = os.path.join(path, filename)
+
+            print('Saving ' + os.path.relpath(destination))
+
+            if comment is not None:
+                with open(destination, 'w') as f:
+                    f.write(comment)
+                mode = 'a'
+            else:
+                mode = 'w'
+
+            # https://stackoverflow.com/a/29233924/4727627
+            with open(destination, mode) as f:
+                df.to_csv(f, na_rep='--', **kwargs)
+
+            return destination
+        except Exception as err:
+            print(err)
+            return ''
+    else:
+        print('no data to save...')
+        return ''
