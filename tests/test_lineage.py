@@ -40,7 +40,9 @@ def simulate_snps(ind, chrom='1', pos_start=1, pos_max=248140902, pos_step=100, 
     ind._build = 37
 
     positions = np.arange(pos_start, pos_max, pos_step, dtype=np.int64)
-    snps = pd.DataFrame({'chrom': chrom}, index=['rs' + str(x + 1) for x in range(len(positions))])
+    snps = pd.DataFrame({'chrom': chrom},
+                        index=pd.Index(['rs' + str(x + 1) for x in range(len(positions))],
+                                       name='rsid'))
     snps['pos'] = positions
     snps['genotype'] = genotype
 

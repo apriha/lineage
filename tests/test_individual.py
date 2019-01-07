@@ -371,8 +371,7 @@ def test_save_discrepant_positions_specify_file(l):
 def test_save_discrepant_positions_no_discrepant_snps(l):
     ind = l.create_individual('ind')
     assert len(ind.discrepant_positions) == 0
-    discrepant_positions_file = ind.save_discrepant_positions()
-    assert not discrepant_positions_file
+    assert not ind.save_discrepant_positions()
 
 
 def test_save_discrepant_positions_invalid_output_dir(l):
@@ -410,8 +409,7 @@ def test_save_discrepant_genotypes_specify_file(l):
 def test_save_discrepant_genotypes_no_discrepant_snps(l):
     ind = l.create_individual('ind')
     assert len(ind.discrepant_genotypes) == 0
-    discrepant_genotypes_file = ind.save_discrepant_genotypes()
-    assert not discrepant_genotypes_file
+    assert not ind.save_discrepant_genotypes()
 
 
 def test_save_discrepant_genotypes_invalid_output_dir(l):
