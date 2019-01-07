@@ -234,6 +234,24 @@ def test_sex_not_determined(l):
     assert ind.sex == ''
 
 
+def test_discrepant_positions(l):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
+    assert len(ind.discrepant_positions) == 4
+
+
+def test_discrepant_genotypes(l):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
+    assert len(ind.discrepant_genotypes) == 1
+
+
+def test_discrepant_snps(l):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
+    assert len(ind.discrepant_snps) == 4
+
+
 def test_load_snps_non_existent_file(l, snps_GRCh37):
     ind = l.create_individual('')
     ind.load_snps(['tests/input/GRCh37.csv', 'tests/input/non_existent_file.csv'])
@@ -431,6 +449,44 @@ def test_save_discrepant_genotypes_exception(l):
     ind = l.create_individual('')
     ind._discrepant_genotypes = 'invalid'
     assert not ind.save_discrepant_genotypes()
+
+
+def test_save_discrepant_snps(l):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
+    assert len(ind.discrepant_snps) == 4
+    discrepant_snps_file = ind.save_discrepant_snps()
+    assert os.path.relpath(discrepant_snps_file) == 'output/ind_discrepant_snps.csv'
+    assert os.path.exists(discrepant_snps_file)
+
+
+def test_save_discrepant_snps_specify_file(l):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
+    assert len(ind.discrepant_snps) == 4
+    discrepant_snps_file = ind.save_discrepant_snps('discrepant_snps.csv')
+    assert os.path.relpath(discrepant_snps_file) == 'output/discrepant_snps.csv'
+    assert os.path.exists(discrepant_snps_file)
+
+
+def test_save_discrepant_snps_no_discrepant_snps(l):
+    ind = l.create_individual('ind')
+    assert len(ind.discrepant_snps) == 0
+    assert not ind.save_discrepant_snps()
+
+
+def test_save_discrepant_snps_invalid_output_dir(l):
+    ind = l.create_individual('ind')
+    ind.load_snps(['tests/input/NCBI36.csv', 'tests/input/GRCh37.csv'])
+    assert len(ind.discrepant_snps) == 4
+    ind._output_dir = None
+    assert not ind.save_discrepant_snps()
+
+
+def test_save_discrepant_snps_exception(l):
+    ind = l.create_individual('')
+    ind._discrepant_snps = 'invalid'
+    assert not ind.save_discrepant_snps()
 
 
 def test_get_var_name(l):

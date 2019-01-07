@@ -182,6 +182,19 @@ class Individual(object):
         """
         return self._discrepant_genotypes
 
+    @property
+    def discrepant_snps(self):
+        """ SNPs with discrepant positions and / or genotypes discovered while loading SNPs.
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        df = self._discrepant_positions.append(self._discrepant_genotypes)
+        if len(df) > 1:
+            df = df.drop_duplicates()
+        return df
+
     def load_snps(self, raw_data, discrepant_snp_positions_threshold=100,
                   discrepant_genotypes_threshold=500, save_output=False):
         """ Load raw genotype data.
@@ -297,6 +310,25 @@ class Individual(object):
             filename = self.get_var_name() + '_discrepant_genotypes.csv'
 
         return lineage.save_df_as_csv(self.discrepant_genotypes, self._output_dir,
+                                      filename, comment=self._generate_header_comment())
+
+    def save_discrepant_snps(self, filename=None):
+        """ Save SNPs with discrepant positions and / or genotypes to file.
+
+        Parameters
+        ----------
+        filename : str
+            filename for file to save
+
+        Returns
+        -------
+        str
+            path to file in output directory if SNPs were saved, else empty str
+        """
+        if filename is None:
+            filename = self.get_var_name() + '_discrepant_snps.csv'
+
+        return lineage.save_df_as_csv(self.discrepant_snps, self._output_dir,
                                       filename, comment=self._generate_header_comment())
 
     def get_var_name(self):
