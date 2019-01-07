@@ -323,7 +323,7 @@ class Lineage(object):
             if save_output:
                 save_df_as_csv(df, self._output_dir, 'discordant_snps_' +
                                individual1.get_var_name() + '_' +
-                               individual2.get_var_name() + '.csv')
+                               individual2.get_var_name() + '_GRCh37.csv')
         else:
             # add SNPs shared with `individual3`
             df = df.join(individual3.snps['genotype'], rsuffix='3')
@@ -364,7 +364,7 @@ class Lineage(object):
                 save_df_as_csv(df, self._output_dir, 'discordant_snps_' +
                                individual1.get_var_name() + '_' +
                                individual2.get_var_name() + '_' +
-                               individual3.get_var_name() + '.csv')
+                               individual3.get_var_name() + '_GRCh37.csv')
 
         return df
 
@@ -516,7 +516,7 @@ class Lineage(object):
                     chroms = 'two_chroms'
 
                 file = 'shared_genes_' + chroms + '_' + individual1_name + '_' + \
-                       individual2_name + '.csv'
+                       individual2_name + '_GRCh37.csv'
 
                 save_df_as_csv(shared_genes, self._output_dir, file)
 
@@ -529,7 +529,7 @@ class Lineage(object):
             chroms = 'two_chroms'
 
         file = os.path.join(self._output_dir, 'shared_dna_' + chroms + '_' + individual1_name +
-                            '_' + individual2_name + '.csv')
+                            '_' + individual2_name + '_GRCh37.csv')
 
         print('Saving ' + os.path.relpath(file))
 

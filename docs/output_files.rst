@@ -79,8 +79,8 @@ Discordant SNPs between two or three individuals can be identified with
 :meth:`~lineage.Lineage.find_discordant_snps`. One CSV file is optionally output when
 `save_output=True`.
 
-discordant_snps_<name1>_<name2>.csv
-```````````````````````````````````
+discordant_snps_<name1>_<name2>_GRCh37.csv
+``````````````````````````````````````````
 Where ``name1`` is the name of the first :class:`~lineage.individual.Individual` and
 ``name2`` is the name of the second :class:`~lineage.individual.Individual`.
 
@@ -94,8 +94,8 @@ genotype_<name1>  Genotype of first individual
 genotype_<name2>  Genotype of second individual
 ================  ===========
 
-discordant_snps_<name1>_<name2>_<name3>.csv
-```````````````````````````````````````````
+discordant_snps_<name1>_<name2>_<name3>_GRCh37.csv
+``````````````````````````````````````````````````
 Where ``name1`` is the name of the first :class:`~lineage.individual.Individual`,
 ``name2`` is the name of the second :class:`~lineage.individual.Individual`, and ``name3`` is
 the name of the third :class:`~lineage.individual.Individual`.
@@ -146,8 +146,8 @@ shared" is indicated are regions where the individuals share DNA on both chromos
 Note that the regions where DNA is shared on both chromosomes is a subset of the regions where
 one chromosome is shared.
 
-shared_dna_one_chrom_<name1>_<name2>.csv
-````````````````````````````````````````
+shared_dna_one_chrom_<name1>_<name2>_GRCh37.csv
+```````````````````````````````````````````````
 If DNA is shared on one chromosome, a CSV file details the shared segments of DNA.
 
 ======  ===========
@@ -160,8 +160,8 @@ cMs     CentiMorgans of matching DNA segment
 snps    Number of SNPs in matching DNA segment
 ======  ===========
 
-shared_dna_two_chroms_<name1>_<name2>.csv
-`````````````````````````````````````````
+shared_dna_two_chroms_<name1>_<name2>_GRCh37.csv
+````````````````````````````````````````````````
 If DNA is shared on two chromosomes, a CSV file details the shared segments of DNA.
 
 ======  ===========
@@ -185,8 +185,8 @@ In the filenames below, ``name1`` is the name of the first
 :class:`~lineage.individual.Individual` and ``name2`` is the name of the second
 :class:`~lineage.individual.Individual`.
 
-shared_genes_one_chrom_<name1>_<name2>.csv
-``````````````````````````````````````````
+shared_genes_one_chrom_<name1>_<name2>_GRCh37.csv
+`````````````````````````````````````````````````
 If DNA is shared on one chromosome, this file details the genes shared between the two
 individuals on at least one chromosome; these genes are located in the shared DNA segments
 specified in `shared_dna_one_chrom_<name1>_<name2>.csv`_.
@@ -208,8 +208,8 @@ description  Description
 \* `UCSC Genome Browser <http://genome.ucsc.edu>`_ /
 `UCSC Table Browser <http://genome.ucsc.edu/cgi-bin/hgTables>`_
 
-shared_genes_two_chroms_<name1>_<name2>.csv
-```````````````````````````````````````````
+shared_genes_two_chroms_<name1>_<name2>_GRCh37.csv
+``````````````````````````````````````````````````
 If DNA is shared on both chromosomes in a pair, this file details the genes shared between the two
 individuals on both chromosomes; these genes are located in the shared DNA segments specified in
 `shared_dna_two_chroms_<name1>_<name2>.csv`_.

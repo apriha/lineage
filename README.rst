@@ -142,7 +142,7 @@ First, let's find discordant SNPs (i.e., SNP data that is not consistent with Me
 inheritance):
 
 >>> discordant_snps = l.find_discordant_snps(user662, user663, save_output=True)
-Saving output/discordant_snps_User662_User663.csv
+Saving output/discordant_snps_User662_User663_GRCh37.csv
 
 This method also returns a ``pandas`` ``DataFrame``, and it can be inspected interactively at
 the prompt, although the same output is available in the CSV file.
@@ -168,7 +168,7 @@ calculating the centiMorgans of shared DNA and plotting the results:
 Downloading resources/genetic_map_HapMapII_GRCh37.tar.gz
 Downloading resources/cytoBand_hg19.txt.gz
 Saving output/shared_dna_User662_User663.png
-Saving output/shared_dna_one_chrom_User662_User663.csv
+Saving output/shared_dna_one_chrom_User662_User663_GRCh37.csv
 
 Notice that the centiMorgan and SNP thresholds for each DNA segment can be tuned. Additionally,
 notice that two files were downloaded to facilitate the analysis and plotting - future analyses
@@ -208,12 +208,12 @@ Now let's find the shared genes:
 
 >>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = l.find_shared_dna(user4583, user4584, shared_genes=True)
 Saving output/shared_dna_User4583_User4584.png
-Saving output/shared_dna_one_chrom_User4583_User4584.csv
+Saving output/shared_dna_one_chrom_User4583_User4584_GRCh37.csv
 Downloading resources/knownGene_hg19.txt.gz
 Downloading resources/kgXref_hg19.txt.gz
-Saving output/shared_genes_one_chrom_User4583_User4584.csv
-Saving output/shared_dna_two_chroms_User4583_User4584.csv
-Saving output/shared_genes_two_chroms_User4583_User4584.csv
+Saving output/shared_genes_one_chrom_User4583_User4584_GRCh37.csv
+Saving output/shared_dna_two_chroms_User4583_User4584_GRCh37.csv
+Saving output/shared_genes_two_chroms_User4583_User4584_GRCh37.csv
 
 The plot that illustrates the shared DNA is shown below. Note that in addition to outputting the
 shared DNA segments on either one or both chromosomes, the shared genes on either one or both
