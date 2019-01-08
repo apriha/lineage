@@ -150,29 +150,31 @@ shared_dna_one_chrom_<name1>_<name2>_GRCh37.csv
 ```````````````````````````````````````````````
 If DNA is shared on one chromosome, a CSV file details the shared segments of DNA.
 
-======  ===========
-Column  Description
-======  ===========
-chrom   Chromosome with matching DNA segment
-start   Start position of matching DNA segment
-stop    Stop position of matching DNA segment
-cMs     CentiMorgans of matching DNA segment
-snps    Number of SNPs in matching DNA segment
-======  ===========
+=======  ===========
+Column   Description
+=======  ===========
+segment  Shared DNA segment number
+chrom    Chromosome with matching DNA segment
+start    Start position of matching DNA segment
+end      End position of matching DNA segment
+cMs      CentiMorgans of matching DNA segment
+snps     Number of SNPs in matching DNA segment
+=======  ===========
 
 shared_dna_two_chroms_<name1>_<name2>_GRCh37.csv
 ````````````````````````````````````````````````
 If DNA is shared on two chromosomes, a CSV file details the shared segments of DNA.
 
-======  ===========
-Column  Description
-======  ===========
-chrom   Pair of chromosomes with matching DNA segment
-start   Start position of matching DNA segment on each chromosome
-stop    Stop position of matching DNA segment on each chromosome
-cMs     CentiMorgans of matching DNA segment on each chromosome
-snps    Number of SNPs in matching DNA segment on each chromosome
-======  ===========
+=======  ===========
+Column   Description
+=======  ===========
+segment  Shared DNA segment number
+chrom    Pair of chromosomes with matching DNA segment
+start    Start position of matching DNA segment on each chromosome
+end      End position of matching DNA segment on each chromosome
+cMs      CentiMorgans of matching DNA segment on each chromosome
+snps     Number of SNPs in matching DNA segment on each chromosome
+=======  ===========
 
 Find Shared Genes
 -----------------

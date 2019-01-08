@@ -394,9 +394,9 @@ class Lineage(object):
 
         Returns
         -------
-        one_chrom_shared_dna : list of dicts
+        one_chrom_shared_dna : pandas.DataFrame
             segments of shared DNA on one chromosome
-        two_chrom_shared_dna : list of dicts
+        two_chrom_shared_dna : pandas.DataFrame
             segments of shared DNA on two chromosomes
         one_chrom_shared_genes : pandas.DataFrame
             shared genes on one chromosome
@@ -459,6 +459,8 @@ class Lineage(object):
 
         # save results in CSV format
         if len(one_chrom_shared_dna) > 0:
+            one_chrom_shared_dna = self._convert_shared_dna_list_to_df(one_chrom_shared_dna)
+
             if save_output:
                 self._save_shared_dna_csv_format(one_chrom_shared_dna, 'one',
                                                  individual1.get_var_name(),
@@ -470,6 +472,8 @@ class Lineage(object):
                                                                     save_output)
 
         if len(two_chrom_shared_dna) > 0:
+            two_chrom_shared_dna = self._convert_shared_dna_list_to_df(two_chrom_shared_dna)
+
             if save_output:
                 self._save_shared_dna_csv_format(two_chrom_shared_dna, 'two',
                                                  individual1.get_var_name(),
@@ -483,6 +487,12 @@ class Lineage(object):
         return one_chrom_shared_dna, two_chrom_shared_dna, \
                one_chrom_shared_genes, two_chrom_shared_genes
 
+    def _convert_shared_dna_list_to_df(self, shared_dna):
+        df = pd.DataFrame(shared_dna, columns=['chrom', 'start', 'end', 'cMs', 'snps'])
+        df.index.name = 'segment'
+        df.index = df.index + 1
+        return df
+
     def _compute_shared_genes(self, shared_dna, type, individual1_name, individual2_name,
                               save_output):
         knownGenes = self._resources.get_knownGene_hg19()
@@ -494,11 +504,11 @@ class Lineage(object):
         shared_genes_dfs = []
         shared_genes = pd.DataFrame()
 
-        for shared_segment in shared_dna:
+        for shared_segment in shared_dna.itertuples():
             # determine genes transcribed from this shared DNA segment
-            temp = df.loc[(df['chrom'] == shared_segment['chrom']) &
-                          (df['txStart'] >= shared_segment['start']) &
-                          (df['txEnd'] <= shared_segment['end'])].copy()
+            temp = df.loc[(df['chrom'] == shared_segment.chrom) &
+                          (df['txStart'] >= shared_segment.start) &
+                          (df['txEnd'] <= shared_segment.end)].copy()
 
             # select subset of columns
             temp = temp[['geneSymbol', 'chrom', 'strand', 'txStart', 'txEnd', 'refseq',
@@ -532,16 +542,7 @@ class Lineage(object):
         file = os.path.join(self._output_dir, 'shared_dna_' + chroms + '_' + individual1_name +
                             '_' + individual2_name + '_GRCh37.csv')
 
-        print('Saving ' + os.path.relpath(file))
-
-        with open(file, 'w') as f:
-            f.write('chrom,start,stop,cMs,snps\n')
-
-            for shared_segment in shared_dna:
-                f.write('{chrom},{start:d},{stop:d},{cMs:.2f},{snps:d}\n'.format(
-                            chrom=shared_segment['chrom'], start=shared_segment['start'],
-                            stop=shared_segment['end'], cMs=shared_segment['cMs'],
-                            snps=shared_segment['snps']))
+        save_df_as_csv(shared_dna, self._output_dir, file, float_format='%.2f')
 
     def _is_one_individual_male(self, individuals):
         for individual in individuals:
