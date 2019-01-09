@@ -457,10 +457,9 @@ class Lineage(object):
                                               individual2.get_var_name() + '.png'),
                                  individual1.name + ' / ' + individual2.name + ' shared DNA', 37)
 
-        # save results in CSV format
-        if len(one_chrom_shared_dna) > 0:
-            one_chrom_shared_dna = self._convert_shared_dna_list_to_df(one_chrom_shared_dna)
+        one_chrom_shared_dna = self._convert_shared_dna_list_to_df(one_chrom_shared_dna)
 
+        if len(one_chrom_shared_dna) > 0:
             if save_output:
                 self._save_shared_dna_csv_format(one_chrom_shared_dna, 'one',
                                                  individual1.get_var_name(),
@@ -471,9 +470,9 @@ class Lineage(object):
                                                                     individual2.get_var_name(),
                                                                     save_output)
 
-        if len(two_chrom_shared_dna) > 0:
-            two_chrom_shared_dna = self._convert_shared_dna_list_to_df(two_chrom_shared_dna)
+        two_chrom_shared_dna = self._convert_shared_dna_list_to_df(two_chrom_shared_dna)
 
+        if len(two_chrom_shared_dna) > 0:
             if save_output:
                 self._save_shared_dna_csv_format(two_chrom_shared_dna, 'two',
                                                  individual1.get_var_name(),
