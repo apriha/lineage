@@ -18,8 +18,8 @@ matrix:
       sudo: true
 
 before_install:
-  - pip install pytest pytest-cov
-  - pip install codecov
+  - pip install --upgrade pip setuptools wheel
+  - pip install pytest-cov codecov
 
 install:
   - pip install .

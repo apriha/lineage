@@ -521,7 +521,7 @@ def get_chromosomes(snps):
         list of str chromosomes (e.g., ['1', '2', '3', 'MT'], empty list if no chromosomes
     """
 
-    if snps is not None:
+    if isinstance(snps, pd.DataFrame):
         return list(pd.unique(snps['chrom']))
     else:
         return []
@@ -540,7 +540,7 @@ def get_chromosomes_summary(snps):
         human-readable listing of chromosomes (e.g., '1-3, MT'), empty str if no chromosomes
     """
 
-    if snps is not None:
+    if isinstance(snps, pd.DataFrame):
         chroms = list(pd.unique(snps['chrom']))
 
         int_chroms = [int(chrom) for chrom in chroms if chrom.isdigit()]
@@ -559,7 +559,7 @@ def get_chromosomes_summary(snps):
                                groupby(int_chroms, key=lambda n, c=count(): n - next(c)))
         str_chroms = ', '.join(str_chroms)
 
-        if str_chroms != '':
+        if int_chroms != '' and str_chroms != '':
             int_chroms += ', '
 
         return int_chroms + str_chroms
@@ -583,7 +583,7 @@ def determine_sex(snps, y_snps_not_null_threshold=0.1, heterozygous_x_snps_thres
         'Male' or 'Female' if detected, else empty str
     """
 
-    if snps is not None:
+    if isinstance(snps, pd.DataFrame):
         y_snps = len(snps.loc[(snps['chrom'] == 'Y')])
 
         if y_snps > 0:
