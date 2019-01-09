@@ -539,8 +539,8 @@ class Lineage(object):
         else:
             chroms = 'two_chroms'
 
-        file = os.path.join(self._output_dir, 'shared_dna_' + chroms + '_' + individual1_name +
-                            '_' + individual2_name + '_GRCh37.csv')
+        file = 'shared_dna_' + chroms + '_' + individual1_name + '_' + individual2_name + \
+               '_GRCh37.csv'
 
         save_df_as_csv(shared_dna, self._output_dir, file, float_format='%.2f')
 
