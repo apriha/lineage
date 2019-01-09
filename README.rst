@@ -144,7 +144,7 @@ inheritance):
 >>> discordant_snps = l.find_discordant_snps(user662, user663, save_output=True)
 Saving output/discordant_snps_User662_User663_GRCh37.csv
 
-This method also returns a ``pandas`` ``DataFrame``, and it can be inspected interactively at
+This method also returns a ``pandas.DataFrame``, and it can be inspected interactively at
 the prompt, although the same output is available in the CSV file.
 
 >>> len(discordant_snps.loc[discordant_snps['chrom'] != 'MT'])
@@ -176,8 +176,8 @@ will used the downloaded files instead of downloading the files again.
 
 Here, the `output <https://lineage.readthedocs.io/en/latest/output_files.html>`_ consists of a CSV file
 that details the shared segments of DNA on one chromosome; the information is also available in
-the ``list`` (``one_chrom_shared_dna``) returned by ``find_shared_dna``. Additionally, a plot is
-generated that illustrates the shared DNA:
+the ``pandas.DataFrame`` (``one_chrom_shared_dna``) returned by ``find_shared_dna``.
+Additionally, a plot is generated that illustrates the shared DNA:
 
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663.png
 
@@ -217,11 +217,9 @@ Saving output/shared_genes_two_chroms_User4583_User4584_GRCh37.csv
 
 The plot that illustrates the shared DNA is shown below. Note that in addition to outputting the
 shared DNA segments on either one or both chromosomes, the shared genes on either one or both
-chromosomes are also output. These `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_
-are detailed in the documentation. The information saved to the output files is also
-available in the ``lists`` (``one_chrom_shared_dna``, ``two_chrom_shared_dna``) and ``pandas``
-``DataFrames`` (``one_chrom_shared_genes``, ``two_chrom_shared_genes``) returned by
-``find_shared_dna``.
+chromosomes are also output (``find_shared_dna`` returns ``pandas.DataFrame`` objects).
+The `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are detailed
+in the documentation and their generation can be disabled with a ``save_output=False`` argument.
 
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User4583_User4584.png
 
