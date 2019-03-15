@@ -135,6 +135,13 @@ def test_snps_ftdna_gzip(l, generic_snps):
     pd.testing.assert_frame_equal(ind.snps, generic_snps)
 
 
+def test_snps_ftdna_famfinder(l, generic_snps):
+    # https://www.familytreedna.com
+    ind = l.create_individual("", "tests/input/ftdna_famfinder.csv")
+    assert ind.source == "FTDNA"
+    pd.testing.assert_frame_equal(ind.snps, generic_snps)
+
+
 def test_snps_ancestry(l, generic_snps):
     # https://www.ancestry.com
     ind = l.create_individual("", "tests/input/ancestry.txt")

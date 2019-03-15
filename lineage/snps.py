@@ -170,6 +170,8 @@ class SNPs(object):
                 return self._read_ancestry(file)
             elif first_line.startswith("RSID"):
                 return self._read_ftdna(file)
+            elif "famfinder" in first_line:
+                return self._read_ftdna_famfinder(file)
             elif "lineage" in first_line:
                 return self._read_lineage_csv(file, comments)
             elif first_line.startswith("rsid"):
@@ -263,6 +265,43 @@ class SNPs(object):
 
         # if second header existed, pos dtype will be object (should be np.int64)
         df["pos"] = df["pos"].astype(np.int64)
+
+        return sort_snps(df), "FTDNA"
+
+    @staticmethod
+    def _read_ftdna_famfinder(file):
+        """ Read and parse Family Tree DNA (FTDNA) "famfinder" file.
+
+        https://www.familytreedna.com
+
+        Parameters
+        ----------
+        file : str
+            path to file
+
+        Returns
+        -------
+        pandas.DataFrame
+            individual's genetic data normalized for use with `lineage`
+        str
+            name of data source
+        """
+        df = pd.read_csv(
+            file,
+            comment="#",
+            na_values="-",
+            names=["rsid", "chrom", "pos", "allele1", "allele2"],
+            index_col=0,
+            dtype={"chrom": object},
+        )
+
+        # create genotype column from allele columns
+        df["genotype"] = df["allele1"] + df["allele2"]
+
+        # delete allele columns
+        # http://stackoverflow.com/a/13485766
+        del df["allele1"]
+        del df["allele2"]
 
         return sort_snps(df), "FTDNA"
 
