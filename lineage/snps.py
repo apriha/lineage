@@ -500,6 +500,7 @@ def detect_build(snps):
     rs11928389 : plus strand in 36, minus strand in 37 and 38
     rs2500347 : plus strand in 36 and 37, minus strand in 38
     rs964481 : plus strand in 36, 37, and 38
+    rs2341354 : plus strand in 36, 37, and 38
 
     Parameters
     ----------
@@ -520,7 +521,7 @@ def detect_build(snps):
       dbSNP: the NCBI database of genetic variation. Nucleic Acids Res. 2001 Jan 1;29(1):308-11.
     ..[4] Database of Single Nucleotide Polymorphisms (dbSNP). Bethesda (MD): National Center
       for Biotechnology Information, National Library of Medicine. dbSNP accession: rs3094315,
-      rs11928389, rs2500347, and rs964481 (dbSNP Build ID: 151). Available from:
+      rs11928389, rs2500347, rs964481, and rs2341354 (dbSNP Build ID: 151). Available from:
       http://www.ncbi.nlm.nih.gov/SNP/
     """
 
@@ -532,12 +533,12 @@ def detect_build(snps):
 
     build = None
 
-    rsids = ["rs3094315", "rs11928389", "rs2500347", "rs964481"]
+    rsids = ["rs3094315", "rs11928389", "rs2500347", "rs964481", "rs2341354"]
     df = pd.DataFrame(
         {
-            36: [742429, 50908372, 143649677, 27566744],
-            37: [752566, 50927009, 144938320, 27656823],
-            38: [817186, 50889578, 148946169, 27638706],
+            36: [742429, 50908372, 143649677, 27566744, 908436],
+            37: [752566, 50927009, 144938320, 27656823, 918573],
+            38: [817186, 50889578, 148946169, 27638706, 983193],
         },
         index=rsids,
     )
