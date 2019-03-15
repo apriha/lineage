@@ -1,6 +1,6 @@
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/lineage_banner.png
 
-|build| |codecov| |docs| |pypi| |python| |license|
+|build| |codecov| |docs| |pypi| |python| |downloads| |license|
 
 lineage
 =======
@@ -260,5 +260,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
    :target: https://pypi.python.org/pypi/lineage
 .. |python| image:: https://img.shields.io/pypi/pyversions/lineage.svg
    :target: https://www.python.org
+.. |downloads| image:: https://pepy.tech/badge/lineage
+   :target: https://pepy.tech/project/lineage
 .. |license| image:: https://img.shields.io/pypi/l/lineage.svg
    :target: https://github.com/apriha/lineage/blob/master/LICENSE.txt
