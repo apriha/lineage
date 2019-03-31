@@ -30,8 +30,8 @@ from pandas.api.types import CategoricalDtype
 
 from lineage.ensembl import EnsemblRestClient
 
-class SNPs(object):
 
+class SNPs(object):
     def __init__(self, file, assign_par_snps=True):
         """ Object used to read and parse genotype / raw data files.
 
@@ -121,13 +121,15 @@ class SNPs(object):
         if not self.is_valid():
             return None
         else:
-            return {'source': self.source,
-                    'assembly': self.assembly,
-                    'build': self.build,
-                    'build_detected': self.build_detected,
-                    'snp_count': self.snp_count,
-                    'chromosomes': self.chromosomes_summary,
-                    'sex': self.sex}
+            return {
+                "source": self.source,
+                "assembly": self.assembly,
+                "build": self.build,
+                "build_detected": self.build_detected,
+                "snp_count": self.snp_count,
+                "chromosomes": self.chromosomes_summary,
+                "sex": self.sex,
+            }
 
     def is_valid(self):
         """ Determine if ``SNPs`` is valid.
@@ -147,43 +149,45 @@ class SNPs(object):
     def _read_raw_data(self, file):
         try:
             if not os.path.exists(file):
-                print(file + ' does not exist; skipping')
-                return None, ''
+                print(file + " does not exist; skipping")
+                return None, ""
 
             # peek into files to determine the data format
-            if '.zip' in file:
+            if ".zip" in file:
                 with zipfile.ZipFile(file) as z:
-                    with z.open(z.namelist()[0], 'r') as f:
+                    with z.open(z.namelist()[0], "r") as f:
                         first_line, comments = self._extract_comments(f, True)
-            elif '.gz' in file:
-                with gzip.open(file, 'rt') as f:
+            elif ".gz" in file:
+                with gzip.open(file, "rt") as f:
                     first_line, comments = self._extract_comments(f, False)
             else:
-                with open(file, 'r') as f:
+                with open(file, "r") as f:
                     first_line, comments = self._extract_comments(f, False)
 
-            if '23andMe' in first_line:
+            if "23andMe" in first_line:
                 return self._read_23andme(file)
-            elif 'Ancestry' in first_line:
+            elif "Ancestry" in first_line:
                 return self._read_ancestry(file)
-            elif first_line.startswith('RSID'):
+            elif first_line.startswith("RSID"):
                 return self._read_ftdna(file)
-            elif 'lineage' in first_line:
+            elif "famfinder" in first_line:
+                return self._read_ftdna_famfinder(file)
+            elif "lineage" in first_line:
                 return self._read_lineage_csv(file, comments)
-            elif first_line.startswith('rsid'):
+            elif first_line.startswith("rsid"):
                 return self._read_generic_csv(file)
             else:
-                return None, ''
+                return None, ""
         except Exception as err:
             print(err)
-            return None, ''
+            return None, ""
 
     def _extract_comments(self, f, decode):
         line = self._read_line(f, decode)
         first_line = line
-        comments = ''
+        comments = ""
 
-        while line.startswith('#'):
+        while line.startswith("#"):
             comments += line
             line = self._read_line(f, decode)
 
@@ -192,7 +196,7 @@ class SNPs(object):
     def _read_line(self, f, decode):
         if decode:
             # https://stackoverflow.com/a/606199
-            return f.readline().decode('utf-8')
+            return f.readline().decode("utf-8")
         else:
             return f.readline()
 
@@ -214,11 +218,17 @@ class SNPs(object):
         str
             name of data source
         """
-        df = pd.read_csv(file, comment='#', sep='\t', na_values='--',
-                               names=['rsid', 'chrom', 'pos', 'genotype'],
-                               index_col=0, dtype={'chrom': object})
+        df = pd.read_csv(
+            file,
+            comment="#",
+            sep="\t",
+            na_values="--",
+            names=["rsid", "chrom", "pos", "genotype"],
+            index_col=0,
+            dtype={"chrom": object},
+        )
 
-        return sort_snps(df), '23andMe'
+        return sort_snps(df), "23andMe"
 
     @staticmethod
     def _read_ftdna(file):
@@ -238,18 +248,62 @@ class SNPs(object):
         str
             name of data source
         """
-        df = pd.read_csv(file, skiprows=1, na_values='--',
-                         names=['rsid', 'chrom', 'pos', 'genotype'],
-                         index_col=0, dtype={'chrom': object})
+        df = pd.read_csv(
+            file,
+            skiprows=1,
+            na_values="--",
+            names=["rsid", "chrom", "pos", "genotype"],
+            index_col=0,
+            dtype={"chrom": object},
+        )
 
         # remove incongruous data
-        df = df.drop(df.loc[df['chrom'] == '0'].index)
-        df = df.drop(df.loc[df.index == 'RSID'].index)  # second header for concatenated data
+        df = df.drop(df.loc[df["chrom"] == "0"].index)
+        df = df.drop(
+            df.loc[df.index == "RSID"].index
+        )  # second header for concatenated data
 
         # if second header existed, pos dtype will be object (should be np.int64)
-        df['pos'] = df['pos'].astype(np.int64)
+        df["pos"] = df["pos"].astype(np.int64)
 
-        return sort_snps(df), 'FTDNA'
+        return sort_snps(df), "FTDNA"
+
+    @staticmethod
+    def _read_ftdna_famfinder(file):
+        """ Read and parse Family Tree DNA (FTDNA) "famfinder" file.
+
+        https://www.familytreedna.com
+
+        Parameters
+        ----------
+        file : str
+            path to file
+
+        Returns
+        -------
+        pandas.DataFrame
+            individual's genetic data normalized for use with `lineage`
+        str
+            name of data source
+        """
+        df = pd.read_csv(
+            file,
+            comment="#",
+            na_values="-",
+            names=["rsid", "chrom", "pos", "allele1", "allele2"],
+            index_col=0,
+            dtype={"chrom": object},
+        )
+
+        # create genotype column from allele columns
+        df["genotype"] = df["allele1"] + df["allele2"]
+
+        # delete allele columns
+        # http://stackoverflow.com/a/13485766
+        del df["allele1"]
+        del df["allele2"]
+
+        return sort_snps(df), "FTDNA"
 
     @staticmethod
     def _read_ancestry(file):
@@ -269,25 +323,32 @@ class SNPs(object):
         str
             name of data source
         """
-        df = pd.read_csv(file, comment='#', header=0, sep='\t', na_values=0,
-                         names=['rsid', 'chrom', 'pos', 'allele1', 'allele2'],
-                         index_col=0, dtype={'chrom': object})
+        df = pd.read_csv(
+            file,
+            comment="#",
+            header=0,
+            sep="\t",
+            na_values=0,
+            names=["rsid", "chrom", "pos", "allele1", "allele2"],
+            index_col=0,
+            dtype={"chrom": object},
+        )
 
         # create genotype column from allele columns
-        df['genotype'] = df['allele1'] + df['allele2']
+        df["genotype"] = df["allele1"] + df["allele2"]
 
         # delete allele columns
         # http://stackoverflow.com/a/13485766
-        del df['allele1']
-        del df['allele2']
+        del df["allele1"]
+        del df["allele2"]
 
         # https://redd.it/5y90un
-        df.ix[np.where(df['chrom'] == '23')[0], 'chrom'] = 'X'
-        df.ix[np.where(df['chrom'] == '24')[0], 'chrom'] = 'Y'
-        df.ix[np.where(df['chrom'] == '25')[0], 'chrom'] = 'PAR'
-        df.ix[np.where(df['chrom'] == '26')[0], 'chrom'] = 'MT'
+        df.ix[np.where(df["chrom"] == "23")[0], "chrom"] = "X"
+        df.ix[np.where(df["chrom"] == "24")[0], "chrom"] = "Y"
+        df.ix[np.where(df["chrom"] == "25")[0], "chrom"] = "PAR"
+        df.ix[np.where(df["chrom"] == "26")[0], "chrom"] = "MT"
 
-        return sort_snps(df), 'AncestryDNA'
+        return sort_snps(df), "AncestryDNA"
 
     @staticmethod
     def _read_lineage_csv(file, comments):
@@ -307,15 +368,21 @@ class SNPs(object):
         str
             name of data source(s)
         """
-        source = ''
-        for comment in comments.split('\n'):
-            if 'Source(s):' in comment:
-                source = comment.split('Source(s):')[1].strip()
+        source = ""
+        for comment in comments.split("\n"):
+            if "Source(s):" in comment:
+                source = comment.split("Source(s):")[1].strip()
                 break
 
-        df = pd.read_csv(file, comment='#', header=0, na_values='--',
-                         names=['rsid', 'chrom', 'pos', 'genotype'],
-                         index_col=0, dtype={'chrom': object, 'pos': np.int64})
+        df = pd.read_csv(
+            file,
+            comment="#",
+            header=0,
+            na_values="--",
+            names=["rsid", "chrom", "pos", "genotype"],
+            index_col=0,
+            dtype={"chrom": object, "pos": np.int64},
+        )
 
         return sort_snps(df), source
 
@@ -346,11 +413,16 @@ class SNPs(object):
         str
             name of data source
         """
-        df = pd.read_csv(file, skiprows=1, na_values='--',
-                         names=['rsid', 'chrom', 'pos', 'genotype'],
-                         index_col=0, dtype={'chrom': object, 'pos': np.int64})
+        df = pd.read_csv(
+            file,
+            skiprows=1,
+            na_values="--",
+            names=["rsid", "chrom", "pos", "genotype"],
+            index_col=0,
+            dtype={"chrom": object, "pos": np.int64},
+        )
 
-        return sort_snps(df), 'generic'
+        return sort_snps(df), "generic"
 
     def _assign_par_snps(self):
         """ Assign PAR SNPs to the X or Y chromosome using SNP position.
@@ -370,19 +442,23 @@ class SNPs(object):
           rs113313554, and rs758419898 (dbSNP Build ID: 151). Available from:
           http://www.ncbi.nlm.nih.gov/SNP/
         """
-        rest_client = EnsemblRestClient(server='https://api.ncbi.nlm.nih.gov')
-        for rsid in self.snps.loc[self.snps['chrom'] == 'PAR'].index.values:
-            if 'rs' in rsid:
+        rest_client = EnsemblRestClient(server="https://api.ncbi.nlm.nih.gov")
+        for rsid in self.snps.loc[self.snps["chrom"] == "PAR"].index.values:
+            if "rs" in rsid:
                 try:
-                    id = rsid.split('rs')[1]
-                    response = rest_client.perform_rest_action('/variation/v0/beta/refsnp/' + id)
+                    id = rsid.split("rs")[1]
+                    response = rest_client.perform_rest_action(
+                        "/variation/v0/beta/refsnp/" + id
+                    )
 
                     if response is not None:
-                        for item in response['primary_snapshot_data']['placements_with_allele']:
-                            if 'NC_000023' in item['seq_id']:
-                                assigned = self._assign_snp(rsid, item['alleles'], 'X')
-                            elif 'NC_000024' in item['seq_id']:
-                                assigned = self._assign_snp(rsid, item['alleles'], 'Y')
+                        for item in response["primary_snapshot_data"][
+                            "placements_with_allele"
+                        ]:
+                            if "NC_000023" in item["seq_id"]:
+                                assigned = self._assign_snp(rsid, item["alleles"], "X")
+                            elif "NC_000024" in item["seq_id"]:
+                                assigned = self._assign_snp(rsid, item["alleles"], "Y")
                             else:
                                 assigned = False
 
@@ -397,17 +473,20 @@ class SNPs(object):
 
     def _assign_snp(self, rsid, alleles, chrom):
         for allele in alleles:
-            allele_pos = allele['allele']['spdi']['position']
+            allele_pos = allele["allele"]["spdi"]["position"]
             # ref SNP positions seem to be 0-based...
             if allele_pos == self.snps.loc[rsid].pos - 1:
-                self.snps.loc[rsid, 'chrom'] = chrom
+                self.snps.loc[rsid, "chrom"] = chrom
                 return True
         return False
 
     def _extract_build(self, item):
-        assembly_name = item['placement_annot']['seq_id_traits_by_assembly'][0]['assembly_name']
-        assembly_name = assembly_name.split('.')[0]
+        assembly_name = item["placement_annot"]["seq_id_traits_by_assembly"][0][
+            "assembly_name"
+        ]
+        assembly_name = assembly_name.split(".")[0]
         return int(assembly_name[-2:])
+
 
 def detect_build(snps):
     """ Detect build of SNPs.
@@ -421,6 +500,7 @@ def detect_build(snps):
     rs11928389 : plus strand in 36, minus strand in 37 and 38
     rs2500347 : plus strand in 36 and 37, minus strand in 38
     rs964481 : plus strand in 36, 37, and 38
+    rs2341354 : plus strand in 36, 37, and 38
 
     Parameters
     ----------
@@ -441,9 +521,10 @@ def detect_build(snps):
       dbSNP: the NCBI database of genetic variation. Nucleic Acids Res. 2001 Jan 1;29(1):308-11.
     ..[4] Database of Single Nucleotide Polymorphisms (dbSNP). Bethesda (MD): National Center
       for Biotechnology Information, National Library of Medicine. dbSNP accession: rs3094315,
-      rs11928389, rs2500347, and rs964481 (dbSNP Build ID: 151). Available from:
+      rs11928389, rs2500347, rs964481, and rs2341354 (dbSNP Build ID: 151). Available from:
       http://www.ncbi.nlm.nih.gov/SNP/
     """
+
     def lookup_build_with_snp_pos(pos, s):
         try:
             return s.loc[s == pos].index[0]
@@ -452,10 +533,15 @@ def detect_build(snps):
 
     build = None
 
-    rsids = ['rs3094315', 'rs11928389', 'rs2500347', 'rs964481']
-    df = pd.DataFrame({36: [742429, 50908372, 143649677, 27566744],
-                       37: [752566, 50927009, 144938320, 27656823],
-                       38: [817186, 50889578, 148946169, 27638706]}, index=rsids)
+    rsids = ["rs3094315", "rs11928389", "rs2500347", "rs964481", "rs2341354"]
+    df = pd.DataFrame(
+        {
+            36: [742429, 50908372, 143649677, 27566744, 908436],
+            37: [752566, 50927009, 144938320, 27656823, 918573],
+            38: [817186, 50889578, 148946169, 27638706, 983193],
+        },
+        index=rsids,
+    )
 
     for rsid in rsids:
         if rsid in snps.index:
@@ -481,13 +567,13 @@ def get_assembly(build):
     """
 
     if build is None:
-        return ''
+        return ""
     elif build == 36:
-        return 'NCBI36'
+        return "NCBI36"
     elif build == 38:
-        return 'GRCh38'
+        return "GRCh38"
     else:
-        return 'GRCh37'
+        return "GRCh37"
 
 
 def get_snp_count(snps):
@@ -522,7 +608,7 @@ def get_chromosomes(snps):
     """
 
     if isinstance(snps, pd.DataFrame):
-        return list(pd.unique(snps['chrom']))
+        return list(pd.unique(snps["chrom"]))
     else:
         return []
 
@@ -541,7 +627,7 @@ def get_chromosomes_summary(snps):
     """
 
     if isinstance(snps, pd.DataFrame):
-        chroms = list(pd.unique(snps['chrom']))
+        chroms = list(pd.unique(snps["chrom"]))
 
         int_chroms = [int(chrom) for chrom in chroms if chrom.isdigit()]
         str_chroms = [chrom for chrom in chroms if not chrom.isdigit()]
@@ -550,23 +636,28 @@ def get_chromosomes_summary(snps):
         def as_range(iterable):
             l = list(iterable)
             if len(l) > 1:
-                return '{0}-{1}'.format(l[0], l[-1])
+                return "{0}-{1}".format(l[0], l[-1])
             else:
-                return '{0}'.format(l[0])
+                return "{0}".format(l[0])
 
         # create str representations
-        int_chroms = ', '.join(as_range(g) for _, g in
-                               groupby(int_chroms, key=lambda n, c=count(): n - next(c)))
-        str_chroms = ', '.join(str_chroms)
+        int_chroms = ", ".join(
+            as_range(g)
+            for _, g in groupby(int_chroms, key=lambda n, c=count(): n - next(c))
+        )
+        str_chroms = ", ".join(str_chroms)
 
-        if int_chroms != '' and str_chroms != '':
-            int_chroms += ', '
+        if int_chroms != "" and str_chroms != "":
+            int_chroms += ", "
 
         return int_chroms + str_chroms
     else:
-        return ''
+        return ""
 
-def determine_sex(snps, y_snps_not_null_threshold=0.1, heterozygous_x_snps_threshold=0.01):
+
+def determine_sex(
+    snps, y_snps_not_null_threshold=0.1, heterozygous_x_snps_threshold=0.01
+):
     """ Determine sex from SNPs using thresholds.
 
     Parameters
@@ -584,60 +675,71 @@ def determine_sex(snps, y_snps_not_null_threshold=0.1, heterozygous_x_snps_thres
     """
 
     if isinstance(snps, pd.DataFrame):
-        y_snps = len(snps.loc[(snps['chrom'] == 'Y')])
+        y_snps = len(snps.loc[(snps["chrom"] == "Y")])
 
         if y_snps > 0:
-            y_snps_not_null = len(snps.loc[(snps['chrom'] == 'Y') & (snps['genotype'].notnull())])
+            y_snps_not_null = len(
+                snps.loc[(snps["chrom"] == "Y") & (snps["genotype"].notnull())]
+            )
 
             if y_snps_not_null / y_snps > y_snps_not_null_threshold:
-                return 'Male'
+                return "Male"
             else:
-                return 'Female'
+                return "Female"
 
-        x_snps = len(snps.loc[snps['chrom'] == 'X'])
+        x_snps = len(snps.loc[snps["chrom"] == "X"])
 
         if x_snps == 0:
-            return ''
+            return ""
 
-        heterozygous_x_snps = len(snps.loc[(snps['chrom'] == 'X') &
-                                           (snps['genotype'].notnull()) &
-                                           (snps['genotype'].str[0] != snps['genotype'].str[1])])
+        heterozygous_x_snps = len(
+            snps.loc[
+                (snps["chrom"] == "X")
+                & (snps["genotype"].notnull())
+                & (snps["genotype"].str[0] != snps["genotype"].str[1])
+            ]
+        )
 
         if heterozygous_x_snps / x_snps > heterozygous_x_snps_threshold:
-            return 'Female'
+            return "Female"
         else:
-            return 'Male'
+            return "Male"
     else:
-        return ''
+        return ""
+
 
 def sort_snps(snps):
     """ Sort SNPs based on ordered chromosome list and position. """
 
-    sorted_list = sorted(snps['chrom'].unique(), key=_natural_sort_key)
+    sorted_list = sorted(snps["chrom"].unique(), key=_natural_sort_key)
 
     # move PAR and MT to the end of the dataframe
-    if 'PAR' in sorted_list:
-        sorted_list.remove('PAR')
-        sorted_list.append('PAR')
+    if "PAR" in sorted_list:
+        sorted_list.remove("PAR")
+        sorted_list.append("PAR")
 
-    if 'MT' in sorted_list:
-        sorted_list.remove('MT')
-        sorted_list.append('MT')
+    if "MT" in sorted_list:
+        sorted_list.remove("MT")
+        sorted_list.append("MT")
 
     # convert chrom column to category for sorting
     # https://stackoverflow.com/a/26707444
-    snps['chrom'] = \
-        snps['chrom'].astype(CategoricalDtype(categories=sorted_list, ordered=True))
+    snps["chrom"] = snps["chrom"].astype(
+        CategoricalDtype(categories=sorted_list, ordered=True)
+    )
 
     # sort based on ordered chromosome list and position
-    snps = snps.sort_values(['chrom', 'pos'])
+    snps = snps.sort_values(["chrom", "pos"])
 
     # convert chromosome back to object
-    snps['chrom'] = snps['chrom'].astype(object)
+    snps["chrom"] = snps["chrom"].astype(object)
 
     return snps
 
+
 # https://stackoverflow.com/a/16090640
-def _natural_sort_key(s, natural_sort_re=re.compile('([0-9]+)')):
-    return [int(text) if text.isdigit() else text.lower()
-            for text in re.split(natural_sort_re, s)]
+def _natural_sort_key(s, natural_sort_re=re.compile("([0-9]+)")):
+    return [
+        int(text) if text.isdigit() else text.lower()
+        for text in re.split(natural_sort_re, s)
+    ]

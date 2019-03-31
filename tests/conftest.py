@@ -25,11 +25,11 @@ from lineage import Lineage
 
 
 def del_output_dir_helper():
-    if os.path.exists('output'):
-        shutil.rmtree('output')
+    if os.path.exists("output"):
+        shutil.rmtree("output")
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def l():
     return Lineage()
 

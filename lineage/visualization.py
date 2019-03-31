@@ -59,10 +59,12 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 from matplotlib.collections import BrokenBarHCollection
 from matplotlib import patches
+
 
 def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, build):
     """ Plots chromosomes with designated markers.
@@ -89,9 +91,9 @@ def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, b
     chrom_spacing = 1
 
     # Decide which chromosomes to use
-    chromosome_list = ['chr%s' % i for i in range(1, 23)]
-    chromosome_list.append('chrY')
-    chromosome_list.append('chrX')
+    chromosome_list = ["chr%s" % i for i in range(1, 23)]
+    chromosome_list.append("chrY")
+    chromosome_list.append("chrX")
 
     # Keep track of the y positions for chromosomes, and the center of each chromosome
     # (which is where we'll put the ytick labels)
@@ -103,21 +105,21 @@ def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, b
     # appear at the top of the plot
     for chrom in chromosome_list[::-1]:
         chrom_ybase[chrom] = ybase
-        chrom_centers[chrom] = ybase + chrom_height / 2.
+        chrom_centers[chrom] = ybase + chrom_height / 2.0
         ybase += chrom_height + chrom_spacing
 
     # Colors for different chromosome stains
     color_lookup = {
-        'gneg': (202/255, 202/255, 202/255),  # background
-        'one_chrom': (0/255, 176/255, 240/255),
-        'two_chrom': (66/255, 69/255, 121/255),
-        'centromere': (1, 1, 1, 0.6)
+        "gneg": (202 / 255, 202 / 255, 202 / 255),  # background
+        "one_chrom": (0 / 255, 176 / 255, 240 / 255),
+        "two_chrom": (66 / 255, 69 / 255, 121 / 255),
+        "centromere": (1, 1, 1, 0.6),
     }
 
     df = _patch_chromosomal_features(cytobands, one_chrom_match, two_chrom_match)
 
     # Add a new column for colors
-    df['colors'] = df['gie_stain'].apply(lambda x: color_lookup[x])
+    df["colors"] = df["gie_stain"].apply(lambda x: color_lookup[x])
 
     # Width, height (in inches)
     figsize = (6.5, 9)
@@ -133,36 +135,41 @@ def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, b
     ax.set_yticks([chrom_centers[i] for i in chromosome_list])
     ax.set_yticklabels(chromosome_list)
     ax.margins(0.01)
-    ax.axis('tight')
+    ax.axis("tight")
 
     handles = []
 
     # setup legend
     if len(one_chrom_match) > 0:
-        one_chrom_patch = patches.Patch(color=color_lookup['one_chrom'],
-                                         label='One chromosome shared')
+        one_chrom_patch = patches.Patch(
+            color=color_lookup["one_chrom"], label="One chromosome shared"
+        )
         handles.append(one_chrom_patch)
 
     if len(two_chrom_match) > 0:
-        two_chrom_patch = patches.Patch(color=color_lookup['two_chrom'],
-                                         label='Two chromosomes shared')
+        two_chrom_patch = patches.Patch(
+            color=color_lookup["two_chrom"], label="Two chromosomes shared"
+        )
         handles.append(two_chrom_patch)
 
-    no_match_patch = patches.Patch(color=color_lookup['gneg'], label='No shared DNA')
+    no_match_patch = patches.Patch(color=color_lookup["gneg"], label="No shared DNA")
     handles.append(no_match_patch)
 
-    centromere_patch = patches.Patch(color=(234/255, 234/255, 234/255), label='Centromere')
+    centromere_patch = patches.Patch(
+        color=(234 / 255, 234 / 255, 234 / 255), label="Centromere"
+    )
     handles.append(centromere_patch)
 
-    plt.legend(handles=handles, loc='lower right', bbox_to_anchor=(0.95, 0.05))
+    plt.legend(handles=handles, loc="lower right", bbox_to_anchor=(0.95, 0.05))
 
-    ax.set_title(title, fontsize=14, fontweight='bold')
-    plt.xlabel('Build ' + str(build) + ' Chromosome Position', fontsize=10)
-    print('Saving ' + os.path.relpath(path))
+    ax.set_title(title, fontsize=14, fontweight="bold")
+    plt.xlabel("Build " + str(build) + " Chromosome Position", fontsize=10)
+    print("Saving " + os.path.relpath(path))
+    plt.tight_layout()
     plt.savefig(path)
 
 
-def _chromosome_collections(df, y_positions, height,  **kwargs):
+def _chromosome_collections(df, y_positions, height, **kwargs):
     """
 
     Yields BrokenBarHCollection of features that can be added to an Axes
@@ -185,15 +192,17 @@ def _chromosome_collections(df, y_positions, height,  **kwargs):
     Additional kwargs are passed to BrokenBarHCollection
     """
     del_width = False
-    if 'width' not in df.columns:
+    if "width" not in df.columns:
         del_width = True
-        df['width'] = df['end'] - df['start']
-    for chrom, group in df.groupby('chrom'):
-        yrange = (y_positions['chr' + chrom], height)
-        xranges = group[['start', 'width']].values
-        yield BrokenBarHCollection(xranges, yrange, facecolors=group['colors'], **kwargs)
+        df["width"] = df["end"] - df["start"]
+    for chrom, group in df.groupby("chrom"):
+        yrange = (y_positions["chr" + chrom], height)
+        xranges = group[["start", "width"]].values
+        yield BrokenBarHCollection(
+            xranges, yrange, facecolors=group["colors"], **kwargs
+        )
     if del_width:
-        del df['width']
+        del df["width"]
 
 
 def _patch_chromosomal_features(cytobands, one_chrom_match, two_chrom_match):
@@ -214,36 +223,70 @@ def _patch_chromosomal_features(cytobands, one_chrom_match, two_chrom_match):
         the start and stop positions of particular features on each
         chromosome
     """
-    chromosomes = cytobands['chrom'].unique()
+    chromosomes = cytobands["chrom"].unique()
 
     df = pd.DataFrame()
 
     for chromosome in chromosomes:
         chromosome_length = np.max(
-            cytobands[cytobands['chrom'] == chromosome]['end'].values)
+            cytobands[cytobands["chrom"] == chromosome]["end"].values
+        )
 
         # get all markers for this chromosome
-        one_chrom_match_markers = [marker for marker in one_chrom_match if marker['chrom'] == chromosome]
-        two_chrom_match_markers = [marker for marker in two_chrom_match if marker['chrom'] == chromosome]
+        one_chrom_match_markers = [
+            marker for marker in one_chrom_match if marker["chrom"] == chromosome
+        ]
+        two_chrom_match_markers = [
+            marker for marker in two_chrom_match if marker["chrom"] == chromosome
+        ]
 
         # background of chromosome
-        df = df.append({'chrom': chromosome, 'start': 0, 'end': chromosome_length,
-                        'gie_stain': 'gneg'}, ignore_index=True)
+        df = df.append(
+            {
+                "chrom": chromosome,
+                "start": 0,
+                "end": chromosome_length,
+                "gie_stain": "gneg",
+            },
+            ignore_index=True,
+        )
 
         # add markers for shared DNA on one chromosome
         for marker in one_chrom_match_markers:
-            df = df.append({'chrom': chromosome, 'start': marker['start'], 'end': marker['end'],
-                            'gie_stain': marker['gie_stain']}, ignore_index=True)
+            df = df.append(
+                {
+                    "chrom": chromosome,
+                    "start": marker["start"],
+                    "end": marker["end"],
+                    "gie_stain": marker["gie_stain"],
+                },
+                ignore_index=True,
+            )
 
         # add markers for shared DNA on both chromosomes
         for marker in two_chrom_match_markers:
-            df = df.append({'chrom': chromosome, 'start': marker['start'], 'end': marker['end'],
-                            'gie_stain': marker['gie_stain']}, ignore_index=True)
+            df = df.append(
+                {
+                    "chrom": chromosome,
+                    "start": marker["start"],
+                    "end": marker["end"],
+                    "gie_stain": marker["gie_stain"],
+                },
+                ignore_index=True,
+            )
 
         # add centromeres
-        for item in cytobands.loc[(cytobands['chrom'] == chromosome) &
-                                  (cytobands['gie_stain'] == 'acen')].itertuples():
-            df = df.append({'chrom': chromosome, 'start': item.start, 'end': item.end,
-                            'gie_stain': 'centromere'}, ignore_index=True)
+        for item in cytobands.loc[
+            (cytobands["chrom"] == chromosome) & (cytobands["gie_stain"] == "acen")
+        ].itertuples():
+            df = df.append(
+                {
+                    "chrom": chromosome,
+                    "start": item.start,
+                    "end": item.end,
+                    "gie_stain": "centromere",
+                },
+                ignore_index=True,
+            )
 
     return df

@@ -1,0 +1,8 @@
+# famfinder, https://www.familytreedna.com
+#
+# name,chromosome,position,allele1,allele2
+rs1,1,1,A,A
+rs2,1,2,C,C
+rs3,1,3,G,G
+rs4,1,4,T,T
+rs5,1,5,-,-

@@ -45,6 +45,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+.pytest_cache/
 
 # Translations
 *.mo
@@ -102,3 +103,15 @@ ENV/
 
 # development
 .idea/
+
+# lineage
+output/
+resources/
+
+# lineage tests
+tests/output/
+tests/resources/
+tests/input/23andme.txt.zip
+tests/input/discrepant_snps[12].csv
+tests/input/empty.txt
+tests/input/ftdna.csv.gz

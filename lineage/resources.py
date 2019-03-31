@@ -65,7 +65,7 @@ import lineage
 class Resources(object):
     """ Object used to manage resources required by `lineage`. """
 
-    def __init__(self, resources_dir='resources', ensembl_rest_client=None):
+    def __init__(self, resources_dir="resources", ensembl_rest_client=None):
         """ Initialize a ``Resources`` object.
 
         Parameters
@@ -89,8 +89,9 @@ class Resources(object):
             dict of pandas.DataFrame HapMapII genetic maps if loading was successful, else None
         """
         if self._genetic_map_HapMapII_GRCh37 is None:
-            self._genetic_map_HapMapII_GRCh37 = \
-                self._load_genetic_map(self._get_path_genetic_map_HapMapII_GRCh37())
+            self._genetic_map_HapMapII_GRCh37 = self._load_genetic_map(
+                self._get_path_genetic_map_HapMapII_GRCh37()
+            )
 
         return self._genetic_map_HapMapII_GRCh37
 
@@ -149,7 +150,8 @@ class Resources(object):
             dict of json assembly mapping data if loading was successful, else None
         """
         return self._load_assembly_mapping_data(
-            self._get_path_assembly_mapping_data(source_assembly, target_assembly))
+            self._get_path_assembly_mapping_data(source_assembly, target_assembly)
+        )
 
     def download_example_datasets(self):
         """ Download example datasets from `openSNP <https://opensnp.org>`_.
@@ -169,26 +171,54 @@ class Resources(object):
           https://doi.org/10.1371/journal.pone.0089204
         """
         paths = []
-        paths.append(self._download_file('https://opensnp.org/data/662.23andme.304',
-                                         '662.23andme.304.txt.gz', compress=True))
-        paths.append(self._download_file('https://opensnp.org/data/662.23andme.340',
-                                         '662.23andme.340.txt.gz', compress=True))
-        paths.append(self._download_file('https://opensnp.org/data/662.ftdna-illumina.341',
-                                         '662.ftdna-illumina.341.csv.gz', compress=True))
-        paths.append(self._download_file('https://opensnp.org/data/663.23andme.305',
-                                         '663.23andme.305.txt.gz', compress=True))
+        paths.append(
+            self._download_file(
+                "https://opensnp.org/data/662.23andme.304",
+                "662.23andme.304.txt.gz",
+                compress=True,
+            )
+        )
+        paths.append(
+            self._download_file(
+                "https://opensnp.org/data/662.23andme.340",
+                "662.23andme.340.txt.gz",
+                compress=True,
+            )
+        )
+        paths.append(
+            self._download_file(
+                "https://opensnp.org/data/662.ftdna-illumina.341",
+                "662.ftdna-illumina.341.csv.gz",
+                compress=True,
+            )
+        )
+        paths.append(
+            self._download_file(
+                "https://opensnp.org/data/663.23andme.305",
+                "663.23andme.305.txt.gz",
+                compress=True,
+            )
+        )
 
         # these two files consist of concatenated gzip files and therefore need special handling
-        paths.append(self._download_file('https://opensnp.org/data/4583.ftdna-illumina.3482',
-                                         '4583.ftdna-illumina.3482.csv.gz'))
-        paths.append(self._download_file('https://opensnp.org/data/4584.ftdna-illumina.3483',
-                                         '4584.ftdna-illumina.3483.csv.gz'))
+        paths.append(
+            self._download_file(
+                "https://opensnp.org/data/4583.ftdna-illumina.3482",
+                "4583.ftdna-illumina.3482.csv.gz",
+            )
+        )
+        paths.append(
+            self._download_file(
+                "https://opensnp.org/data/4584.ftdna-illumina.3483",
+                "4584.ftdna-illumina.3483.csv.gz",
+            )
+        )
 
         try:
             for gzip_path in paths[-2:]:
                 # https://stackoverflow.com/q/4928560
                 # https://stackoverflow.com/a/37042747
-                with open(gzip_path, 'rb') as f:
+                with open(gzip_path, "rb") as f:
                     decompressor = zlib.decompressobj(31)
 
                     # decompress data from first concatenated gzip file
@@ -200,7 +230,7 @@ class Resources(object):
                         data += additional_data[33:]  # skip over second header
 
                 # recompress data
-                with gzip.open(gzip_path, 'wb') as f:
+                with gzip.open(gzip_path, "wb") as f:
                     f.write(data)
         except Exception as err:
             print(err)
@@ -216,12 +246,16 @@ class Resources(object):
             dict of resources
         """
         resources = {}
-        resources['genetic_map_HapMapII_GRCh37'] = self.get_genetic_map_HapMapII_GRCh37()
-        resources['cytoBand_hg19'] = self.get_cytoBand_hg19()
-        resources['knownGene_hg19'] = self.get_knownGene_hg19()
-        resources['kgXref_hg19'] = self.get_kgXref_hg19()
-        for source, target in itertools.permutations(['NCBI36', 'GRCh37', 'GRCh38'], 2):
-            resources[source + '_' + target] = self.get_assembly_mapping_data(source, target)
+        resources[
+            "genetic_map_HapMapII_GRCh37"
+        ] = self.get_genetic_map_HapMapII_GRCh37()
+        resources["cytoBand_hg19"] = self.get_cytoBand_hg19()
+        resources["knownGene_hg19"] = self.get_knownGene_hg19()
+        resources["kgXref_hg19"] = self.get_kgXref_hg19()
+        for source, target in itertools.permutations(["NCBI36", "GRCh37", "GRCh38"], 2):
+            resources[source + "_" + target] = self.get_assembly_mapping_data(
+                source, target
+            )
         return resources
 
     @staticmethod
@@ -245,24 +279,29 @@ class Resources(object):
         try:
             genetic_map = {}
 
-            with tarfile.open(filename, 'r') as tar:
+            with tarfile.open(filename, "r") as tar:
                 # http://stackoverflow.com/a/2018576
                 for member in tar.getmembers():
-                    if 'genetic_map' in member.name:
-                        df = pd.read_csv(tar.extractfile(member), sep='\t')
-                        df = df.rename(columns={'Position(bp)': 'pos',
-                                                'Rate(cM/Mb)': 'rate',
-                                                'Map(cM)': 'map'})
-                        del df['Chromosome']
-                        start_pos = member.name.index('chr') + 3
-                        end_pos = member.name.index('.')
+                    if "genetic_map" in member.name:
+                        df = pd.read_csv(tar.extractfile(member), sep="\t")
+                        df = df.rename(
+                            columns={
+                                "Position(bp)": "pos",
+                                "Rate(cM/Mb)": "rate",
+                                "Map(cM)": "map",
+                            }
+                        )
+                        del df["Chromosome"]
+                        start_pos = member.name.index("chr") + 3
+                        end_pos = member.name.index(".")
                         genetic_map[member.name[start_pos:end_pos]] = df
 
             # X chrom consists of X PAR regions and X non-PAR region
-            genetic_map['X'] = pd.concat([genetic_map['X_par1'], genetic_map['X'],
-                                          genetic_map['X_par2']])
-            del genetic_map['X_par1']
-            del genetic_map['X_par2']
+            genetic_map["X"] = pd.concat(
+                [genetic_map["X_par1"], genetic_map["X"], genetic_map["X_par2"]]
+            )
+            del genetic_map["X_par1"]
+            del genetic_map["X_par2"]
 
             return genetic_map
         except Exception as err:
@@ -290,15 +329,16 @@ class Resources(object):
         try:
             assembly_mapping_data = {}
 
-            with tarfile.open(filename, 'r') as tar:
+            with tarfile.open(filename, "r") as tar:
                 # http://stackoverflow.com/a/2018576
                 for member in tar.getmembers():
-                    if '.json' in member.name:
+                    if ".json" in member.name:
                         with tar.extractfile(member) as tar_file:
                             tar_bytes = tar_file.read()
                         # https://stackoverflow.com/a/42683509/4727627
-                        assembly_mapping_data[member.name.split('.')[0]] =\
-                            json.loads(tar_bytes.decode('utf-8'))
+                        assembly_mapping_data[member.name.split(".")[0]] = json.loads(
+                            tar_bytes.decode("utf-8")
+                        )
 
             return assembly_mapping_data
         except Exception as err:
@@ -326,8 +366,10 @@ class Resources(object):
         """
         try:
             # adapted from chromosome plotting code (see [1]_)
-            df = pd.read_table(filename, names=['chrom', 'start', 'end', 'name', 'gie_stain'])
-            df['chrom'] = df['chrom'].str[3:]
+            df = pd.read_table(
+                filename, names=["chrom", "start", "end", "name", "gie_stain"]
+            )
+            df["chrom"] = df["chrom"].str[3:]
             return df
         except Exception as err:
             print(err)
@@ -348,10 +390,25 @@ class Resources(object):
             knownGene table if loading was successful, else None
         """
         try:
-            df = pd.read_table(filename, names=['name', 'chrom', 'strand', 'txStart', 'txEnd',
-                                                'cdsStart', 'cdsEnd', 'exonCount', 'exonStarts',
-                                                'exonEnds', 'proteinID', 'alignID'], index_col=0)
-            df['chrom'] = df['chrom'].str[3:]
+            df = pd.read_table(
+                filename,
+                names=[
+                    "name",
+                    "chrom",
+                    "strand",
+                    "txStart",
+                    "txEnd",
+                    "cdsStart",
+                    "cdsEnd",
+                    "exonCount",
+                    "exonStarts",
+                    "exonEnds",
+                    "proteinID",
+                    "alignID",
+                ],
+                index_col=0,
+            )
+            df["chrom"] = df["chrom"].str[3:]
             return df
         except Exception as err:
             print(err)
@@ -372,10 +429,23 @@ class Resources(object):
             kgXref table if loading was successful, else None
         """
         try:
-            df = pd.read_table(filename, names=['kgID', 'mRNA', 'spID', 'spDisplayID',
-                                                'geneSymbol', 'refseq', 'protAcc',
-                                                'description', 'rfamAcc', 'tRnaName'], index_col=0,
-                               dtype=object)
+            df = pd.read_table(
+                filename,
+                names=[
+                    "kgID",
+                    "mRNA",
+                    "spID",
+                    "spDisplayID",
+                    "geneSymbol",
+                    "refseq",
+                    "protAcc",
+                    "description",
+                    "rfamAcc",
+                    "tRnaName",
+                ],
+                index_col=0,
+                dtype=object,
+            )
             return df
         except Exception as err:
             print(err)
@@ -390,8 +460,9 @@ class Resources(object):
             path to cytoBand_hg19.txt.gz
         """
         return self._download_file(
-            'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz',
-            'cytoBand_hg19.txt.gz')
+            "ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/cytoBand.txt.gz",
+            "cytoBand_hg19.txt.gz",
+        )
 
     def _get_path_genetic_map_HapMapII_GRCh37(self):
         """ Get local path to HapMap Phase II genetic map for hg19 / GRCh37 (HapMapII),
@@ -412,8 +483,10 @@ class Resources(object):
           the UCSC liftOver tool. Adam Auton, 08/12/2010"
         """
         return self._download_file(
-            'ftp://ftp.ncbi.nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37/'
-            'genetic_map_HapMapII_GRCh37.tar.gz', 'genetic_map_HapMapII_GRCh37.tar.gz')
+            "ftp://ftp.ncbi.nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37/"
+            "genetic_map_HapMapII_GRCh37.tar.gz",
+            "genetic_map_HapMapII_GRCh37.tar.gz",
+        )
 
     def _get_path_knownGene_hg19(self):
         """ Get local path to knownGene file for hg19 / GRCh37 from UCSC, downloading if necessary.
@@ -424,8 +497,9 @@ class Resources(object):
             path to knownGene_hg19.txt.gz
         """
         return self._download_file(
-            'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/knownGene.txt.gz',
-            'knownGene_hg19.txt.gz')
+            "ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/knownGene.txt.gz",
+            "knownGene_hg19.txt.gz",
+        )
 
     def _get_path_kgXref_hg19(self):
         """ Get local path to kgXref file for hg19 / GRCh37 from UCSC, downloading if necessary.
@@ -436,10 +510,13 @@ class Resources(object):
             path to kgXref_hg19.txt.gz
         """
         return self._download_file(
-            'ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/kgXref.txt.gz',
-            'kgXref_hg19.txt.gz')
+            "ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/database/kgXref.txt.gz",
+            "kgXref_hg19.txt.gz",
+        )
 
-    def _get_path_assembly_mapping_data(self, source_assembly, target_assembly, retries=10):
+    def _get_path_assembly_mapping_data(
+        self, source_assembly, target_assembly, retries=10
+    ):
         """ Get local path to assembly mapping data, downloading if necessary.
 
         Parameters
@@ -468,33 +545,73 @@ class Resources(object):
         if not lineage.create_dir(self._resources_dir):
             return None
 
-        chroms = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14',
-                  '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y', 'MT']
+        chroms = [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "X",
+            "Y",
+            "MT",
+        ]
 
-        assembly_mapping_data = source_assembly + '_' + target_assembly
-        destination = os.path.join(self._resources_dir, assembly_mapping_data + '.tar.gz')
+        assembly_mapping_data = source_assembly + "_" + target_assembly
+        destination = os.path.join(
+            self._resources_dir, assembly_mapping_data + ".tar.gz"
+        )
 
-        if not os.path.exists(destination) or not self._all_chroms_in_tar(chroms, destination):
-            print('Downloading {}'.format(os.path.relpath(destination)))
+        if not os.path.exists(destination) or not self._all_chroms_in_tar(
+            chroms, destination
+        ):
+            print("Downloading {}".format(os.path.relpath(destination)))
 
             try:
-                with tarfile.open(destination, 'w:gz') as out_tar:
+                with tarfile.open(destination, "w:gz") as out_tar:
                     for chrom in chroms:
-                        file = chrom + '.json'
+                        file = chrom + ".json"
 
-                        map_endpoint = '/map/human/' + source_assembly + '/' + chrom + '/' + \
-                                       target_assembly + '?'
+                        map_endpoint = (
+                            "/map/human/"
+                            + source_assembly
+                            + "/"
+                            + chrom
+                            + "/"
+                            + target_assembly
+                            + "?"
+                        )
 
                         # get assembly mapping data
                         response = None
                         retry = 0
                         while response is None and retry < retries:
-                            response = self._ensembl_rest_client.perform_rest_action(map_endpoint)
+                            response = self._ensembl_rest_client.perform_rest_action(
+                                map_endpoint
+                            )
                             retry += 1
 
                         if response is not None:
                             # open temp file, save json response to file, close temp file
-                            with tempfile.NamedTemporaryFile(delete=False, mode='w') as f:
+                            with tempfile.NamedTemporaryFile(
+                                delete=False, mode="w"
+                            ) as f:
                                 json.dump(response, f)
 
                             # add temp file to archive
@@ -510,11 +627,11 @@ class Resources(object):
 
     def _all_chroms_in_tar(self, chroms, filename):
         try:
-            with tarfile.open(filename, 'r') as tar:
+            with tarfile.open(filename, "r") as tar:
                 members = tar.getnames()
 
             for chrom in chroms:
-                if chrom + '.json' not in members:
+                if chrom + ".json" not in members:
                     return False
         except Exception as err:
             print(err)
@@ -546,8 +663,8 @@ class Resources(object):
         if not lineage.create_dir(self._resources_dir):
             return None
 
-        if compress and filename[-3:] != '.gz':
-            filename += '.gz'
+        if compress and filename[-3:] != ".gz":
+            filename += ".gz"
 
         destination = os.path.join(self._resources_dir, filename)
 
@@ -560,8 +677,9 @@ class Resources(object):
 
                 # get file if it hasn't already been downloaded
                 # http://stackoverflow.com/a/7244263
-                with urllib.request.urlopen(url, timeout=timeout) as response, \
-                        open_func(destination, 'wb') as f:
+                with urllib.request.urlopen(
+                    url, timeout=timeout
+                ) as response, open_func(destination, "wb") as f:
                     self._print_download_msg(destination)
                     data = response.read()  # a `bytes` object
                     f.write(data)
@@ -569,9 +687,13 @@ class Resources(object):
                 print(err)
                 destination = None
                 # try HTTP if an FTP error occurred
-                if 'ftp://' in url:
-                    destination = self._download_file(url.replace('ftp://', 'http://'),
-                                                      filename, compress=compress, timeout=timeout)
+                if "ftp://" in url:
+                    destination = self._download_file(
+                        url.replace("ftp://", "http://"),
+                        filename,
+                        compress=compress,
+                        timeout=timeout,
+                    )
             except Exception as err:
                 print(err)
                 return None
@@ -587,4 +709,4 @@ class Resources(object):
         path : str
             path to file being downloaded
         """
-        print('Downloading ' + os.path.relpath(path))
+        print("Downloading " + os.path.relpath(path))

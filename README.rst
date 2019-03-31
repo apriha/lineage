@@ -1,6 +1,6 @@
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/lineage_banner.png
 
-|build| |codecov| |docs| |pypi| |python| |license|
+|build| |codecov| |docs| |pypi| |python| |downloads| |license|
 
 lineage
 =======
@@ -190,10 +190,13 @@ after all), but generally, one mRNA produces one protein, and the mRNA / protein
 gene.
 
 Therefore, it would be interesting to understand not just what DNA is shared between individuals,
-but what *genes* are shared between individuals *with the same variations*. (In other words,
-what genes are producing the *same* proteins?) Since ``lineage`` can determine the shared DNA
+but what *genes* are shared between individuals *with the same variations*. In other words,
+what genes are producing the *same* proteins? [*]_ Since ``lineage`` can determine the shared DNA
 between individuals, it can use that information to determine what genes are also shared on
 either one or both chromosomes.
+
+.. [*] In theory, shared segments of DNA should be producing the same proteins, but there are many
+ complexities, such as copy number variation (CNV), gene expression, etc.
 
 For this example, let's create two more ``Individuals`` for the ``User4583`` and ``User4584``
 datasets:
@@ -260,5 +263,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
    :target: https://pypi.python.org/pypi/lineage
 .. |python| image:: https://img.shields.io/pypi/pyversions/lineage.svg
    :target: https://www.python.org
+.. |downloads| image:: https://pepy.tech/badge/lineage
+   :target: https://pepy.tech/project/lineage
 .. |license| image:: https://img.shields.io/pypi/l/lineage.svg
    :target: https://github.com/apriha/lineage/blob/master/LICENSE.txt

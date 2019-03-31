@@ -48,6 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from setuptools import setup
+
 # To use a consistent encoding
 from codecs import open
 from os import path
@@ -57,44 +58,40 @@ import versioneer
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
+with open(path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
-    name='lineage',
+    name="lineage",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description='tools for genetic genealogy and the analysis of consumer DNA '
-                'test results',
+    description="tools for genetic genealogy and the analysis of consumer DNA "
+    "test results",
     long_description=long_description,
-    url='https://github.com/apriha/lineage',
-    author='Andrew Riha',
-    author_email='apriha@gmail.com',
-    license='GPLv3',
+    url="https://github.com/apriha/lineage",
+    author="Andrew Riha",
+    author_email="apriha@gmail.com",
+    license="GPLv3",
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'Intended Audience :: End Users/Desktop',
-        'Intended Audience :: Healthcare Industry',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Topic :: Scientific/Engineering',
-        'Topic :: Scientific/Engineering :: Bio-Informatics',
-        'Topic :: Scientific/Engineering :: Information Analysis',
-        'Topic :: Scientific/Engineering :: Visualization',
-        'Topic :: Utilities'
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "Intended Audience :: End Users/Desktop",
+        "Intended Audience :: Healthcare Industry",
+        "Intended Audience :: Science/Research",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Bio-Informatics",
+        "Topic :: Scientific/Engineering :: Information Analysis",
+        "Topic :: Scientific/Engineering :: Visualization",
+        "Topic :: Utilities",
     ],
-    keywords='dna genes genetics genealogy snps chromosomes genotype '
-             'bioinformatics ancestry',
-    packages=['lineage'],
-    install_requires=[
-        'numpy==1.15.1',
-        'pandas==0.23.4',
-        'matplotlib==2.2.3'
-    ]
+    keywords="dna genes genetics genealogy snps chromosomes genotype "
+    "bioinformatics ancestry",
+    packages=["lineage"],
+    install_requires=["numpy==1.15.1", "pandas==0.23.4", "matplotlib==2.2.3"],
 )

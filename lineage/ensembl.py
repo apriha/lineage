@@ -56,7 +56,7 @@ import urllib.request
 
 
 class EnsemblRestClient(object):
-    def __init__(self, server='http://rest.ensembl.org', reqs_per_sec=15):
+    def __init__(self, server="http://rest.ensembl.org", reqs_per_sec=15):
         self.server = server
         self.reqs_per_sec = reqs_per_sec
         self.req_count = 0
@@ -66,11 +66,11 @@ class EnsemblRestClient(object):
         if hdrs is None:
             hdrs = {}
 
-        if 'Content-Type' not in hdrs:
-            hdrs['Content-Type'] = 'application/json'
+        if "Content-Type" not in hdrs:
+            hdrs["Content-Type"] = "application/json"
 
         if params:
-            endpoint += '?' + urllib.parse.urlencode(params)
+            endpoint += "?" + urllib.parse.urlencode(params)
 
         data = None
 
@@ -86,7 +86,7 @@ class EnsemblRestClient(object):
             request = urllib.request.Request(self.server + endpoint, headers=hdrs)
 
             with urllib.request.urlopen(request) as response:
-                content = response.read().decode('utf-8')
+                content = response.read().decode("utf-8")
 
             if content:
                 data = json.loads(content)
@@ -95,13 +95,15 @@ class EnsemblRestClient(object):
         except urllib.error.HTTPError as e:
             # check if we are being rate limited by the server
             if e.code == 429:
-                if 'Retry-After' in e.headers:
-                    retry = e.headers['Retry-After']
+                if "Retry-After" in e.headers:
+                    retry = e.headers["Retry-After"]
                     time.sleep(float(retry))
                     self.perform_rest_action(endpoint, hdrs, params)
             else:
                 sys.stderr.write(
-                    'Request failed for {0}: Status code: {1.code} Reason: {1.reason}\n'.format(
-                        endpoint, e))
+                    "Request failed for {0}: Status code: {1.code} Reason: {1.reason}\n".format(
+                        endpoint, e
+                    )
+                )
 
         return data
