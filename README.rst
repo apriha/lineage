@@ -190,10 +190,13 @@ after all), but generally, one mRNA produces one protein, and the mRNA / protein
 gene.
 
 Therefore, it would be interesting to understand not just what DNA is shared between individuals,
-but what *genes* are shared between individuals *with the same variations*. (In other words,
-what genes are producing the *same* proteins?) Since ``lineage`` can determine the shared DNA
+but what *genes* are shared between individuals *with the same variations*. In other words,
+what genes are producing the *same* proteins? [*]_ Since ``lineage`` can determine the shared DNA
 between individuals, it can use that information to determine what genes are also shared on
 either one or both chromosomes.
+
+.. [*] In theory, shared segments of DNA should be producing the same proteins, but there are many
+ complexities, such as copy number variation (CNV), gene expression, etc.
 
 For this example, let's create two more ``Individuals`` for the ``User4583`` and ``User4584``
 datasets:
