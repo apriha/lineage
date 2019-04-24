@@ -19,12 +19,13 @@ matrix:
 
 before_install:
   - pip install --upgrade pip setuptools wheel
-  - pip install pytest-cov codecov
+  - pip install pytest-cov codecov black
 
 install:
   - pip install .
 
 script:
+  - black --check --diff .
   - set -e
   - |
     if [ -z ${DEPLOY+x} ]; then  # https://stackoverflow.com/a/13864829/4727627
