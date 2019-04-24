@@ -5,7 +5,7 @@
 
 language: python
 
-sudo: false
+dist: xenial
 
 matrix:
   include:
