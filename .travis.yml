@@ -9,7 +9,7 @@ dist: xenial
 
 addons:
   snaps:
-  - black
+  - name: black
     channel: latest/edge
 
 matrix:
