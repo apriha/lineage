@@ -19,13 +19,15 @@ matrix:
 
 before_install:
   - pip install --upgrade pip setuptools wheel
-  - pip install pytest-cov codecov black
+  - pip install pytest-cov codecov
+  # black requires Python 3.6+
+  - python3.6 -m pip install black
 
 install:
   - pip install .
 
 script:
-  - black --check --diff .
+  - python3.6 black --check --diff .
   - set -e
   - |
     if [ -z ${DEPLOY+x} ]; then  # https://stackoverflow.com/a/13864829/4727627
