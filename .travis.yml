@@ -30,7 +30,7 @@ script:
 stages:
   - check formatting
   - test
-  - deploy
+  - name: deploy
     if: branch = master
 
 jobs:
