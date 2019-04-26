@@ -4,6 +4,12 @@
 
 language: python
 
+python:
+  - 3.5
+  - 3.6
+  - 3.7
+    dist: xenial
+
 before_install:
   - pip install --upgrade pip setuptools wheel
   - pip install pytest-cov codecov
