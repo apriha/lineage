@@ -1,26 +1,8 @@
 # https://github.com/sympy/sympy/blob/master/.travis.yml
-# https://github.com/twisted/klein/blob/master/.travis.yml
 # https://github.com/codecov/example-python
 # https://docs.travis-ci.com
 
 language: python
-
-dist: xenial
-
-addons:
-  snaps:
-  - name: black
-    channel: latest/edge
-
-matrix:
-  include:
-    - python: 3.5
-    - python: 3.6
-      env:
-        DEPLOY="true"
-    - python: 3.7
-      dist: xenial
-      sudo: true
 
 before_install:
   - pip install --upgrade pip setuptools wheel
@@ -30,31 +12,45 @@ install:
   - pip install .
 
 script:
-  - black --check --diff .
   - set -e
   - |
-    if [ -z ${DEPLOY+x} ]; then  # https://stackoverflow.com/a/13864829/4727627
-      curl -sSf -o resources.tar.gz https://s3.amazonaws.com/lineage-public/resources.tar.gz
-      if [ -f resources.tar.gz ]; then
-        tar -xzf resources.tar.gz
-        rm resources.tar.gz
-      fi
+    curl -sSf -o resources.tar.gz https://s3.amazonaws.com/lineage-public/resources.tar.gz
+    if [ -f resources.tar.gz ]; then
+      tar -xzf resources.tar.gz
+      rm resources.tar.gz
     fi
   - pytest --cov=lineage tests
 
-after_success:
-  - codecov
+stages:
+  - check formatting
+  - test
+  - deploy
+    if: branch = master
 
-# automatically package and deploy to PyPI
-# https://www.appneta.com/blog/pypi-deployment-with-travis-ci/
-deploy:
-  # production PyPI
-  - provider: pypi
-    user: "apriha"
-    password:
-      secure: "ILDxck7IPSffABa4mWFANETAOJgazxXJRJBFoMQ+0TKxsrTKVA6VDtrUBEAgxAdm2Zp9Lwh8vsOKodEToTrcm5J4JmnFsyz+pxBbPNpKE1RU4bn+X0qqd3D//iK6DoATxrQCS73MZA7GoMOEL7dvU2R8d2d8i6H3x4lDCIp3dcPRZm1+YYGo51bwv6MYJGcN9lQOtQlVgFYPp/9TSAiwK5sWjQk8Bfv7ASIJWGb0+oLW5AK468ANk1agof+pg56d041vWYDqTBuuaZs6gEYxJQSk0V0o896NoNoqenfIch39KeHnL4jTBUhftDk/NNT/wGfi8JasGC/ks+ESE7R8BwbWYb0QH9AhBQSraAjIr0IEyoOXYYl2FlghHWFC2/mBKZcmQXuL+Dx6tJxvAP914bB2sb+ZNNcBfuPkfzeOYoVosTly/O/MPoyuj2/Ohmw76hKzeGu2IE4UILQUsggaZvgVk/A+Vu8KmeOx15X+IgHn3ahJ3550K4d5vFTRlvY1EZQP5XY5Mx7OW55Orm71wZKOMIN4Y6COyZA7NCs0tCR5M7EjIk/j401Dm/O75hcYIY0J69eZiifSIXUNsJ+6QmOvhZJA8ZtYNlJ6nyGhBAF22a6wp7E2OQEY2WR2X1ZMRaP9SSr7X8wUbKHTt9JbEVFQwqTQzqdP+8Szj/Hh0nA="
-    distributions: "sdist bdist_wheel"
-    on:
-      branch: master
-      tags: true
-      condition: $DEPLOY = "true"
+jobs:
+  include:
+    - stage: check formatting
+      python: 3.6
+      before_install:
+        - pip install black
+      script:
+        - black --check --diff .
+    - stage: test
+      python: 3.5
+    - python: 3.6
+      after_success:
+        - codecov
+    - python: 3.7
+      dist: xenial
+    - stage: deploy
+      python: 3.6
+      script: skip
+      deploy:
+        - provider: pypi
+          user: "apriha"
+          password:
+            secure: "ILDxck7IPSffABa4mWFANETAOJgazxXJRJBFoMQ+0TKxsrTKVA6VDtrUBEAgxAdm2Zp9Lwh8vsOKodEToTrcm5J4JmnFsyz+pxBbPNpKE1RU4bn+X0qqd3D//iK6DoATxrQCS73MZA7GoMOEL7dvU2R8d2d8i6H3x4lDCIp3dcPRZm1+YYGo51bwv6MYJGcN9lQOtQlVgFYPp/9TSAiwK5sWjQk8Bfv7ASIJWGb0+oLW5AK468ANk1agof+pg56d041vWYDqTBuuaZs6gEYxJQSk0V0o896NoNoqenfIch39KeHnL4jTBUhftDk/NNT/wGfi8JasGC/ks+ESE7R8BwbWYb0QH9AhBQSraAjIr0IEyoOXYYl2FlghHWFC2/mBKZcmQXuL+Dx6tJxvAP914bB2sb+ZNNcBfuPkfzeOYoVosTly/O/MPoyuj2/Ohmw76hKzeGu2IE4UILQUsggaZvgVk/A+Vu8KmeOx15X+IgHn3ahJ3550K4d5vFTRlvY1EZQP5XY5Mx7OW55Orm71wZKOMIN4Y6COyZA7NCs0tCR5M7EjIk/j401Dm/O75hcYIY0J69eZiifSIXUNsJ+6QmOvhZJA8ZtYNlJ6nyGhBAF22a6wp7E2OQEY2WR2X1ZMRaP9SSr7X8wUbKHTt9JbEVFQwqTQzqdP+8Szj/Hh0nA="
+          distributions: "sdist bdist_wheel"
+          on:
+            branch: master
+            tags: true
