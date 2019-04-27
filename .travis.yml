@@ -27,6 +27,9 @@ script:
       rm resources.tar.gz
     fi
   - pytest --cov=lineage tests
+  - if [ $SELECTED_JOB == $JOB_ID ]; then
+      codecov
+    fi
 
 stages:
   - check formatting
@@ -47,8 +50,6 @@ jobs:
       env: JOB_ID=0
     - python: 3.6
       env: JOB_ID=1
-      after_success:
-        - codecov
     - python: 3.7
       dist: xenial
       env: JOB_ID=2
