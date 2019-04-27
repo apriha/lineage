@@ -14,11 +14,24 @@ install:
   - pip install .
 
 script:
+  # For testing, we want to limit downloads from the resource servers, and we
+  # achieve this by the following:
+  # 1) assign each job an ID
+  # 2) select (identify) one of the jobs based on week of the year
+  # 3) limit downloading of resources to selected job on master branch
+  # 4) use cached resources on Amazon S3 for all other jobs
+  # Note that the master branch is tested weekly via `cron`, so this ensures
+  # all Python versions will be periodically integration tested with the
+  # resource servers.
   - set -e
   - NUM_JOBS=3
   - SELECTED_JOB=$(($(date +%V) % $NUM_JOBS))
   - |
-    if [ $SELECTED_JOB != $JOB_ID ]; then
+    if [ $TRAVIS_BRANCH == "master" ]; then
+      if [ $SELECTED_JOB != $JOB_ID ]; then
+        aws s3 cp s3://lineage-resources/resources.tar.gz resources.tar.gz
+      fi
+    else
       aws s3 cp s3://lineage-resources/resources.tar.gz resources.tar.gz
     fi
   - |
