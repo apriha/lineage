@@ -6,7 +6,7 @@ language: python
 
 before_install:
   - pip install --upgrade pip setuptools wheel
-  - pip install pytest-cov codecov
+  - pip install pytest-cov codecov awscli
 
 install:
   - pip install .
@@ -14,7 +14,7 @@ install:
 script:
   - set -e
   - |
-    curl -sSf -o resources.tar.gz https://s3.amazonaws.com/lineage-public/resources.tar.gz
+    aws s3 cp s3://lineage-resources/resources.tar.gz resources.tar.gz
     if [ -f resources.tar.gz ]; then
       tar -xzf resources.tar.gz
       rm resources.tar.gz
