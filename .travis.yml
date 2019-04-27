@@ -27,7 +27,8 @@ script:
       rm resources.tar.gz
     fi
   - pytest --cov=lineage tests
-  - if [ $SELECTED_JOB == $JOB_ID ]; then
+  - |
+    if [ $SELECTED_JOB == $JOB_ID ]; then
       codecov
     fi
 
