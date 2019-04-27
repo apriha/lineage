@@ -1,6 +1,8 @@
 # https://github.com/sympy/sympy/blob/master/.travis.yml
 # https://github.com/codecov/example-python
 # https://docs.travis-ci.com
+# https://stackoverflow.com/a/3237883
+# https://stackoverflow.com/a/5688592
 
 language: python
 
@@ -13,8 +15,13 @@ install:
 
 script:
   - set -e
+  - NUM_JOBS=3
+  - SELECTED_JOB=$(($(date +%V) % $NUM_JOBS))
   - |
-    aws s3 cp s3://lineage-resources/resources.tar.gz resources.tar.gz
+    if [ $SELECTED_JOB != $JOB_ID ]; then
+      aws s3 cp s3://lineage-resources/resources.tar.gz resources.tar.gz
+    fi
+  - |
     if [ -f resources.tar.gz ]; then
       tar -xzf resources.tar.gz
       rm resources.tar.gz
@@ -37,11 +44,14 @@ jobs:
         - black --check --diff .
     - stage: test
       python: 3.5
+      env: JOB_ID=0
     - python: 3.6
+      env: JOB_ID=1
       after_success:
         - codecov
     - python: 3.7
       dist: xenial
+      env: JOB_ID=2
     - stage: deploy
       python: 3.6
       script: skip
