@@ -16,150 +16,105 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-import pandas as pd
-import pytest
-
-from tests.test_lineage import simulate_snps
+from lineage import Lineage, SNPs
+from tests import BaseLineageTestCase
 
 
-def create_snp_df(rsid, chrom, pos, genotype):
-    df = pd.DataFrame(
-        {"rsid": rsid, "chrom": chrom, "pos": pos, "genotype": genotype},
-        columns=["rsid", "chrom", "pos", "genotype"],
-    )
-    df = df.set_index("rsid")
-    return df
+class TestSnps(BaseLineageTestCase):
+    def setUp(self):
+        self.l = Lineage()
+        self.snps_GRCh38 = SNPs("tests/input/GRCh38.csv")
+        self.snps = SNPs("tests/input/chromosomes.csv")
+        self.snps_none = SNPs(None)
+        self.del_output_dir_helper()
 
+    def snps_discrepant_pos(self):
+        return self.create_snp_df(
+            rsid=["rs3094315"], chrom=["1"], pos=[1], genotype=["AA"]
+        )
 
-@pytest.fixture(scope="module")
-def snps_discrepant_pos():
-    return create_snp_df(rsid=["rs3094315"], chrom=["1"], pos=[1], genotype=["AA"])
+    def test_assembly(self):
+        assert self.snps_GRCh38.assembly == "GRCh38"
 
+    def test_assembly_no_snps(self):
+        assert self.snps_none.assembly == ""
 
-@pytest.fixture(scope="module")
-def snps_GRCh38():
-    from lineage.snps import SNPs
+    def test_snp_count(self):
+        assert self.snps.snp_count == 6
 
-    return SNPs("tests/input/GRCh38.csv")
+    def test_snp_count_no_snps(self):
+        assert self.snps_none.snp_count == 0
 
+    def test_chromosomes(self):
+        assert self.snps.chromosomes == ["1", "2", "3", "5", "PAR", "MT"]
 
-@pytest.fixture(scope="module")
-def snps():
-    from lineage.snps import SNPs
+    def test_chromosomes_no_snps(self):
+        assert self.snps_none.chromosomes == []
 
-    return SNPs("tests/input/chromosomes.csv")
+    def test_chromosomes_summary(self):
+        assert self.snps.chromosomes_summary == "1-3, 5, PAR, MT"
 
+    def test_chromosomes_summary_no_snps(self):
+        assert self.snps_none.chromosomes_summary == ""
 
-@pytest.fixture(scope="module")
-def snps_none():
-    from lineage.snps import SNPs
+    def test_build_no_snps(self):
+        assert self.snps_none.build is None
 
-    return SNPs(None)
+    def test_build_detected_no_snps(self):
+        assert self.snps_none.build_detected == False
 
+    def test_build_detected_PAR_snps(self):
+        snps = SNPs("tests/input/GRCh37_PAR.csv")
+        assert snps.build == 37
+        assert snps.build_detected
 
-def test_assembly(snps_GRCh38):
-    assert snps_GRCh38.assembly == "GRCh38"
+    def test_sex_no_snps(self):
+        assert self.snps_none.sex == ""
 
+    def test_sex_Male_Y_chrom(self):
+        ind = self.simulate_snps(
+            self.l.create_individual("test_snps_sex_Male_Y_chrom"),
+            chrom="Y",
+            pos_start=1,
+            pos_max=59373566,
+            pos_step=10000,
+        )
+        file = ind.save_snps()
+        from lineage.snps import SNPs
 
-def test_assembly_no_snps(snps_none):
-    assert snps_none.assembly == ""
+        snps = SNPs(file)
+        assert snps.sex == "Male"
 
+    def test_get_summary(self):
+        assert self.snps_GRCh38.get_summary() == {
+            "source": "generic",
+            "assembly": "GRCh38",
+            "build": 38,
+            "build_detected": True,
+            "snp_count": 4,
+            "chromosomes": "1, 3",
+            "sex": "",
+        }
 
-def test_snp_count(snps):
-    assert snps.snp_count == 6
+    def test_get_summary_no_snps(self):
+        assert self.snps_none.get_summary() is None
 
+    def test_is_valid_True(self):
+        assert self.snps_GRCh38.is_valid()
 
-def test_snp_count_no_snps(snps_none):
-    assert snps_none.snp_count == 0
+    def test_is_valid_False(self):
+        assert not self.snps_none.is_valid()
 
+    def test__read_raw_data(self):
+        assert self.snps_none.snps is None
+        assert self.snps_none.source == ""
 
-def test_chromosomes(snps):
-    assert snps.chromosomes == ["1", "2", "3", "5", "PAR", "MT"]
+    def test__lookup_build_with_snp_pos_None(self):
+        from lineage.snps import detect_build
 
+        assert detect_build(self.snps_discrepant_pos()) is None
 
-def test_chromosomes_no_snps(snps_none):
-    assert snps_none.chromosomes == []
+    def test_get_assembly_None(self):
+        from lineage.snps import get_assembly
 
-
-def test_chromosomes_summary(snps):
-    assert snps.chromosomes_summary == "1-3, 5, PAR, MT"
-
-
-def test_chromosomes_summary_no_snps(snps_none):
-    assert snps_none.chromosomes_summary == ""
-
-
-def test_build_no_snps(snps_none):
-    assert snps_none.build is None
-
-
-def test_build_detected_no_snps(snps_none):
-    assert snps_none.build_detected == False
-
-
-def test_build_detected_PAR_snps():
-    from lineage.snps import SNPs
-
-    snps = SNPs("tests/input/GRCh37_PAR.csv")
-    assert snps.build == 37
-    assert snps.build_detected
-
-
-def test_sex_no_snps(snps_none):
-    assert snps_none.sex == ""
-
-
-def test_sex_Male_Y_chrom(l):
-    ind = simulate_snps(
-        l.create_individual("test_snps_sex_Male_Y_chrom"),
-        chrom="Y",
-        pos_start=1,
-        pos_max=59373566,
-        pos_step=10000,
-    )
-    file = ind.save_snps()
-    from lineage.snps import SNPs
-
-    snps = SNPs(file)
-    assert snps.sex == "Male"
-
-
-def test_get_summary(snps_GRCh38):
-    assert snps_GRCh38.get_summary() == {
-        "source": "generic",
-        "assembly": "GRCh38",
-        "build": 38,
-        "build_detected": True,
-        "snp_count": 4,
-        "chromosomes": "1, 3",
-        "sex": "",
-    }
-
-
-def test_get_summary_no_snps(snps_none):
-    assert snps_none.get_summary() is None
-
-
-def test_is_valid_True(snps_GRCh38):
-    assert snps_GRCh38.is_valid()
-
-
-def test_is_valid_False(snps_none):
-    assert not snps_none.is_valid()
-
-
-def test__read_raw_data(snps_none):
-    assert snps_none.snps is None
-    assert snps_none.source == ""
-
-
-def test__lookup_build_with_snp_pos_None(snps_discrepant_pos):
-    from lineage.snps import detect_build
-
-    assert detect_build(snps_discrepant_pos) is None
-
-
-def test_get_assembly_None():
-    from lineage.snps import get_assembly
-
-    assert get_assembly(None) is ""
+        assert get_assembly(None) is ""
