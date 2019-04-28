@@ -42,7 +42,7 @@ def get_config():
     cfg.style = "pep440-post"
     cfg.tag_prefix = "v"
     cfg.parentdir_prefix = "lineage-"
-    cfg.versionfile_source = "lineage/_version.py"
+    cfg.versionfile_source = "src/lineage/_version.py"
     cfg.verbose = False
     return cfg
 

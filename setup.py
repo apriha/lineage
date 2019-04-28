@@ -47,18 +47,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-from setuptools import setup
-
 # To use a consistent encoding
 from codecs import open
-from os import path
+from glob import glob
+from os.path import abspath
+from os.path import basename
+from os.path import dirname
+from os.path import join
+from os.path import splitext
+
+from setuptools import find_packages
+from setuptools import setup
 
 import versioneer
 
-here = path.abspath(path.dirname(__file__))
+here = abspath(dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, "README.rst"), encoding="utf-8") as f:
+with open(join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
@@ -72,6 +78,9 @@ setup(
     author="Andrew Riha",
     author_email="apriha@gmail.com",
     license="GPLv3",
+    packages=find_packages("src"),
+    package_dir={"": "src"},
+    py_modules=[splitext(basename(path))[0] for path in glob("src/*.py")],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -90,8 +99,13 @@ setup(
         "Topic :: Scientific/Engineering :: Visualization",
         "Topic :: Utilities",
     ],
+    project_urls={
+        "Documentation": "https://lineage.readthedocs.io",
+        "Changelog": "https://github.com/apriha/lineage/releases",
+        "Issue Tracker": "https://github.com/apriha/lineage/issues",
+    },
     keywords="dna genes genetics genealogy snps chromosomes genotype "
     "bioinformatics ancestry",
-    packages=["lineage"],
     install_requires=["numpy==1.15.1", "pandas==0.23.4", "matplotlib==2.2.3"],
+    python_requires=">=3.5",
 )
