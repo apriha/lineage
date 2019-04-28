@@ -53,7 +53,7 @@ class TestResources(BaseLineageTestCase):
         assembly_mapping_data = self.resource.get_assembly_mapping_data(
             "NCBI36", "GRCh37"
         )
-        assert assembly_mapping_data == None
+        assert assembly_mapping_data is None
 
     def test_get_assembly_mapping_data_bad_tar(self):
         with open("resources/NCBI36_GRCh37.tar.gz", "w"):

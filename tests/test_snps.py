@@ -61,7 +61,7 @@ class TestSnps(BaseLineageTestCase):
         assert self.snps_none.build is None
 
     def test_build_detected_no_snps(self):
-        assert self.snps_none.build_detected == False
+        assert not self.snps_none.build_detected
 
     def test_build_detected_PAR_snps(self):
         snps = SNPs("tests/input/GRCh37_PAR.csv")
