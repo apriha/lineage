@@ -108,4 +108,5 @@ setup(
     "bioinformatics ancestry",
     install_requires=["numpy==1.15.1", "pandas==0.23.4", "matplotlib==2.2.3"],
     python_requires=">=3.5",
+    platforms=["any"],
 )
