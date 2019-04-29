@@ -39,7 +39,7 @@ script:
       tar -xzf resources.tar.gz
       rm resources.tar.gz
     fi
-  - pytest --cov=src tests
+  - pytest --cov=lineage tests
   - |
     if [ $SELECTED_JOB == $JOB_ID ]; then
       codecov

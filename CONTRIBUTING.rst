@@ -52,7 +52,7 @@ To set up ``lineage`` for local development:
 
 5. When you're done making changes, run all the tests with::
 
-    pipenv run pytest --cov=src tests
+    pipenv run pytest --cov=lineage tests
 
 6. Commit your changes and push your branch to GitHub::
 
