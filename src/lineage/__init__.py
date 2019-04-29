@@ -31,7 +31,7 @@ import pandas as pd
 from lineage.ensembl import EnsemblRestClient
 from lineage.individual import Individual
 from lineage.resources import Resources
-from lineage.snps import sort_snps
+from lineage.snps import SNPs, sort_snps
 from lineage.visualization import plot_chromosomes
 
 # set version string with Versioneer
