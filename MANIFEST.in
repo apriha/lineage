@@ -2,9 +2,9 @@ graft docs
 graft src
 graft tests
 
-include AUTHORS.rst
 include CHANGELOG.rst
 include CONTRIBUTING.rst
+include CONTRIBUTORS.rst
 include LICENSE.txt
 include LICENSES-3RD-PARTY.txt
 include README.rst
