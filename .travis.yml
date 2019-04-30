@@ -49,7 +49,7 @@ stages:
   - check formatting
   - test
   - name: deploy
-    if: branch = master
+    if: tag IS present
 
 jobs:
   include:
