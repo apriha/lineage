@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
 import os
+
+from atomicwrites import atomic_write
 import numpy as np
 import pandas as pd
 
@@ -924,11 +926,9 @@ def save_df_as_csv(df, path, filename, comment=None, **kwargs):
             if isinstance(comment, str):
                 s += comment
 
-            with open(destination, "w") as f:
+            with atomic_write(destination, mode="w", overwrite=True) as f:
                 f.write(s)
-
-            # https://stackoverflow.com/a/29233924/4727627
-            with open(destination, "a") as f:
+                # https://stackoverflow.com/a/29233924
                 df.to_csv(f, na_rep="--", **kwargs)
 
             return destination

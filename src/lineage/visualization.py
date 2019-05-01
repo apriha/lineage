@@ -56,6 +56,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import os
 
+from atomicwrites import atomic_write
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -166,7 +167,9 @@ def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, b
     plt.xlabel("Build " + str(build) + " Chromosome Position", fontsize=10)
     print("Saving " + os.path.relpath(path))
     plt.tight_layout()
-    plt.savefig(path)
+
+    with atomic_write(path, mode="wb", overwrite=True) as f:
+        plt.savefig(f)
 
 
 def _chromosome_collections(df, y_positions, height, **kwargs):

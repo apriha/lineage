@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import warnings
 
+from atomicwrites import atomic_write
+
 from lineage import Resources, EnsemblRestClient
 from tests import BaseLineageTestCase
 
@@ -56,7 +58,7 @@ class TestResources(BaseLineageTestCase):
         assert assembly_mapping_data is None
 
     def test_get_assembly_mapping_data_bad_tar(self):
-        with open("resources/NCBI36_GRCh37.tar.gz", "w"):
+        with atomic_write("resources/NCBI36_GRCh37.tar.gz", mode="w", overwrite=True):
             pass
         assembly_mapping_data = self.resource_assembly_mapping.get_assembly_mapping_data(
             "NCBI36", "GRCh37"

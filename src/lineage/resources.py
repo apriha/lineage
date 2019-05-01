@@ -57,6 +57,7 @@ import urllib.error
 import urllib.request
 import zlib
 
+from atomicwrites import atomic_write
 import pandas as pd
 
 import lineage
@@ -230,8 +231,8 @@ class Resources(object):
                         data += additional_data[33:]  # skip over second header
 
                 # recompress data
-                with gzip.open(gzip_path, "wb") as f:
-                    f.write(data)
+                with atomic_write(gzip_path, mode="wb", overwrite=True) as f:
+                    self._write_data_to_gzip(f, data)
         except Exception as err:
             print(err)
 
@@ -257,6 +258,18 @@ class Resources(object):
                 source, target
             )
         return resources
+
+    @staticmethod
+    def _write_data_to_gzip(f, data):
+        """ Write `data` to `f` in `gzip` format.
+
+        Parameters
+        ----------
+        f : file object opened with `mode="wb"`
+        data : `bytes` object
+        """
+        with gzip.open(f, "wb") as f_gzip:
+            f_gzip.write(data)
 
     @staticmethod
     def _load_genetic_map(filename):
@@ -584,46 +597,48 @@ class Resources(object):
             print("Downloading {}".format(os.path.relpath(destination)))
 
             try:
-                with tarfile.open(destination, "w:gz") as out_tar:
-                    for chrom in chroms:
-                        file = chrom + ".json"
-
-                        map_endpoint = (
-                            "/map/human/"
-                            + source_assembly
-                            + "/"
-                            + chrom
-                            + "/"
-                            + target_assembly
-                            + "?"
-                        )
-
-                        # get assembly mapping data
-                        response = None
-                        retry = 0
-                        while response is None and retry < retries:
-                            response = self._ensembl_rest_client.perform_rest_action(
-                                map_endpoint
-                            )
-                            retry += 1
-
-                        if response is not None:
-                            # open temp file, save json response to file, close temp file
-                            with tempfile.NamedTemporaryFile(
-                                delete=False, mode="w"
-                            ) as f:
-                                json.dump(response, f)
-
-                            # add temp file to archive
-                            out_tar.add(f.name, arcname=file)
-
-                            # remove temp file
-                            os.remove(f.name)
+                self._download_assembly_mapping_data(
+                    destination, chroms, source_assembly, target_assembly, retries
+                )
             except Exception as err:
                 print(err)
                 return None
 
         return destination
+
+    def _download_assembly_mapping_data(
+        self, destination, chroms, source_assembly, target_assembly, retries
+    ):
+        with atomic_write(destination, mode="wb", overwrite=True) as f:
+            with tarfile.open(fileobj=f, mode="w:gz") as out_tar:
+                for chrom in chroms:
+                    file = chrom + ".json"
+
+                    map_endpoint = "/map/human/{}/{}/{}?".format(
+                        source_assembly, chrom, target_assembly
+                    )
+
+                    # get assembly mapping data
+                    response = None
+                    retry = 0
+                    while response is None and retry < retries:
+                        response = self._ensembl_rest_client.perform_rest_action(
+                            map_endpoint
+                        )
+                        retry += 1
+
+                    if response is not None:
+                        # open temp file, save json response to file, close temp file
+                        with tempfile.NamedTemporaryFile(
+                            delete=False, mode="w"
+                        ) as f_tmp:
+                            json.dump(response, f_tmp)
+
+                        # add temp file to archive
+                        out_tar.add(f_tmp.name, arcname=file)
+
+                        # remove temp file
+                        os.remove(f_tmp.name)
 
     def _all_chroms_in_tar(self, chroms, filename):
         try:
@@ -670,19 +685,18 @@ class Resources(object):
 
         if not os.path.exists(destination):
             try:
-                if compress:
-                    open_func = gzip.open
-                else:
-                    open_func = open
-
                 # get file if it hasn't already been downloaded
                 # http://stackoverflow.com/a/7244263
                 with urllib.request.urlopen(
                     url, timeout=timeout
-                ) as response, open_func(destination, "wb") as f:
+                ) as response, atomic_write(destination, mode="wb") as f:
                     self._print_download_msg(destination)
                     data = response.read()  # a `bytes` object
-                    f.write(data)
+
+                    if compress:
+                        self._write_data_to_gzip(f, data)
+                    else:
+                        f.write(data)
             except urllib.error.URLError as err:
                 print(err)
                 destination = None

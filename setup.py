@@ -106,7 +106,12 @@ setup(
     },
     keywords="dna genes genetics genealogy snps chromosomes genotype "
     "bioinformatics ancestry",
-    install_requires=["numpy==1.15.1", "pandas==0.23.4", "matplotlib==2.2.3"],
+    install_requires=[
+        "numpy==1.15.1",
+        "pandas==0.23.4",
+        "matplotlib==2.2.3",
+        "atomicwrites",
+    ],
     python_requires=">=3.5",
     platforms=["any"],
 )
