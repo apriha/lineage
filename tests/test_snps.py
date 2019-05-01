@@ -16,6 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+import os
+
 from lineage import Lineage, SNPs
 from tests import BaseLineageTestCase
 
@@ -64,9 +66,10 @@ class TestSnps(BaseLineageTestCase):
         assert not self.snps_none.build_detected
 
     def test_build_detected_PAR_snps(self):
-        snps = SNPs("tests/input/GRCh37_PAR.csv")
-        assert snps.build == 37
-        assert snps.build_detected
+        if os.getenv("DOWNLOADS_ENABLED"):
+            snps = SNPs("tests/input/GRCh37_PAR.csv")
+            assert snps.build == 37
+            assert snps.build_detected
 
     def test_sex_no_snps(self):
         assert self.snps_none.sex == ""

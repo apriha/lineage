@@ -585,15 +585,16 @@ class TestIndividual(BaseLineageTestCase):
             pd.testing.assert_frame_equal(ind.snps, self.snps_GRCh38())
 
     def test_remap_snps_37_to_38_with_PAR_SNP(self):
-        ind = self.l.create_individual("", "tests/input/GRCh37_PAR.csv")
-        assert ind.snp_count == 3
-        chromosomes_remapped, chromosomes_not_remapped = self.l.remap_snps(ind, 38)
-        assert ind.build == 38
-        assert ind.assembly == "GRCh38"
-        if len(chromosomes_remapped) == 2:
-            assert len(chromosomes_not_remapped) == 1
-            assert ind.snp_count == 2
-            pd.testing.assert_frame_equal(ind.snps, self.snps_GRCh38_PAR())
+        if os.getenv("DOWNLOADS_ENABLED"):
+            ind = self.l.create_individual("", "tests/input/GRCh37_PAR.csv")
+            assert ind.snp_count == 3
+            chromosomes_remapped, chromosomes_not_remapped = self.l.remap_snps(ind, 38)
+            assert ind.build == 38
+            assert ind.assembly == "GRCh38"
+            if len(chromosomes_remapped) == 2:
+                assert len(chromosomes_not_remapped) == 1
+                assert ind.snp_count == 2
+                pd.testing.assert_frame_equal(ind.snps, self.snps_GRCh38_PAR())
 
     def test_remap_snps_37_to_37(self):
         ind = self.l.create_individual("", "tests/input/GRCh37.csv")

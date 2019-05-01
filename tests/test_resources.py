@@ -58,12 +58,15 @@ class TestResources(BaseLineageTestCase):
         assert assembly_mapping_data is None
 
     def test_get_assembly_mapping_data_bad_tar(self):
-        with atomic_write("resources/NCBI36_GRCh37.tar.gz", mode="w", overwrite=True):
-            pass
-        assembly_mapping_data = self.resource_assembly_mapping.get_assembly_mapping_data(
-            "NCBI36", "GRCh37"
-        )
-        assert len(assembly_mapping_data) == 25
+        if os.getenv("DOWNLOADS_ENABLED"):
+            with atomic_write(
+                "resources/NCBI36_GRCh37.tar.gz", mode="w", overwrite=True
+            ):
+                pass
+            assembly_mapping_data = self.resource_assembly_mapping.get_assembly_mapping_data(
+                "NCBI36", "GRCh37"
+            )
+            assert len(assembly_mapping_data) == 25
 
     def test_get_assembly_mapping_data(self):
         assembly_mapping_data = self.resource_assembly_mapping.get_assembly_mapping_data(

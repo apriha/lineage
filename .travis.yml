@@ -30,6 +30,8 @@ script:
     if [ $TRAVIS_BRANCH == "master" ]; then
       if [ $SELECTED_JOB != $JOB_ID ]; then
         aws s3 cp s3://lineage-resources/resources.tar.gz resources.tar.gz
+      else
+        DOWNLOADS_ENABLED=True
       fi
     else
       aws s3 cp s3://lineage-resources/resources.tar.gz resources.tar.gz

@@ -1,7 +1,7 @@
 rsid,chromosome,position,genotype
-rs1,1,1,AA
-rs2,2,1,CC
-rs3,3,1,GG
-rs4,5,1,TT
-rs5,MT,1,A
-rs6,PAR,1,AA
+snp1,1,1,AA
+snp2,2,1,CC
+snp3,3,1,GG
+snp4,5,1,TT
+snp5,MT,1,A
+snp6,PAR,1,AA
