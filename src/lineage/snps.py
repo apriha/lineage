@@ -442,13 +442,15 @@ class SNPs(object):
           rs113313554, and rs758419898 (dbSNP Build ID: 151). Available from:
           http://www.ncbi.nlm.nih.gov/SNP/
         """
-        rest_client = EnsemblRestClient(server="https://api.ncbi.nlm.nih.gov")
+        rest_client = EnsemblRestClient(
+            server="https://api.ncbi.nlm.nih.gov", reqs_per_sec=1
+        )
         for rsid in self.snps.loc[self.snps["chrom"] == "PAR"].index.values:
             if "rs" in rsid:
                 try:
                     id = rsid.split("rs")[1]
                     response = rest_client.perform_rest_action(
-                        "/variation/v0/beta/refsnp/" + id
+                        "/variation/v0/refsnp/" + id
                     )
 
                     if response is not None:
@@ -466,12 +468,13 @@ class SNPs(object):
                                 if not self.build_detected:
                                     self.build = self._extract_build(item)
                                     self.build_detected = True
-                                continue
+                                break
 
                 except Exception as err:
                     print(err)
 
     def _assign_snp(self, rsid, alleles, chrom):
+        # only assign SNP if positions match (i.e., same build)
         for allele in alleles:
             allele_pos = allele["allele"]["spdi"]["position"]
             # ref SNP positions seem to be 0-based...
