@@ -55,7 +55,7 @@ import urllib.parse
 import urllib.request
 
 
-class EnsemblRestClient(object):
+class EnsemblRestClient:
     def __init__(self, server="http://rest.ensembl.org", reqs_per_sec=15):
         self.server = server
         self.reqs_per_sec = reqs_per_sec

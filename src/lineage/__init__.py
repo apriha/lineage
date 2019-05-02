@@ -43,7 +43,7 @@ __version__ = get_versions()["version"]
 del get_versions
 
 
-class Lineage(object):
+class Lineage:
     """ Object used to interact with the `lineage` framework. """
 
     def __init__(self, output_dir="output", resources_dir="resources"):

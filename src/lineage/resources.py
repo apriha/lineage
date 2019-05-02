@@ -63,7 +63,7 @@ import pandas as pd
 import lineage
 
 
-class Resources(object):
+class Resources:
     """ Object used to manage resources required by `lineage`. """
 
     def __init__(self, resources_dir="resources", ensembl_rest_client=None):

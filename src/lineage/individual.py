@@ -36,7 +36,7 @@ from lineage.snps import (
 )
 
 
-class Individual(object):
+class Individual:
     """ Object used to represent and interact with an individual.
 
     The ``Individual`` object maintains information about an individual. The object provides

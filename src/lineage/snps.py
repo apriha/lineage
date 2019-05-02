@@ -31,7 +31,7 @@ from pandas.api.types import CategoricalDtype
 from lineage.ensembl import EnsemblRestClient
 
 
-class SNPs(object):
+class SNPs:
     def __init__(self, file, assign_par_snps=True):
         """ Object used to read and parse genotype / raw data files.
 
