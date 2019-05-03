@@ -123,4 +123,5 @@ class Individual(SNPsCollection):
             build of this ``Individual``'s SNPs
         """
         self._snps = snps
+        self.sort_snps()
         self._build = build

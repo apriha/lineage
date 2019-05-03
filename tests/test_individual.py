@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from lineage import sort_snps
+from lineage import SNPs
 from tests import BaseLineageTestCase
 
 
@@ -383,7 +383,10 @@ class TestIndividual(BaseLineageTestCase):
         expected = expected.rename(
             columns={"expected_position": "pos", "expected_genotype": "genotype"}
         )
-        expected = sort_snps(expected)
+        expected_snps = SNPs()
+        expected_snps._snps = expected
+        expected_snps.sort_snps()
+        expected = expected_snps.snps
 
         pd.testing.assert_index_equal(
             ind.discrepant_positions.index,

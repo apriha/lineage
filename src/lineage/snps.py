@@ -55,6 +55,8 @@ class SNPs:
             self._snps, self._source = self._read_raw_data(file)
 
             if self._snps is not None:
+                self.sort_snps()
+
                 self._build = self.detect_build()
 
                 if self._build is None:
@@ -324,7 +326,7 @@ class SNPs:
             dtype={"chrom": object},
         )
 
-        return sort_snps(df), "23andMe"
+        return df, "23andMe"
 
     @staticmethod
     def _read_ftdna(file):
@@ -362,7 +364,7 @@ class SNPs:
         # if second header existed, pos dtype will be object (should be np.int64)
         df["pos"] = df["pos"].astype(np.int64)
 
-        return sort_snps(df), "FTDNA"
+        return df, "FTDNA"
 
     @staticmethod
     def _read_ftdna_famfinder(file):
@@ -399,7 +401,7 @@ class SNPs:
         del df["allele1"]
         del df["allele2"]
 
-        return sort_snps(df), "FTDNA"
+        return df, "FTDNA"
 
     @staticmethod
     def _read_ancestry(file):
@@ -444,7 +446,7 @@ class SNPs:
         df.ix[np.where(df["chrom"] == "25")[0], "chrom"] = "PAR"
         df.ix[np.where(df["chrom"] == "26")[0], "chrom"] = "MT"
 
-        return sort_snps(df), "AncestryDNA"
+        return df, "AncestryDNA"
 
     @staticmethod
     def _read_lineage_csv(file, comments):
@@ -480,7 +482,7 @@ class SNPs:
             dtype={"chrom": object, "pos": np.int64},
         )
 
-        return sort_snps(df), source
+        return df, source
 
     @staticmethod
     def _read_generic_csv(file):
@@ -518,7 +520,7 @@ class SNPs:
             dtype={"chrom": object, "pos": np.int64},
         )
 
-        return sort_snps(df), "generic"
+        return df, "generic"
 
     def _assign_par_snps(self):
         """ Assign PAR SNPs to the X or Y chromosome using SNP position.
@@ -780,6 +782,42 @@ class SNPs:
                 return "Male"
         else:
             return ""
+
+    def sort_snps(self):
+        """ Sort SNPs based on ordered chromosome list and position. """
+
+        sorted_list = sorted(self._snps["chrom"].unique(), key=self._natural_sort_key)
+
+        # move PAR and MT to the end of the dataframe
+        if "PAR" in sorted_list:
+            sorted_list.remove("PAR")
+            sorted_list.append("PAR")
+
+        if "MT" in sorted_list:
+            sorted_list.remove("MT")
+            sorted_list.append("MT")
+
+        # convert chrom column to category for sorting
+        # https://stackoverflow.com/a/26707444
+        self._snps["chrom"] = self._snps["chrom"].astype(
+            CategoricalDtype(categories=sorted_list, ordered=True)
+        )
+
+        # sort based on ordered chromosome list and position
+        snps = self._snps.sort_values(["chrom", "pos"])
+
+        # convert chromosome back to object
+        snps["chrom"] = snps["chrom"].astype(object)
+
+        self._snps = snps
+
+    # https://stackoverflow.com/a/16090640
+    @staticmethod
+    def _natural_sort_key(s, natural_sort_re=re.compile("([0-9]+)")):
+        return [
+            int(text) if text.isdigit() else text.lower()
+            for text in re.split(natural_sort_re, s)
+        ]
 
 
 class SNPsCollection(SNPs):
@@ -1147,7 +1185,7 @@ class SNPsCollection(SNPs):
             # combine_first converts position to float64, so convert it back to int64
             self._snps["pos"] = self._snps["pos"].astype(np.int64)
 
-        self._snps = sort_snps(self._snps)
+        self.sort_snps()
 
         return discrepant_positions, discrepant_genotypes
 
@@ -1176,40 +1214,3 @@ class SNPsCollection(SNPs):
         df.ix[single_alleles, "genotype"] = df.ix[single_alleles, "genotype"] * 2
 
         return df
-
-
-def sort_snps(snps):
-    """ Sort SNPs based on ordered chromosome list and position. """
-
-    sorted_list = sorted(snps["chrom"].unique(), key=_natural_sort_key)
-
-    # move PAR and MT to the end of the dataframe
-    if "PAR" in sorted_list:
-        sorted_list.remove("PAR")
-        sorted_list.append("PAR")
-
-    if "MT" in sorted_list:
-        sorted_list.remove("MT")
-        sorted_list.append("MT")
-
-    # convert chrom column to category for sorting
-    # https://stackoverflow.com/a/26707444
-    snps["chrom"] = snps["chrom"].astype(
-        CategoricalDtype(categories=sorted_list, ordered=True)
-    )
-
-    # sort based on ordered chromosome list and position
-    snps = snps.sort_values(["chrom", "pos"])
-
-    # convert chromosome back to object
-    snps["chrom"] = snps["chrom"].astype(object)
-
-    return snps
-
-
-# https://stackoverflow.com/a/16090640
-def _natural_sort_key(s, natural_sort_re=re.compile("([0-9]+)")):
-    return [
-        int(text) if text.isdigit() else text.lower()
-        for text in re.split(natural_sort_re, s)
-    ]

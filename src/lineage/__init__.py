@@ -33,7 +33,7 @@ import pandas as pd
 from lineage.ensembl import EnsemblRestClient
 from lineage.individual import Individual
 from lineage.resources import Resources
-from lineage.snps import SNPs, sort_snps
+from lineage.snps import SNPs
 from lineage.visualization import plot_chromosomes
 
 # set version string with Versioneer
@@ -262,7 +262,7 @@ class Lineage:
             # update SNP positions for this chrom
             snps.loc[temp.index, "pos"] = temp["pos"]
 
-        individual._set_snps(sort_snps(snps), int(target_assembly[-2:]))
+        individual._set_snps(snps, int(target_assembly[-2:]))
 
         return chromosomes_remapped, chromosomes_not_remapped
 
