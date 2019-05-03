@@ -28,11 +28,12 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 
+import lineage
 from lineage.ensembl import EnsemblRestClient
 
 
 class SNPs:
-    def __init__(self, file, assign_par_snps=True):
+    def __init__(self, file="", assign_par_snps=True, output_dir="output"):
         """ Object used to read and parse genotype / raw data files.
 
         Parameters
@@ -41,21 +42,61 @@ class SNPs:
             path to file to load
         assign_par_snps : bool
             assign PAR SNPs to the X and Y chromosomes
+        output_dir : str
+            path to output directory
         """
-        self._snps, self._source = self._read_raw_data(file)
+        self._snps = None
+        self._source = ""
         self._build = None
         self._build_detected = False
+        self._output_dir = output_dir
 
+        if file:
+            self._snps, self._source = self._read_raw_data(file)
+
+            if self._snps is not None:
+                self._build = self.detect_build()
+
+                if self._build is None:
+                    self._build = 37  # assume Build 37 / GRCh37 if not detected
+                else:
+                    self._build_detected = True
+
+                if assign_par_snps:
+                    self._assign_par_snps()
+
+    @property
+    def source(self):
+        """ Summary of the SNP data source for ``SNPs``.
+
+        Returns
+        -------
+        str
+        """
+        return self._source
+
+    @property
+    def snps(self):
+        """ Get a copy of SNPs.
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
         if self._snps is not None:
-            self._build = detect_build(self._snps)
+            return self._snps.copy()
+        else:
+            return None
 
-            if self._build is None:
-                self._build = 37  # assume Build 37 / GRCh37 if not detected
-            else:
-                self._build_detected = True
+    @property
+    def build(self):
+        """ Get the build of ``SNPs``.
 
-            if assign_par_snps:
-                self._assign_par_snps()
+        Returns
+        -------
+        int
+        """
+        return self._build
 
     @property
     def assembly(self):
@@ -65,7 +106,7 @@ class SNPs:
         -------
         str
         """
-        return get_assembly(self._build)
+        return self.get_assembly()
 
     @property
     def snp_count(self):
@@ -75,7 +116,7 @@ class SNPs:
         -------
         int
         """
-        return get_snp_count(self._snps)
+        return self.get_snp_count()
 
     @property
     def chromosomes(self):
@@ -86,7 +127,7 @@ class SNPs:
         list
             list of str chromosomes (e.g., ['1', '2', '3', 'MT'], empty list if no chromosomes
         """
-        return get_chromosomes(self._snps)
+        return self.get_chromosomes()
 
     @property
     def chromosomes_summary(self):
@@ -97,7 +138,7 @@ class SNPs:
         str
             human-readable listing of chromosomes (e.g., '1-3, MT'), empty str if no chromosomes
         """
-        return get_chromosomes_summary(self._snps)
+        return self.get_chromosomes_summary()
 
     @property
     def sex(self):
@@ -108,7 +149,7 @@ class SNPs:
         str
             'Male' or 'Female' if detected, else empty str
         """
-        return determine_sex(self._snps)
+        return self.determine_sex(self._snps)
 
     def get_summary(self):
         """ Get summary of ``SNPs``.
@@ -145,6 +186,61 @@ class SNPs:
             return False
         else:
             return True
+
+    def save_snps(self, filename=None):
+        """ Save SNPs to file.
+
+        Parameters
+        ----------
+        filename : str
+            filename for file to save
+
+        Returns
+        -------
+        str
+            path to file in output directory if SNPs were saved, else empty str
+        """
+        comment = (
+            "# Source(s): {}\n"
+            "# Assembly: {}\n"
+            "# SNPs: {}\n"
+            "# Chromosomes: {}\n".format(
+                self.source, self.assembly, self.snp_count, self.chromosomes_summary
+            )
+        )
+
+        if filename is None:
+            filename = (
+                self.get_var_repr(self._source) + "_lineage_" + self.assembly + ".csv"
+            )
+
+        return lineage.save_df_as_csv(
+            self._snps,
+            self._output_dir,
+            filename,
+            comment=comment,
+            header=["chromosome", "position", "genotype"],
+        )
+
+    def get_var_repr(self, s):
+        return self._clean_string(s)
+
+    def _clean_string(self, s):
+        """ Clean a string so that it can be a valid Python variable
+        name.
+
+        Parameters
+        ----------
+        s : str
+            string to clean
+
+        Returns
+        -------
+        str
+            cleaned string that can be used as a variable name
+        """
+        # http://stackoverflow.com/a/3305731
+        return re.sub("\W|^(?=\d)", "_", s)
 
     def _read_raw_data(self, file):
         try:
@@ -490,225 +586,596 @@ class SNPs:
         assembly_name = assembly_name.split(".")[0]
         return int(assembly_name[-2:])
 
+    def detect_build(self):
+        """ Detect build of SNPs.
 
-def detect_build(snps):
-    """ Detect build of SNPs.
+        Use the coordinates of common SNPs to identify the build / assembly of a genotype file
+        that is being loaded.
 
-    Use the coordinates of common SNPs to identify the build / assembly of a genotype file
-    that is being loaded.
+        Notes
+        -----
+        rs3094315 : plus strand in 36, 37, and 38
+        rs11928389 : plus strand in 36, minus strand in 37 and 38
+        rs2500347 : plus strand in 36 and 37, minus strand in 38
+        rs964481 : plus strand in 36, 37, and 38
+        rs2341354 : plus strand in 36, 37, and 38
 
-    Notes
-    -----
-    rs3094315 : plus strand in 36, 37, and 38
-    rs11928389 : plus strand in 36, minus strand in 37 and 38
-    rs2500347 : plus strand in 36 and 37, minus strand in 38
-    rs964481 : plus strand in 36, 37, and 38
-    rs2341354 : plus strand in 36, 37, and 38
+        Returns
+        -------
+        int
+            detected build of SNPs, else None
 
-    Parameters
-    ----------
-    snps : pandas.DataFrame
-        SNPs to add
+        References
+        ----------
+        ..[1] Yates et. al. (doi:10.1093/bioinformatics/btu613),
+          http://europepmc.org/search/?query=DOI:10.1093/bioinformatics/btu613
+        ..[2] Zerbino et. al. (doi.org/10.1093/nar/gkx1098), https://doi.org/10.1093/nar/gkx1098
+        ..[3] Sherry ST, Ward MH, Kholodov M, Baker J, Phan L, Smigielski EM, Sirotkin K.
+          dbSNP: the NCBI database of genetic variation. Nucleic Acids Res. 2001 Jan 1;29(1):308-11.
+        ..[4] Database of Single Nucleotide Polymorphisms (dbSNP). Bethesda (MD): National Center
+          for Biotechnology Information, National Library of Medicine. dbSNP accession: rs3094315,
+          rs11928389, rs2500347, rs964481, and rs2341354 (dbSNP Build ID: 151). Available from:
+          http://www.ncbi.nlm.nih.gov/SNP/
+        """
 
-    Returns
-    -------
-    int
-        detected build of SNPs, else None
+        def lookup_build_with_snp_pos(pos, s):
+            try:
+                return s.loc[s == pos].index[0]
+            except:
+                return None
 
-    References
-    ----------
-    ..[1] Yates et. al. (doi:10.1093/bioinformatics/btu613),
-      http://europepmc.org/search/?query=DOI:10.1093/bioinformatics/btu613
-    ..[2] Zerbino et. al. (doi.org/10.1093/nar/gkx1098), https://doi.org/10.1093/nar/gkx1098
-    ..[3] Sherry ST, Ward MH, Kholodov M, Baker J, Phan L, Smigielski EM, Sirotkin K.
-      dbSNP: the NCBI database of genetic variation. Nucleic Acids Res. 2001 Jan 1;29(1):308-11.
-    ..[4] Database of Single Nucleotide Polymorphisms (dbSNP). Bethesda (MD): National Center
-      for Biotechnology Information, National Library of Medicine. dbSNP accession: rs3094315,
-      rs11928389, rs2500347, rs964481, and rs2341354 (dbSNP Build ID: 151). Available from:
-      http://www.ncbi.nlm.nih.gov/SNP/
-    """
+        build = None
 
-    def lookup_build_with_snp_pos(pos, s):
-        try:
-            return s.loc[s == pos].index[0]
-        except:
-            return None
-
-    build = None
-
-    rsids = ["rs3094315", "rs11928389", "rs2500347", "rs964481", "rs2341354"]
-    df = pd.DataFrame(
-        {
-            36: [742429, 50908372, 143649677, 27566744, 908436],
-            37: [752566, 50927009, 144938320, 27656823, 918573],
-            38: [817186, 50889578, 148946169, 27638706, 983193],
-        },
-        index=rsids,
-    )
-
-    for rsid in rsids:
-        if rsid in snps.index:
-            build = lookup_build_with_snp_pos(snps.loc[rsid].pos, df.loc[rsid])
-
-        if build is not None:
-            break
-
-    return build
-
-
-def get_assembly(build):
-    """ Get the assembly of a build.
-
-    Parameters
-    ----------
-    build : int {36, 37, 38}
-
-    Returns
-    -------
-    str
-        empty str if `build` is None
-    """
-
-    if build is None:
-        return ""
-    elif build == 36:
-        return "NCBI36"
-    elif build == 38:
-        return "GRCh38"
-    else:
-        return "GRCh37"
-
-
-def get_snp_count(snps):
-    """ Count of SNPs.
-
-    Parameters
-    ----------
-    snps : pandas.DataFrame
-
-    Returns
-    -------
-    int
-    """
-
-    if snps is not None:
-        return len(snps)
-    else:
-        return 0
-
-
-def get_chromosomes(snps):
-    """ Get the chromosomes of SNPs.
-
-    Parameters
-    ----------
-    snps : pandas.DataFrame
-
-    Returns
-    -------
-    list
-        list of str chromosomes (e.g., ['1', '2', '3', 'MT'], empty list if no chromosomes
-    """
-
-    if isinstance(snps, pd.DataFrame):
-        return list(pd.unique(snps["chrom"]))
-    else:
-        return []
-
-
-def get_chromosomes_summary(snps):
-    """ Summary of the chromosomes of SNPs.
-
-    Parameters
-    ----------
-    snps : pandas.DataFrame
-
-    Returns
-    -------
-    str
-        human-readable listing of chromosomes (e.g., '1-3, MT'), empty str if no chromosomes
-    """
-
-    if isinstance(snps, pd.DataFrame):
-        chroms = list(pd.unique(snps["chrom"]))
-
-        int_chroms = [int(chrom) for chrom in chroms if chrom.isdigit()]
-        str_chroms = [chrom for chrom in chroms if not chrom.isdigit()]
-
-        # https://codereview.stackexchange.com/a/5202
-        def as_range(iterable):
-            l = list(iterable)
-            if len(l) > 1:
-                return "{0}-{1}".format(l[0], l[-1])
-            else:
-                return "{0}".format(l[0])
-
-        # create str representations
-        int_chroms = ", ".join(
-            as_range(g)
-            for _, g in groupby(int_chroms, key=lambda n, c=count(): n - next(c))
+        rsids = ["rs3094315", "rs11928389", "rs2500347", "rs964481", "rs2341354"]
+        df = pd.DataFrame(
+            {
+                36: [742429, 50908372, 143649677, 27566744, 908436],
+                37: [752566, 50927009, 144938320, 27656823, 918573],
+                38: [817186, 50889578, 148946169, 27638706, 983193],
+            },
+            index=rsids,
         )
-        str_chroms = ", ".join(str_chroms)
 
-        if int_chroms != "" and str_chroms != "":
-            int_chroms += ", "
+        for rsid in rsids:
+            if rsid in self._snps.index:
+                build = lookup_build_with_snp_pos(
+                    self._snps.loc[rsid].pos, df.loc[rsid]
+                )
 
-        return int_chroms + str_chroms
-    else:
-        return ""
+            if build is not None:
+                break
 
+        return build
 
-def determine_sex(
-    snps, y_snps_not_null_threshold=0.1, heterozygous_x_snps_threshold=0.01
-):
-    """ Determine sex from SNPs using thresholds.
+    def get_assembly(self):
+        """ Get the assembly of a build.
 
-    Parameters
-    ----------
-    snps : pandas.DataFrame
-    y_snps_not_null_threshold : float
-        percentage Y SNPs that are not null; above this threshold, Male is determined
-    heterozygous_x_snps_threshold : float
-        percentage heterozygous X SNPs; above this threshold, Female is determined
+        Returns
+        -------
+        str
+            empty str if `build` is None
+        """
 
-    Returns
-    -------
-    str
-        'Male' or 'Female' if detected, else empty str
-    """
+        if self._build is None:
+            return ""
+        elif self._build == 36:
+            return "NCBI36"
+        elif self._build == 38:
+            return "GRCh38"
+        else:
+            return "GRCh37"
 
-    if isinstance(snps, pd.DataFrame):
-        y_snps = len(snps.loc[(snps["chrom"] == "Y")])
+    def get_snp_count(self):
+        """ Count of SNPs.
 
-        if y_snps > 0:
-            y_snps_not_null = len(
-                snps.loc[(snps["chrom"] == "Y") & (snps["genotype"].notnull())]
+        Returns
+        -------
+        int
+        """
+
+        if self._snps is not None:
+            return len(self._snps)
+        else:
+            return 0
+
+    def get_chromosomes(self):
+        """ Get the chromosomes of SNPs.
+
+        Returns
+        -------
+        list
+            list of str chromosomes (e.g., ['1', '2', '3', 'MT'], empty list if no chromosomes
+        """
+
+        if isinstance(self._snps, pd.DataFrame):
+            return list(pd.unique(self._snps["chrom"]))
+        else:
+            return []
+
+    def get_chromosomes_summary(self):
+        """ Summary of the chromosomes of SNPs.
+
+        Returns
+        -------
+        str
+            human-readable listing of chromosomes (e.g., '1-3, MT'), empty str if no chromosomes
+        """
+
+        if isinstance(self._snps, pd.DataFrame):
+            chroms = list(pd.unique(self._snps["chrom"]))
+
+            int_chroms = [int(chrom) for chrom in chroms if chrom.isdigit()]
+            str_chroms = [chrom for chrom in chroms if not chrom.isdigit()]
+
+            # https://codereview.stackexchange.com/a/5202
+            def as_range(iterable):
+                l = list(iterable)
+                if len(l) > 1:
+                    return "{0}-{1}".format(l[0], l[-1])
+                else:
+                    return "{0}".format(l[0])
+
+            # create str representations
+            int_chroms = ", ".join(
+                as_range(g)
+                for _, g in groupby(int_chroms, key=lambda n, c=count(): n - next(c))
             )
+            str_chroms = ", ".join(str_chroms)
 
-            if y_snps_not_null / y_snps > y_snps_not_null_threshold:
-                return "Male"
-            else:
-                return "Female"
+            if int_chroms != "" and str_chroms != "":
+                int_chroms += ", "
 
-        x_snps = len(snps.loc[snps["chrom"] == "X"])
-
-        if x_snps == 0:
+            return int_chroms + str_chroms
+        else:
             return ""
 
-        heterozygous_x_snps = len(
-            snps.loc[
-                (snps["chrom"] == "X")
-                & (snps["genotype"].notnull())
-                & (snps["genotype"].str[0] != snps["genotype"].str[1])
-            ]
+    def determine_sex(
+        self, snps, y_snps_not_null_threshold=0.1, heterozygous_x_snps_threshold=0.01
+    ):
+        """ Determine sex from SNPs using thresholds.
+
+        Parameters
+        ----------
+        snps : pandas.DataFrame
+        y_snps_not_null_threshold : float
+            percentage Y SNPs that are not null; above this threshold, Male is determined
+        heterozygous_x_snps_threshold : float
+            percentage heterozygous X SNPs; above this threshold, Female is determined
+
+        Returns
+        -------
+        str
+            'Male' or 'Female' if detected, else empty str
+        """
+
+        if isinstance(snps, pd.DataFrame):
+            y_snps = len(snps.loc[(snps["chrom"] == "Y")])
+
+            if y_snps > 0:
+                y_snps_not_null = len(
+                    snps.loc[(snps["chrom"] == "Y") & (snps["genotype"].notnull())]
+                )
+
+                if y_snps_not_null / y_snps > y_snps_not_null_threshold:
+                    return "Male"
+                else:
+                    return "Female"
+
+            x_snps = len(snps.loc[snps["chrom"] == "X"])
+
+            if x_snps == 0:
+                return ""
+
+            heterozygous_x_snps = len(
+                snps.loc[
+                    (snps["chrom"] == "X")
+                    & (snps["genotype"].notnull())
+                    & (snps["genotype"].str[0] != snps["genotype"].str[1])
+                ]
+            )
+
+            if heterozygous_x_snps / x_snps > heterozygous_x_snps_threshold:
+                return "Female"
+            else:
+                return "Male"
+        else:
+            return ""
+
+
+class SNPsCollection(SNPs):
+    def __init__(self, raw_data=None, output_dir="output", name=""):
+        """
+
+        Parameters
+        ----------
+        raw_data : list or str
+            path(s) to file(s) with raw genotype data
+        output_dir : str
+            path to output directory
+        name : str
+            name for this ``SNPsCollection``
+        """
+        super().__init__(file="", output_dir=output_dir)
+
+        self._source = []
+        self._discrepant_positions_file_count = 0
+        self._discrepant_genotypes_file_count = 0
+        self._discrepant_positions = pd.DataFrame()
+        self._discrepant_genotypes = pd.DataFrame()
+        self._name = name
+
+        if raw_data is not None:
+            self.load_snps(raw_data)
+
+    @property
+    def source(self):
+        """ Summary of the SNP data source for ``SNPs``.
+
+        Returns
+        -------
+        str
+        """
+        return ", ".join(self._source)
+
+    @property
+    def discrepant_positions(self):
+        """ SNPs with discrepant positions discovered while loading SNPs.
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        return self._discrepant_positions
+
+    @property
+    def discrepant_genotypes(self):
+        """ SNPs with discrepant genotypes discovered while loading SNPs.
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        return self._discrepant_genotypes
+
+    @property
+    def discrepant_snps(self):
+        """ SNPs with discrepant positions and / or genotypes discovered while loading SNPs.
+
+        Returns
+        -------
+        pandas.DataFrame
+        """
+        df = self._discrepant_positions.append(self._discrepant_genotypes)
+        if len(df) > 1:
+            df = df.drop_duplicates()
+        return df
+
+    def load_snps(
+        self,
+        raw_data,
+        discrepant_snp_positions_threshold=100,
+        discrepant_genotypes_threshold=500,
+        save_output=False,
+    ):
+        """ Load raw genotype data.
+
+        Parameters
+        ----------
+        raw_data : list or str
+            path(s) to file(s) with raw genotype data
+        discrepant_snp_positions_threshold : int
+            threshold for discrepant SNP positions between existing data and data to be loaded,
+            a large value could indicate mismatched genome assemblies
+        discrepant_genotypes_threshold : int
+            threshold for discrepant genotype data between existing data and data to be loaded,
+            a large value could indicated mismatched individuals
+        save_output : bool
+            specifies whether to save discrepant SNP output to CSV files in the output directory
+        """
+        if type(raw_data) is list:
+            for file in raw_data:
+                self._load_snps_helper(
+                    file,
+                    discrepant_snp_positions_threshold,
+                    discrepant_genotypes_threshold,
+                    save_output,
+                )
+        elif type(raw_data) is str:
+            self._load_snps_helper(
+                raw_data,
+                discrepant_snp_positions_threshold,
+                discrepant_genotypes_threshold,
+                save_output,
+            )
+        else:
+            raise TypeError("invalid filetype")
+
+    def _load_snps_helper(
+        self,
+        file,
+        discrepant_snp_positions_threshold,
+        discrepant_genotypes_threshold,
+        save_output,
+    ):
+        print("Loading " + os.path.relpath(file))
+        discrepant_positions, discrepant_genotypes = self._add_snps(
+            SNPs(file),
+            discrepant_snp_positions_threshold,
+            discrepant_genotypes_threshold,
+            save_output,
         )
 
-        if heterozygous_x_snps / x_snps > heterozygous_x_snps_threshold:
-            return "Female"
+        self._discrepant_positions = self._discrepant_positions.append(
+            discrepant_positions, sort=True
+        )
+        self._discrepant_genotypes = self._discrepant_genotypes.append(
+            discrepant_genotypes, sort=True
+        )
+
+    def save_snps(self, filename=None):
+        """ Save SNPs to file.
+
+        Parameters
+        ----------
+        filename : str
+            filename for file to save
+
+        Returns
+        -------
+        str
+            path to file in output directory if SNPs were saved, else empty str
+        """
+        if filename is None:
+            filename = (
+                self.get_var_repr(self._name) + "_lineage_" + self.assembly + ".csv"
+            )
+        return super().save_snps(filename)
+
+    def save_discrepant_positions(self, filename=None):
+        """ Save SNPs with discrepant positions to file.
+
+        Parameters
+        ----------
+        filename : str
+            filename for file to save
+
+        Returns
+        -------
+        str
+            path to file in output directory if SNPs were saved, else empty str
+        """
+        return self._save_discrepant_snps_file(
+            self.discrepant_positions, "discrepant_positions", filename
+        )
+
+    def save_discrepant_genotypes(self, filename=None):
+        """ Save SNPs with discrepant genotypes to file.
+
+        Parameters
+        ----------
+        filename : str
+            filename for file to save
+
+        Returns
+        -------
+        str
+            path to file in output directory if SNPs were saved, else empty str
+        """
+        return self._save_discrepant_snps_file(
+            self.discrepant_genotypes, "discrepant_genotypes", filename
+        )
+
+    def save_discrepant_snps(self, filename=None):
+        """ Save SNPs with discrepant positions and / or genotypes to file.
+
+        Parameters
+        ----------
+        filename : str
+            filename for file to save
+
+        Returns
+        -------
+        str
+            path to file in output directory if SNPs were saved, else empty str
+        """
+        return self._save_discrepant_snps_file(
+            self.discrepant_snps, "discrepant_snps", filename
+        )
+
+    def _save_discrepant_snps_file(self, df, name, filename):
+        if filename is None:
+            filename = self.get_var_repr(self._name) + "_" + name + ".csv"
+
+        return lineage.save_df_as_csv(
+            df,
+            self._output_dir,
+            filename,
+            comment="# Source(s): {}\n".format(self.source),
+        )
+
+    def _add_snps(
+        self,
+        snps,
+        discrepant_snp_positions_threshold,
+        discrepant_genotypes_threshold,
+        save_output,
+    ):
+        """ Add SNPs to this ``SNPsCollection``.
+
+        Parameters
+        ----------
+        snps : SNPs
+            SNPs to add
+        discrepant_snp_positions_threshold : int
+            see above
+        discrepant_genotypes_threshold : int
+            see above
+        save_output
+            see above
+
+        Returns
+        -------
+        discrepant_positions : pandas.DataFrame
+        discrepant_genotypes : pandas.DataFrame
+        """
+        discrepant_positions = pd.DataFrame()
+        discrepant_genotypes = pd.DataFrame()
+
+        if snps._snps is None:
+            return discrepant_positions, discrepant_genotypes
+
+        build = snps._build
+        source = [s.strip() for s in snps._source.split(",")]
+
+        if not snps._build_detected:
+            print("build not detected, assuming build {}".format(snps._build))
+
+        if self._build is None:
+            self._build = build
+        elif self._build != build:
+            print(
+                "build / assembly mismatch between current build of SNPs and SNPs being loaded"
+            )
+
+        # ensure there area always two X alleles
+        snps = self._double_single_alleles(snps._snps, "X")
+
+        if self._snps is None:
+            self._source.extend(source)
+            self._snps = snps
         else:
-            return "Male"
-    else:
-        return ""
+            common_snps = self._snps.join(snps, how="inner", rsuffix="_added")
+
+            discrepant_positions = common_snps.loc[
+                (common_snps["chrom"] != common_snps["chrom_added"])
+                | (common_snps["pos"] != common_snps["pos_added"])
+            ]
+
+            if 0 < len(discrepant_positions) < discrepant_snp_positions_threshold:
+                print(
+                    str(len(discrepant_positions)) + " SNP positions were discrepant; "
+                    "keeping original positions"
+                )
+
+                if save_output:
+                    self._discrepant_positions_file_count += 1
+                    lineage.save_df_as_csv(
+                        discrepant_positions,
+                        self._output_dir,
+                        self.get_var_repr(self._name)
+                        + "_discrepant_positions_"
+                        + str(self._discrepant_positions_file_count)
+                        + ".csv",
+                    )
+            elif len(discrepant_positions) >= discrepant_snp_positions_threshold:
+                print(
+                    "too many SNPs differ in position; ensure same genome build is being used"
+                )
+                return discrepant_positions, discrepant_genotypes
+
+            # remove null genotypes
+            common_snps = common_snps.loc[
+                ~common_snps["genotype"].isnull()
+                & ~common_snps["genotype_added"].isnull()
+            ]
+
+            # discrepant genotypes are where alleles are not equivalent (i.e., alleles are not the
+            # same and not swapped)
+            discrepant_genotypes = common_snps.loc[
+                (
+                    (common_snps["genotype"].str.len() == 1)
+                    & (common_snps["genotype_added"].str.len() == 1)
+                    & ~(
+                        common_snps["genotype"].str[0]
+                        == common_snps["genotype_added"].str[0]
+                    )
+                )
+                | (
+                    (common_snps["genotype"].str.len() == 2)
+                    & (common_snps["genotype_added"].str.len() == 2)
+                    & ~(
+                        (
+                            common_snps["genotype"].str[0]
+                            == common_snps["genotype_added"].str[0]
+                        )
+                        & (
+                            common_snps["genotype"].str[1]
+                            == common_snps["genotype_added"].str[1]
+                        )
+                    )
+                    & ~(
+                        (
+                            common_snps["genotype"].str[0]
+                            == common_snps["genotype_added"].str[1]
+                        )
+                        & (
+                            common_snps["genotype"].str[1]
+                            == common_snps["genotype_added"].str[0]
+                        )
+                    )
+                )
+            ]
+
+            if 0 < len(discrepant_genotypes) < discrepant_genotypes_threshold:
+                print(
+                    str(len(discrepant_genotypes)) + " SNP genotypes were discrepant; "
+                    "marking those as null"
+                )
+
+                if save_output:
+                    self._discrepant_genotypes_file_count += 1
+                    lineage.save_df_as_csv(
+                        discrepant_genotypes,
+                        self._output_dir,
+                        self.get_var_repr(self._name)
+                        + "_discrepant_genotypes_"
+                        + str(self._discrepant_genotypes_file_count)
+                        + ".csv",
+                    )
+            elif len(discrepant_genotypes) >= discrepant_genotypes_threshold:
+                print(
+                    "too many SNPs differ in their genotype; ensure file is for same "
+                    "individual"
+                )
+                return discrepant_positions, discrepant_genotypes
+
+            # add new SNPs
+            self._source.extend(source)
+            self._snps = self._snps.combine_first(snps)
+            self._snps.loc[discrepant_genotypes.index, "genotype"] = np.nan
+
+            # combine_first converts position to float64, so convert it back to int64
+            self._snps["pos"] = self._snps["pos"].astype(np.int64)
+
+        self._snps = sort_snps(self._snps)
+
+        return discrepant_positions, discrepant_genotypes
+
+    @staticmethod
+    def _double_single_alleles(df, chrom):
+        """ Double any single alleles in the specified chromosome.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            SNPs
+        chrom : str
+            chromosome of alleles to double
+
+        Returns
+        -------
+        df : pandas.DataFrame
+            SNPs with specified chromosome's single alleles doubled
+        """
+        # find all single alleles of the specified chromosome
+        single_alleles = np.where(
+            (df["chrom"] == chrom) & (df["genotype"].str.len() == 1)
+        )[0]
+
+        # double those alleles
+        df.ix[single_alleles, "genotype"] = df.ix[single_alleles, "genotype"] * 2
+
+        return df
 
 
 def sort_snps(snps):

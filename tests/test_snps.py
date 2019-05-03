@@ -113,11 +113,11 @@ class TestSnps(BaseLineageTestCase):
         assert self.snps_none._source == ""
 
     def test__lookup_build_with_snp_pos_None(self):
-        from lineage.snps import detect_build
-
-        assert detect_build(self.snps_discrepant_pos()) is None
+        snps = SNPs()
+        snps._snps = self.snps_discrepant_pos()
+        assert snps.detect_build() is None
 
     def test_get_assembly_None(self):
-        from lineage.snps import get_assembly
-
-        assert get_assembly(None) is ""
+        snps = SNPs()
+        snps._build = None
+        assert snps.get_assembly() is ""
