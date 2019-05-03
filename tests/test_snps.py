@@ -60,16 +60,16 @@ class TestSnps(BaseLineageTestCase):
         assert self.snps_none.chromosomes_summary == ""
 
     def test_build_no_snps(self):
-        assert self.snps_none.build is None
+        assert self.snps_none._build is None
 
     def test_build_detected_no_snps(self):
-        assert not self.snps_none.build_detected
+        assert not self.snps_none._build_detected
 
     def test_build_detected_PAR_snps(self):
         if os.getenv("DOWNLOADS_ENABLED"):
             snps = SNPs("tests/input/GRCh37_PAR.csv")
-            assert snps.build == 37
-            assert snps.build_detected
+            assert snps._build == 37
+            assert snps._build_detected
 
     def test_sex_no_snps(self):
         assert self.snps_none.sex == ""
@@ -109,8 +109,8 @@ class TestSnps(BaseLineageTestCase):
         assert not self.snps_none.is_valid()
 
     def test__read_raw_data(self):
-        assert self.snps_none.snps is None
-        assert self.snps_none.source == ""
+        assert self.snps_none._snps is None
+        assert self.snps_none._source == ""
 
     def test__lookup_build_with_snp_pos_None(self):
         from lineage.snps import detect_build

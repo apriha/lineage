@@ -42,17 +42,17 @@ class SNPs:
         assign_par_snps : bool
             assign PAR SNPs to the X and Y chromosomes
         """
-        self.snps, self.source = self._read_raw_data(file)
-        self.build = None
-        self.build_detected = False
+        self._snps, self._source = self._read_raw_data(file)
+        self._build = None
+        self._build_detected = False
 
-        if self.snps is not None:
-            self.build = detect_build(self.snps)
+        if self._snps is not None:
+            self._build = detect_build(self._snps)
 
-            if self.build is None:
-                self.build = 37  # assume Build 37 / GRCh37 if not detected
+            if self._build is None:
+                self._build = 37  # assume Build 37 / GRCh37 if not detected
             else:
-                self.build_detected = True
+                self._build_detected = True
 
             if assign_par_snps:
                 self._assign_par_snps()
@@ -65,7 +65,7 @@ class SNPs:
         -------
         str
         """
-        return get_assembly(self.build)
+        return get_assembly(self._build)
 
     @property
     def snp_count(self):
@@ -75,7 +75,7 @@ class SNPs:
         -------
         int
         """
-        return get_snp_count(self.snps)
+        return get_snp_count(self._snps)
 
     @property
     def chromosomes(self):
@@ -86,7 +86,7 @@ class SNPs:
         list
             list of str chromosomes (e.g., ['1', '2', '3', 'MT'], empty list if no chromosomes
         """
-        return get_chromosomes(self.snps)
+        return get_chromosomes(self._snps)
 
     @property
     def chromosomes_summary(self):
@@ -97,7 +97,7 @@ class SNPs:
         str
             human-readable listing of chromosomes (e.g., '1-3, MT'), empty str if no chromosomes
         """
-        return get_chromosomes_summary(self.snps)
+        return get_chromosomes_summary(self._snps)
 
     @property
     def sex(self):
@@ -108,7 +108,7 @@ class SNPs:
         str
             'Male' or 'Female' if detected, else empty str
         """
-        return determine_sex(self.snps)
+        return determine_sex(self._snps)
 
     def get_summary(self):
         """ Get summary of ``SNPs``.
@@ -122,10 +122,10 @@ class SNPs:
             return None
         else:
             return {
-                "source": self.source,
+                "source": self._source,
                 "assembly": self.assembly,
-                "build": self.build,
-                "build_detected": self.build_detected,
+                "build": self._build,
+                "build_detected": self._build_detected,
                 "snp_count": self.snp_count,
                 "chromosomes": self.chromosomes_summary,
                 "sex": self.sex,
@@ -141,7 +141,7 @@ class SNPs:
         bool
             True if ``SNPs`` is valid
         """
-        if self.snps is None:
+        if self._snps is None:
             return False
         else:
             return True
@@ -445,7 +445,7 @@ class SNPs:
         rest_client = EnsemblRestClient(
             server="https://api.ncbi.nlm.nih.gov", reqs_per_sec=1
         )
-        for rsid in self.snps.loc[self.snps["chrom"] == "PAR"].index.values:
+        for rsid in self._snps.loc[self._snps["chrom"] == "PAR"].index.values:
             if "rs" in rsid:
                 try:
                     id = rsid.split("rs")[1]
@@ -465,9 +465,9 @@ class SNPs:
                                 assigned = False
 
                             if assigned:
-                                if not self.build_detected:
-                                    self.build = self._extract_build(item)
-                                    self.build_detected = True
+                                if not self._build_detected:
+                                    self._build = self._extract_build(item)
+                                    self._build_detected = True
                                 break
 
                 except Exception as err:
@@ -478,8 +478,8 @@ class SNPs:
         for allele in alleles:
             allele_pos = allele["allele"]["spdi"]["position"]
             # ref SNP positions seem to be 0-based...
-            if allele_pos == self.snps.loc[rsid].pos - 1:
-                self.snps.loc[rsid, "chrom"] = chrom
+            if allele_pos == self._snps.loc[rsid].pos - 1:
+                self._snps.loc[rsid, "chrom"] = chrom
                 return True
         return False
 

@@ -471,14 +471,14 @@ class Individual:
         discrepant_positions = pd.DataFrame()
         discrepant_genotypes = pd.DataFrame()
 
-        if snps.snps is None:
+        if snps._snps is None:
             return discrepant_positions, discrepant_genotypes
 
-        build = snps.build
-        source = [s.strip() for s in snps.source.split(",")]
+        build = snps._build
+        source = [s.strip() for s in snps._source.split(",")]
 
-        if not snps.build_detected:
-            print("build not detected, assuming build {}".format(snps.build))
+        if not snps._build_detected:
+            print("build not detected, assuming build {}".format(snps._build))
 
         if self._build is None:
             self._build = build
@@ -488,7 +488,7 @@ class Individual:
             )
 
         # ensure there area always two X alleles
-        snps = self._double_single_alleles(snps.snps, "X")
+        snps = self._double_single_alleles(snps._snps, "X")
 
         if self._snps is None:
             self._source.extend(source)
