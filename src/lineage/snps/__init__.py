@@ -150,7 +150,7 @@ class SNPs:
         str
             'Male' or 'Female' if detected, else empty str
         """
-        return self.determine_sex(self._snps)
+        return self.determine_sex()
 
     def get_summary(self):
         """ Get summary of ``SNPs``.
@@ -456,13 +456,12 @@ class SNPs:
             return ""
 
     def determine_sex(
-        self, snps, y_snps_not_null_threshold=0.1, heterozygous_x_snps_threshold=0.01
+        self, y_snps_not_null_threshold=0.1, heterozygous_x_snps_threshold=0.01
     ):
         """ Determine sex from SNPs using thresholds.
 
         Parameters
         ----------
-        snps : pandas.DataFrame
         y_snps_not_null_threshold : float
             percentage Y SNPs that are not null; above this threshold, Male is determined
         heterozygous_x_snps_threshold : float
@@ -474,12 +473,15 @@ class SNPs:
             'Male' or 'Female' if detected, else empty str
         """
 
-        if isinstance(snps, pd.DataFrame):
-            y_snps = len(snps.loc[(snps["chrom"] == "Y")])
+        if isinstance(self._snps, pd.DataFrame):
+            y_snps = len(self._snps.loc[(self._snps["chrom"] == "Y")])
 
             if y_snps > 0:
                 y_snps_not_null = len(
-                    snps.loc[(snps["chrom"] == "Y") & (snps["genotype"].notnull())]
+                    self._snps.loc[
+                        (self._snps["chrom"] == "Y")
+                        & (self._snps["genotype"].notnull())
+                    ]
                 )
 
                 if y_snps_not_null / y_snps > y_snps_not_null_threshold:
@@ -487,16 +489,16 @@ class SNPs:
                 else:
                     return "Female"
 
-            x_snps = len(snps.loc[snps["chrom"] == "X"])
+            x_snps = len(self._snps.loc[self._snps["chrom"] == "X"])
 
             if x_snps == 0:
                 return ""
 
             heterozygous_x_snps = len(
-                snps.loc[
-                    (snps["chrom"] == "X")
-                    & (snps["genotype"].notnull())
-                    & (snps["genotype"].str[0] != snps["genotype"].str[1])
+                self._snps.loc[
+                    (self._snps["chrom"] == "X")
+                    & (self._snps["genotype"].notnull())
+                    & (self._snps["genotype"].str[0] != self._snps["genotype"].str[1])
                 ]
             )
 
