@@ -28,7 +28,7 @@ from pandas.api.types import CategoricalDtype
 
 import lineage
 from lineage.ensembl import EnsemblRestClient
-from lineage.reader import Reader
+from lineage.snps.reader import Reader
 
 
 class SNPs:
