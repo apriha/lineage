@@ -527,8 +527,27 @@ class Lineage:
 
         one_x_chrom = self._is_one_individual_male([individual1, individual2])
 
+        genetic_map = self._resources.get_genetic_map_HapMapII_GRCh37()
+        chromosomes = df["chrom"].unique()
+
+        tasks = []
+
+        for chrom in chromosomes:
+            if chrom not in genetic_map.keys():
+                continue
+
+            tasks.append(
+                {
+                    "genetic_map": genetic_map[chrom],
+                    # get positions for the current chromosome
+                    "snps": pd.DataFrame(df.loc[(df["chrom"] == chrom)]["pos"]),
+                }
+            )
+
         # determine the genetic distance between each SNP using the HapMap Phase II genetic map
-        genetic_map, df = self._compute_snp_distances(df)
+        snp_distances = map(self._compute_snp_distances, tasks)
+        snp_distances = pd.concat(snp_distances)
+        df["cM_from_prev_snp"] = snp_distances["cM_from_prev_snp"]
 
         # determine where individuals share an allele on one chromosome
         df["one_chrom_match"] = np.where(
@@ -728,66 +747,68 @@ class Lineage:
                 return True
         return False
 
-    def _compute_snp_distances(self, df):
-        genetic_map = self._resources.get_genetic_map_HapMapII_GRCh37()
+    def _compute_snp_distances(self, task):
+        """ Compute genetic distance between SNPs.
 
-        for chrom in df["chrom"].unique():
-            if chrom not in genetic_map.keys():
-                continue
+        Parameters
+        ----------
+        task : dict
+            dict with `snps` to compute distance between using `genetic_map`
 
-            # create a new dataframe from the positions for the current chromosome
-            temp = pd.DataFrame(
-                df.loc[(df["chrom"] == chrom)]["pos"].values, columns=["pos"]
-            )
+        Returns
+        -------
+        pandas.DataFrame
+            genetic distances between SNPs
+        """
+        genetic_map = task["genetic_map"]
+        temp = task["snps"]
 
-            # merge genetic map for this chrom
-            temp = temp.append(genetic_map[chrom], ignore_index=True, sort=True)
+        # merge genetic map for this chrom
+        temp = temp.append(genetic_map, ignore_index=False, sort=True)
 
-            # sort based on pos
-            temp = temp.sort_values("pos")
+        # sort based on pos
+        temp = temp.sort_values("pos")
 
-            # fill recombination rates forward
-            temp["rate"] = temp["rate"].fillna(method="ffill")
+        # fill recombination rates forward
+        temp["rate"] = temp["rate"].fillna(method="ffill")
 
-            # assume recombination rate of 0 for SNPs upstream of first defined rate
-            temp["rate"] = temp["rate"].fillna(0)
+        # assume recombination rate of 0 for SNPs upstream of first defined rate
+        temp["rate"] = temp["rate"].fillna(0)
 
-            # get difference between positions
-            pos_diffs = np.ediff1d(temp["pos"])
+        # get difference between positions
+        pos_diffs = np.ediff1d(temp["pos"])
 
-            # compute cMs between each pos based on probabilistic recombination rate
-            # https://www.biostars.org/p/123539/
-            cMs_match_segment = (temp["rate"] * np.r_[pos_diffs, 0] / 1e6).values
+        # compute cMs between each pos based on probabilistic recombination rate
+        # https://www.biostars.org/p/123539/
+        cMs_match_segment = (temp["rate"] * np.r_[pos_diffs, 0] / 1e6).values
 
-            # add back into temp
-            temp["cMs"] = np.r_[0, cMs_match_segment][:-1]
+        # add back into temp
+        temp["cMs"] = np.r_[0, cMs_match_segment][:-1]
 
-            temp = temp.reset_index()
-            del temp["index"]
+        temp = temp.reset_index()
 
-            # use null `map` values to find locations of SNPs
-            snp_indices = temp.loc[temp["map"].isnull()].index
+        # use null `map` values to find locations of SNPs
+        snp_indices = temp.loc[temp["map"].isnull()].index
 
-            # use SNP indices to determine boundaries over which to sum cMs
-            start_snp_ix = snp_indices + 1
-            end_snp_ix = np.r_[snp_indices, snp_indices[-1]][1:] + 1
-            snp_boundaries = np.c_[start_snp_ix, end_snp_ix]
+        # use SNP indices to determine boundaries over which to sum cMs
+        start_snp_ix = snp_indices + 1
+        end_snp_ix = np.r_[snp_indices, snp_indices[-1]][1:] + 1
+        snp_boundaries = np.c_[start_snp_ix, end_snp_ix]
 
-            # sum cMs between SNPs to get total cM distance between SNPs
-            # http://stackoverflow.com/a/7471967
-            c = np.r_[0, temp["cMs"].cumsum()][snp_boundaries]
-            cM_from_prev_snp = c[:, 1] - c[:, 0]
+        # sum cMs between SNPs to get total cM distance between SNPs
+        # http://stackoverflow.com/a/7471967
+        c = np.r_[0, temp["cMs"].cumsum()][snp_boundaries]
+        cM_from_prev_snp = c[:, 1] - c[:, 0]
 
-            # debug
-            # temp.loc[snp_indices, 'cM_from_prev_snp'] = np.r_[0, cM_from_prev_snp][:-1]
-            # temp.to_csv('debug.csv')
+        temp = temp.loc[temp["map"].isna()]
 
-            # add back into df
-            df.loc[(df["chrom"] == chrom), "cM_from_prev_snp"] = np.r_[
-                0, cM_from_prev_snp
-            ][:-1]
+        # add back into temp
+        temp["cM_from_prev_snp"] = np.r_[0, cM_from_prev_snp][:-1]
 
-        return genetic_map, df
+        # restore index
+        temp = temp.set_index("index")
+
+        return pd.DataFrame(temp["cM_from_prev_snp"])
 
     def _compute_shared_dna(
         self, df, genetic_map, col, cM_threshold, snp_threshold, one_x_chrom
