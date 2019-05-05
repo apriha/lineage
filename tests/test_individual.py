@@ -129,6 +129,12 @@ class TestIndividual(BaseLineageTestCase):
         assert ind.source == "AncestryDNA"
         pd.testing.assert_frame_equal(ind.snps, self.generic_snps())
 
+    def test_snps_myheritage(self):
+        # https://www.myheritage.com
+        ind = self.l.create_individual("", "tests/input/myheritage.csv")
+        assert ind.source == "MyHeritage"
+        pd.testing.assert_frame_equal(ind.snps, self.generic_snps())
+
     def test_source_lineage_file(self):
         ind = self.l.create_individual("", "tests/input/GRCh37.csv")
         assert ind.source == "generic"

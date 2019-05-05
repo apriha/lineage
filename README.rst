@@ -5,9 +5,7 @@
 lineage
 =======
 ``lineage`` provides a framework for analyzing genotype (raw data) files from direct-to-consumer
-DNA testing companies (e.g., `23andMe <https://www.23andme.com>`_,
-`Family Tree DNA <https://www.familytreedna.com>`_, and `Ancestry <http://www.ancestry.com>`_),
-primarily for the purposes of genetic genealogy.
+(DTC) DNA testing companies, primarily for the purposes of genetic genealogy.
 
 Capabilities
 ------------
@@ -17,6 +15,15 @@ Capabilities
 - Determine genes shared between individuals (i.e., genes transcribed from shared DNA segments)
 - Find discordant SNPs between child and parent(s)
 - Remap SNPs between assemblies / builds (e.g., convert SNPs from Build 36 to Build 37, etc.)
+
+Supported Genotype Files
+------------------------
+``lineage`` supports genotype files from the following DTC DNA testing companies:
+
+- `23andMe <https://www.23andme.com>`_
+- `Ancestry <https://www.ancestry.com>`_
+- `Family Tree DNA <https://www.familytreedna.com>`_
+- `MyHeritage <https://www.myheritage.com>`_
 
 Dependencies
 ------------

@@ -72,6 +72,8 @@ class Reader:
                 return self.read_ftdna(file)
             elif "famfinder" in first_line:
                 return self.read_ftdna_famfinder(file)
+            elif "MyHeritage" in first_line:
+                return self.read_myheritage(file)
             elif "lineage" in first_line:
                 return self.read_lineage_csv(file, comments)
             elif first_line.startswith("rsid"):
@@ -267,6 +269,36 @@ class Reader:
         df.ix[np.where(df["chrom"] == "26")[0], "chrom"] = "MT"
 
         return df, "AncestryDNA"
+
+    @staticmethod
+    def read_myheritage(file):
+        """ Read and parse MyHeritage file.
+
+        https://www.myheritage.com
+
+        Parameters
+        ----------
+        file : str
+            path to file
+
+        Returns
+        -------
+        pandas.DataFrame
+            genetic data normalized for use with `lineage`
+        str
+            name of data source
+        """
+        df = pd.read_csv(
+            file,
+            comment="#",
+            header=0,
+            na_values="--",
+            names=["rsid", "chrom", "pos", "genotype"],
+            index_col=0,
+            dtype={"chrom": object, "pos": np.int64},
+        )
+
+        return df, "MyHeritage"
 
     @staticmethod
     def read_lineage_csv(file, comments):
