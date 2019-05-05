@@ -34,6 +34,7 @@ from lineage.ensembl import EnsemblRestClient
 from lineage.individual import Individual
 from lineage.resources import Resources
 from lineage.snps import SNPs
+from lineage.utils import Parallelizer
 from lineage.visualization import plot_chromosomes
 
 # set version string with Versioneer
@@ -46,21 +47,32 @@ del get_versions
 class Lineage:
     """ Object used to interact with the `lineage` framework. """
 
-    def __init__(self, output_dir="output", resources_dir="resources"):
+    def __init__(
+        self,
+        output_dir="output",
+        resources_dir="resources",
+        parallelize=True,
+        processes=os.cpu_count(),
+    ):
         """ Initialize a ``Lineage`` object.
 
         Parameters
         ----------
         output_dir : str
             name / path of output directory
-        resources_dir
+        resources_dir : str
             name / path of resources directory
+        parallelize : bool
+            utilize multiprocessing to speedup calculations
+        processes : int
+            processes to launch if multiprocessing
         """
         self._output_dir = os.path.abspath(output_dir)
         self._ensembl_rest_client = EnsemblRestClient()
         self._resources = Resources(
             resources_dir=resources_dir, ensembl_rest_client=self._ensembl_rest_client
         )
+        self._parallelizer = Parallelizer(parallelize=parallelize, processes=processes)
 
     def create_individual(self, name, raw_data=None):
         """ Initialize an individual in the context of the `lineage` framework.
@@ -153,7 +165,8 @@ class Lineage:
             print("No SNPs to remap")
             return chromosomes_remapped, chromosomes_not_remapped
         else:
-            chromosomes_not_remapped = list(snps["chrom"].unique())
+            chromosomes = snps["chrom"].unique()
+            chromosomes_not_remapped = list(chromosomes)
 
         valid_assemblies = ["NCBI36", "GRCh37", "GRCh38", 36, 37, 38]
 
@@ -182,89 +195,114 @@ class Lineage:
         if assembly_mapping_data is None:
             return chromosomes_remapped, chromosomes_not_remapped
 
-        for chrom in snps["chrom"].unique():
-            # extract SNPs for this chrom for faster remapping
-            temp = pd.DataFrame(snps.loc[snps["chrom"] == chrom])
+        tasks = []
 
-            temp["remapped"] = False
-
+        for chrom in chromosomes:
             if chrom in assembly_mapping_data:
                 chromosomes_remapped.append(chrom)
                 chromosomes_not_remapped.remove(chrom)
                 mappings = assembly_mapping_data[chrom]
+                tasks.append(
+                    {
+                        "snps": snps.loc[snps["chrom"] == chrom],
+                        "mappings": mappings,
+                        "complement_bases": complement_bases,
+                    }
+                )
             else:
                 print(
-                    "Chromosome " + chrom + " not remapped; "
-                    "removing chromosome from SNPs for consistency"
+                    "Chromosome {} not remapped; "
+                    "removing chromosome from SNPs for consistency".format(chrom)
                 )
                 snps = snps.drop(snps.loc[snps["chrom"] == chrom].index)
-                continue
 
-            pos_start = int(temp["pos"].describe()["min"])
-            pos_end = int(temp["pos"].describe()["max"])
+        # remap SNPs
+        remapped_snps = self._parallelizer(self._remapper, tasks)
+        remapped_snps = pd.concat(remapped_snps)
 
-            for mapping in mappings["mappings"]:
-                # skip if mapping is outside of range of SNP positions
-                if (
-                    mapping["original"]["end"] <= pos_start
-                    or mapping["original"]["start"] >= pos_end
-                ):
-                    continue
-
-                orig_range_len = (
-                    mapping["original"]["end"] - mapping["original"]["start"]
-                )
-                mapped_range_len = mapping["mapped"]["end"] - mapping["mapped"]["start"]
-
-                orig_region = mapping["original"]["seq_region_name"]
-                mapped_region = mapping["mapped"]["seq_region_name"]
-
-                if orig_region != mapped_region:
-                    print("discrepant chroms")
-                    continue
-
-                if orig_range_len != mapped_range_len:
-                    print("discrepant coords")  # observed when mapping NCBI36 -> GRCh38
-                    continue
-
-                # find the SNPs that are being remapped for this mapping
-                snp_indices = temp.loc[
-                    ~temp["remapped"]
-                    & (temp["pos"] >= mapping["original"]["start"])
-                    & (temp["pos"] <= mapping["original"]["end"])
-                ].index
-
-                if len(snp_indices) > 0:
-                    # remap the SNPs
-                    if mapping["mapped"]["strand"] == -1:
-                        # flip and (optionally) complement since we're mapping to minus strand
-                        diff_from_start = (
-                            temp.loc[snp_indices, "pos"] - mapping["original"]["start"]
-                        )
-                        temp.loc[snp_indices, "pos"] = (
-                            mapping["mapped"]["end"] - diff_from_start
-                        )
-
-                        if complement_bases:
-                            snps.loc[snp_indices, "genotype"] = temp.loc[
-                                snp_indices, "genotype"
-                            ].apply(self._complement_bases)
-                    else:
-                        # mapping is on same (plus) strand, so just remap based on offset
-                        offset = (
-                            mapping["mapped"]["start"] - mapping["original"]["start"]
-                        )
-                        temp.loc[snp_indices, "pos"] = temp["pos"] + offset
-
-                    # mark these SNPs as remapped
-                    temp.loc[snp_indices, "remapped"] = True
-
-            # update SNP positions for this chrom
-            snps.loc[temp.index, "pos"] = temp["pos"]
+        # update SNP positions and genotypes
+        snps.loc[remapped_snps.index, "pos"] = remapped_snps["pos"]
+        snps.loc[remapped_snps.index, "genotype"] = remapped_snps["genotype"]
 
         individual._set_snps(snps, int(target_assembly[-2:]))
 
         return chromosomes_remapped, chromosomes_not_remapped
+
+    def _remapper(self, task):
+        """ Remap SNPs for a chromosome.
+
+        Parameters
+        ----------
+        task : dict
+            dict with `snps` to remap per `mappings`, optionally `complement_bases`
+
+        Returns
+        -------
+        pandas.DataFrame
+            remapped SNPs
+        """
+        temp = task["snps"].copy()
+        mappings = task["mappings"]
+        complement_bases = task["complement_bases"]
+
+        temp["remapped"] = False
+
+        pos_start = int(temp["pos"].describe()["min"])
+        pos_end = int(temp["pos"].describe()["max"])
+
+        for mapping in mappings["mappings"]:
+            # skip if mapping is outside of range of SNP positions
+            if (
+                mapping["original"]["end"] <= pos_start
+                or mapping["original"]["start"] >= pos_end
+            ):
+                continue
+
+            orig_range_len = mapping["original"]["end"] - mapping["original"]["start"]
+            mapped_range_len = mapping["mapped"]["end"] - mapping["mapped"]["start"]
+
+            orig_region = mapping["original"]["seq_region_name"]
+            mapped_region = mapping["mapped"]["seq_region_name"]
+
+            if orig_region != mapped_region:
+                print("discrepant chroms")
+                continue
+
+            if orig_range_len != mapped_range_len:
+                print("discrepant coords")  # observed when mapping NCBI36 -> GRCh38
+                continue
+
+            # find the SNPs that are being remapped for this mapping
+            snp_indices = temp.loc[
+                ~temp["remapped"]
+                & (temp["pos"] >= mapping["original"]["start"])
+                & (temp["pos"] <= mapping["original"]["end"])
+            ].index
+
+            if len(snp_indices) > 0:
+                # remap the SNPs
+                if mapping["mapped"]["strand"] == -1:
+                    # flip and (optionally) complement since we're mapping to minus strand
+                    diff_from_start = (
+                        temp.loc[snp_indices, "pos"] - mapping["original"]["start"]
+                    )
+                    temp.loc[snp_indices, "pos"] = (
+                        mapping["mapped"]["end"] - diff_from_start
+                    )
+
+                    if complement_bases:
+                        temp.loc[snp_indices, "genotype"] = temp.loc[
+                            snp_indices, "genotype"
+                        ].apply(self._complement_bases)
+                else:
+                    # mapping is on same (plus) strand, so just remap based on offset
+                    offset = mapping["mapped"]["start"] - mapping["original"]["start"]
+                    temp.loc[snp_indices, "pos"] = temp["pos"] + offset
+
+                # mark these SNPs as remapped
+                temp.loc[snp_indices, "remapped"] = True
+
+        return temp
 
     def _complement_bases(self, genotype):
         if pd.isnull(genotype):
@@ -849,13 +887,12 @@ class Lineage:
                 counter += 1
         return shared_dna
 
-    @staticmethod
-    def _remap_snps_to_GRCh37(individuals):
+    def _remap_snps_to_GRCh37(self, individuals):
         for i in individuals:
             if i is None:
                 continue
 
-            i.remap_snps(37)
+            self.remap_snps(i, 37)
 
 
 def create_dir(path):

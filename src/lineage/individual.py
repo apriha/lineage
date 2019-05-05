@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+import os
+
 from lineage.snps import SNPsCollection
 
 
@@ -61,7 +63,13 @@ class Individual(SNPsCollection):
     def get_var_name(self):
         return self.get_var_repr(self.name)
 
-    def remap_snps(self, target_assembly, complement_bases=True):
+    def remap_snps(
+        self,
+        target_assembly,
+        complement_bases=True,
+        parallelize=True,
+        processes=os.cpu_count(),
+    ):
         """ Remap the SNP coordinates of this ``Individual`` from one assembly to another.
 
         This method is a wrapper for `remap_snps` in the ``Lineage`` class.
@@ -79,6 +87,10 @@ class Individual(SNPsCollection):
             assembly to remap to
         complement_bases : bool
             complement bases when remapping SNPs to the minus strand
+        parallelize : bool
+            utilize multiprocessing to speedup calculations
+        processes : int
+            processes to launch if multiprocessing
 
         Returns
         -------
@@ -105,7 +117,7 @@ class Individual(SNPsCollection):
         """
         from lineage import Lineage
 
-        l = Lineage()
+        l = Lineage(parallelize=parallelize, processes=processes)
         return l.remap_snps(self, target_assembly, complement_bases)
 
     def _set_snps(self, snps, build=37):
