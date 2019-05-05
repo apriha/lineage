@@ -251,7 +251,8 @@ class SNPs:
             cleaned string that can be used as a variable name
         """
         # http://stackoverflow.com/a/3305731
-        return re.sub("\W|^(?=\d)", "_", s)
+        # https://stackoverflow.com/a/52335971
+        return re.sub(r"\W|^(?=\d)", "_", s)
 
     def _read_raw_data(self, file):
         return Reader.read_file(file)
