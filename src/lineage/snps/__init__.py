@@ -947,6 +947,6 @@ class SNPsCollection(SNPs):
         )[0]
 
         # double those alleles
-        df.ix[single_alleles, "genotype"] = df.ix[single_alleles, "genotype"] * 2
+        df.iloc[single_alleles, 2] = df.iloc[single_alleles, 2] * 2
 
         return df

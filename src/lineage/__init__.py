@@ -839,8 +839,8 @@ class Lineage:
                 shared_dna.append(
                     {
                         "chrom": chrom,
-                        "start": df.loc[(df["chrom"] == chrom)].ix[x[0]].pos,
-                        "end": df.loc[(df["chrom"] == chrom)].ix[x[1] - 1].pos,
+                        "start": df.loc[(df["chrom"] == chrom)].iloc[x[0]].pos,
+                        "end": df.loc[(df["chrom"] == chrom)].iloc[x[1] - 1].pos,
                         "cMs": cMs_match_segment[counter],
                         "snps": x[1] - x[0],
                         "gie_stain": chrom_stain,

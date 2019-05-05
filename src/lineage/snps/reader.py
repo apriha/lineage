@@ -263,10 +263,10 @@ class Reader:
         del df["allele2"]
 
         # https://redd.it/5y90un
-        df.ix[np.where(df["chrom"] == "23")[0], "chrom"] = "X"
-        df.ix[np.where(df["chrom"] == "24")[0], "chrom"] = "Y"
-        df.ix[np.where(df["chrom"] == "25")[0], "chrom"] = "PAR"
-        df.ix[np.where(df["chrom"] == "26")[0], "chrom"] = "MT"
+        df.iloc[np.where(df["chrom"] == "23")[0], 0] = "X"
+        df.iloc[np.where(df["chrom"] == "24")[0], 0] = "Y"
+        df.iloc[np.where(df["chrom"] == "25")[0], 0] = "PAR"
+        df.iloc[np.where(df["chrom"] == "26")[0], 0] = "MT"
 
         return df, "AncestryDNA"
 
