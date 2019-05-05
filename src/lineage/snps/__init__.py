@@ -100,6 +100,16 @@ class SNPs:
         return self._build
 
     @property
+    def build_detected(self):
+        """ Get status indicating if build of ``SNPs`` was detected.
+
+        Returns
+        -------
+        bool
+        """
+        return self._build_detected
+
+    @property
     def assembly(self):
         """ Get the assembly of ``SNPs``.
 
