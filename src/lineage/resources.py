@@ -379,8 +379,8 @@ class Resources:
         """
         try:
             # adapted from chromosome plotting code (see [1]_)
-            df = pd.read_table(
-                filename, names=["chrom", "start", "end", "name", "gie_stain"]
+            df = pd.read_csv(
+                filename, names=["chrom", "start", "end", "name", "gie_stain"], sep="\t"
             )
             df["chrom"] = df["chrom"].str[3:]
             return df
@@ -403,7 +403,7 @@ class Resources:
             knownGene table if loading was successful, else None
         """
         try:
-            df = pd.read_table(
+            df = pd.read_csv(
                 filename,
                 names=[
                     "name",
@@ -420,6 +420,7 @@ class Resources:
                     "alignID",
                 ],
                 index_col=0,
+                sep="\t",
             )
             df["chrom"] = df["chrom"].str[3:]
             return df
@@ -442,7 +443,7 @@ class Resources:
             kgXref table if loading was successful, else None
         """
         try:
-            df = pd.read_table(
+            df = pd.read_csv(
                 filename,
                 names=[
                     "kgID",
@@ -457,6 +458,7 @@ class Resources:
                     "tRnaName",
                 ],
                 index_col=0,
+                sep="\t",
                 dtype=object,
             )
             return df
