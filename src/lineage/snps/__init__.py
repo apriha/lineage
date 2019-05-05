@@ -174,10 +174,10 @@ class SNPs:
             return None
         else:
             return {
-                "source": self._source,
+                "source": self.source,
                 "assembly": self.assembly,
-                "build": self._build,
-                "build_detected": self._build_detected,
+                "build": self.build,
+                "build_detected": self.build_detected,
                 "snp_count": self.snp_count,
                 "chromosomes": self.chromosomes_summary,
                 "sex": self.sex,
