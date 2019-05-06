@@ -5,9 +5,7 @@
 lineage
 =======
 ``lineage`` provides a framework for analyzing genotype (raw data) files from direct-to-consumer
-DNA testing companies (e.g., `23andMe <https://www.23andme.com>`_,
-`Family Tree DNA <https://www.familytreedna.com>`_, and `Ancestry <http://www.ancestry.com>`_),
-primarily for the purposes of genetic genealogy.
+(DTC) DNA testing companies, primarily for the purposes of genetic genealogy.
 
 Capabilities
 ------------
@@ -18,6 +16,15 @@ Capabilities
 - Find discordant SNPs between child and parent(s)
 - Remap SNPs between assemblies / builds (e.g., convert SNPs from Build 36 to Build 37, etc.)
 
+Supported Genotype Files
+------------------------
+``lineage`` supports genotype files from the following DTC DNA testing companies:
+
+- `23andMe <https://www.23andme.com>`_
+- `Ancestry <https://www.ancestry.com>`_
+- `Family Tree DNA <https://www.familytreedna.com>`_
+- `MyHeritage <https://www.myheritage.com>`_
+
 Dependencies
 ------------
 ``lineage`` requires `Python <https://www.python.org>`_ 3.5+ and the following Python packages:
@@ -25,6 +32,7 @@ Dependencies
 - `numpy <http://www.numpy.org>`_
 - `pandas <http://pandas.pydata.org>`_
 - `matplotlib <http://matplotlib.org>`_
+- `atomicwrites <https://github.com/untitaker/python-atomicwrites>`_
 
 On Linux systems, the following system-level installs may also be required::
 
@@ -210,12 +218,12 @@ Loading resources/4584.ftdna-illumina.3483.csv.gz
 Now let's find the shared genes:
 
 >>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = l.find_shared_dna(user4583, user4584, shared_genes=True)
-Saving output/shared_dna_User4583_User4584.png
-Saving output/shared_dna_one_chrom_User4583_User4584_GRCh37.csv
 Downloading resources/knownGene_hg19.txt.gz
 Downloading resources/kgXref_hg19.txt.gz
-Saving output/shared_genes_one_chrom_User4583_User4584_GRCh37.csv
+Saving output/shared_dna_User4583_User4584.png
+Saving output/shared_dna_one_chrom_User4583_User4584_GRCh37.csv
 Saving output/shared_dna_two_chroms_User4583_User4584_GRCh37.csv
+Saving output/shared_genes_one_chrom_User4583_User4584_GRCh37.csv
 Saving output/shared_genes_two_chroms_User4583_User4584_GRCh37.csv
 
 The plot that illustrates the shared DNA is shown below. Note that in addition to outputting the

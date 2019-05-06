@@ -26,6 +26,8 @@ Listed in alphabetical order.
 Name            GitHub
 =============== =============
 Anatoli Babenia `@abitrolly`_
+Yoan Bouzin     `@Tuisto59`_
 =============== =============
 
 .. _@abitrolly: https://github.com/abitrolly
+.. _@Tuisto59: https://github.com/Tuisto59

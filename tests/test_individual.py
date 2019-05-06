@@ -21,11 +21,12 @@ import os
 import shutil
 import zipfile
 
+from atomicwrites import atomic_write
 import numpy as np
 import pandas as pd
 import pytest
 
-from lineage import sort_snps
+from lineage import SNPs
 from tests import BaseLineageTestCase
 
 
@@ -89,9 +90,12 @@ class TestIndividual(BaseLineageTestCase):
         pd.testing.assert_frame_equal(ind.snps, self.generic_snps())
 
     def test_snps_23andme_zip(self):
-        with zipfile.ZipFile("tests/input/23andme.txt.zip", "w") as f:
-            # https://stackoverflow.com/a/16104667
-            f.write("tests/input/23andme.txt", arcname="23andme.txt")
+        with atomic_write(
+            "tests/input/23andme.txt.zip", mode="wb", overwrite=True
+        ) as f:
+            with zipfile.ZipFile(f, "w") as f_zip:
+                # https://stackoverflow.com/a/16104667
+                f_zip.write("tests/input/23andme.txt", arcname="23andme.txt")
         ind = self.l.create_individual("", "tests/input/23andme.txt.zip")
         assert ind.source == "23andMe"
         pd.testing.assert_frame_equal(ind.snps, self.generic_snps())
@@ -104,8 +108,11 @@ class TestIndividual(BaseLineageTestCase):
 
     def test_snps_ftdna_gzip(self):
         with open("tests/input/ftdna.csv", "rb") as f_in:
-            with gzip.open("tests/input/ftdna.csv.gz", "wb") as f_out:
-                shutil.copyfileobj(f_in, f_out)
+            with atomic_write(
+                "tests/input/ftdna.csv.gz", mode="wb", overwrite=True
+            ) as f_out:
+                with gzip.open(f_out, "wb") as f_gzip:
+                    shutil.copyfileobj(f_in, f_gzip)
         ind = self.l.create_individual("", "tests/input/ftdna.csv.gz")
         assert ind.source == "FTDNA"
         pd.testing.assert_frame_equal(ind.snps, self.generic_snps())
@@ -120,6 +127,12 @@ class TestIndividual(BaseLineageTestCase):
         # https://www.ancestry.com
         ind = self.l.create_individual("", "tests/input/ancestry.txt")
         assert ind.source == "AncestryDNA"
+        pd.testing.assert_frame_equal(ind.snps, self.generic_snps())
+
+    def test_snps_myheritage(self):
+        # https://www.myheritage.com
+        ind = self.l.create_individual("", "tests/input/myheritage.csv")
+        assert ind.source == "MyHeritage"
         pd.testing.assert_frame_equal(ind.snps, self.generic_snps())
 
     def test_source_lineage_file(self):
@@ -139,8 +152,9 @@ class TestIndividual(BaseLineageTestCase):
         assert ind.source == "generic, 23andMe"
         file = ind.save_snps()
         with open(file, "rb") as f_in:
-            with gzip.open(file + ".gz", "wb") as f_out:
-                shutil.copyfileobj(f_in, f_out)
+            with atomic_write(file + ".gz", mode="wb", overwrite=True) as f_out:
+                with gzip.open(f_out, "wb") as f_gzip:
+                    shutil.copyfileobj(f_in, f_gzip)
         ind_saved_snps = self.l.create_individual("", file + ".gz")
         assert ind_saved_snps.source == "generic, 23andMe"
         pd.testing.assert_frame_equal(ind.snps, ind_saved_snps.snps)
@@ -268,7 +282,7 @@ class TestIndividual(BaseLineageTestCase):
 
     def test_load_snps_invalid_file(self):
         ind = self.l.create_individual("")
-        with open("tests/input/empty.txt", "w"):
+        with atomic_write("tests/input/empty.txt", mode="w", overwrite=True):
             pass
         ind.load_snps(["tests/input/GRCh37.csv", "tests/input/empty.txt"])
         pd.testing.assert_frame_equal(ind.snps, self.snps_GRCh37())
@@ -375,7 +389,10 @@ class TestIndividual(BaseLineageTestCase):
         expected = expected.rename(
             columns={"expected_position": "pos", "expected_genotype": "genotype"}
         )
-        expected = sort_snps(expected)
+        expected_snps = SNPs()
+        expected_snps._snps = expected
+        expected_snps.sort_snps()
+        expected = expected_snps.snps
 
         pd.testing.assert_index_equal(
             ind.discrepant_positions.index,
@@ -549,6 +566,17 @@ class TestIndividual(BaseLineageTestCase):
             assert len(chromosomes_not_remapped) == 0
             pd.testing.assert_frame_equal(ind.snps, self.snps_GRCh37())
 
+    def test_remap_snps_36_to_37_no_multiprocessing(self):
+        ind = self.l.create_individual("", "tests/input/NCBI36.csv")
+        chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(
+            37, parallelize=False
+        )
+        assert ind.build == 37
+        assert ind.assembly == "GRCh37"
+        if len(chromosomes_remapped) == 2:
+            assert len(chromosomes_not_remapped) == 0
+            pd.testing.assert_frame_equal(ind.snps, self.snps_GRCh37())
+
     def test_remap_snps_37_to_36(self):
         ind = self.l.create_individual("", "tests/input/GRCh37.csv")
         chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(36)
@@ -577,15 +605,16 @@ class TestIndividual(BaseLineageTestCase):
             pd.testing.assert_frame_equal(ind.snps, self.snps_GRCh38())
 
     def test_remap_snps_37_to_38_with_PAR_SNP(self):
-        ind = self.l.create_individual("", "tests/input/GRCh37_PAR.csv")
-        assert ind.snp_count == 3
-        chromosomes_remapped, chromosomes_not_remapped = self.l.remap_snps(ind, 38)
-        assert ind.build == 38
-        assert ind.assembly == "GRCh38"
-        if len(chromosomes_remapped) == 2:
-            assert len(chromosomes_not_remapped) == 1
-            assert ind.snp_count == 2
-            pd.testing.assert_frame_equal(ind.snps, self.snps_GRCh38_PAR())
+        if os.getenv("DOWNLOADS_ENABLED"):
+            ind = self.l.create_individual("", "tests/input/GRCh37_PAR.csv")
+            assert ind.snp_count == 3
+            chromosomes_remapped, chromosomes_not_remapped = self.l.remap_snps(ind, 38)
+            assert ind.build == 38
+            assert ind.assembly == "GRCh38"
+            if len(chromosomes_remapped) == 2:
+                assert len(chromosomes_not_remapped) == 1
+                assert ind.snp_count == 2
+                pd.testing.assert_frame_equal(ind.snps, self.snps_GRCh38_PAR())
 
     def test_remap_snps_37_to_37(self):
         ind = self.l.create_individual("", "tests/input/GRCh37.csv")
