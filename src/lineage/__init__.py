@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import datetime
+from itertools import chain
 import os
 
 from atomicwrites import atomic_write
@@ -580,14 +581,32 @@ class Lineage:
             False,
         )
 
-        # compute shared DNA between individuals
-        one_chrom_shared_dna = self._compute_shared_dna(
-            df, genetic_map, "one_chrom_match", cM_threshold, snp_threshold, one_x_chrom
-        )
+        tasks = []
 
-        two_chrom_shared_dna = self._compute_shared_dna(
-            df, genetic_map, "two_chrom_match", cM_threshold, snp_threshold, one_x_chrom
-        )
+        for chrom in chromosomes:
+            if chrom not in genetic_map.keys():
+                continue
+
+            tasks.append(
+                {
+                    "df": df.loc[df["chrom"] == chrom],
+                    "chrom": chrom,
+                    "col": "one_chrom_match",
+                    "cM_threshold": cM_threshold,
+                    "snp_threshold": snp_threshold,
+                    "one_x_chrom": one_x_chrom,
+                }
+            )
+
+        # compute shared DNA between individuals
+        one_chrom_shared_dna = map(self._compute_shared_dna, tasks)
+        one_chrom_shared_dna = self._convert_list_of_lists_to_list(one_chrom_shared_dna)
+
+        for task in tasks:
+            task["col"] = "two_chrom_match"
+
+        two_chrom_shared_dna = map(self._compute_shared_dna, tasks)
+        two_chrom_shared_dna = self._convert_list_of_lists_to_list(two_chrom_shared_dna)
 
         cytobands = self._resources.get_cytoBand_hg19()
 
@@ -654,6 +673,10 @@ class Lineage:
             one_chrom_shared_genes,
             two_chrom_shared_genes,
         )
+
+    def _convert_list_of_lists_to_list(self, l):
+        # https://stackoverflow.com/a/952952
+        return list(chain.from_iterable(l))
 
     def _convert_shared_dna_list_to_df(self, shared_dna):
         df = pd.DataFrame(shared_dna, columns=["chrom", "start", "end", "cMs", "snps"])
@@ -810,102 +833,102 @@ class Lineage:
 
         return pd.DataFrame(temp["cM_from_prev_snp"])
 
-    def _compute_shared_dna(
-        self, df, genetic_map, col, cM_threshold, snp_threshold, one_x_chrom
-    ):
+    def _compute_shared_dna(self, task):
+        df = task["df"]
+        chrom = task["chrom"]
+        col = task["col"]
+        cM_threshold = task["cM_threshold"]
+        snp_threshold = task["snp_threshold"]
+        one_x_chrom = task["one_x_chrom"]
+
         shared_dna = []
 
-        for chrom in df["chrom"].unique():
-            if chrom not in genetic_map.keys():
-                continue
+        # set two_chrom_match in non-PAR region to False if an individual is male
+        if chrom == "X" and col == "two_chrom_match" and one_x_chrom:
+            df = df.copy()
+            # https://www.ncbi.nlm.nih.gov/grc/human
+            df.loc[
+                (df["chrom"] == "X") & (df["pos"] > 2699520) & (df["pos"] < 154931044),
+                "two_chrom_match",
+            ] = False
 
-            # set two_chrom_match in non-PAR region to False if an individual is male
-            if chrom == "X" and col == "two_chrom_match" and one_x_chrom:
-                # https://www.ncbi.nlm.nih.gov/grc/human
-                df.loc[
-                    (df["chrom"] == "X")
-                    & (df["pos"] > 2699520)
-                    & (df["pos"] < 154931044),
-                    "two_chrom_match",
-                ] = False
+        # get consecutive strings of trues
+        # http://stackoverflow.com/a/17151327
+        a = df.loc[(df["chrom"] == chrom)][col].values
+        a = np.r_[a, False]
+        a_rshifted = np.roll(a, 1)
+        starts = a & ~a_rshifted
+        ends = ~a & a_rshifted
+        a_starts = np.nonzero(starts)[0]
+        a_starts = np.reshape(a_starts, (len(a_starts), 1))
+        a_ends = np.nonzero(ends)[0]
+        a_ends = np.reshape(a_ends, (len(a_ends), 1))
 
-            # get consecutive strings of trues
-            # http://stackoverflow.com/a/17151327
-            a = df.loc[(df["chrom"] == chrom)][col].values
-            a = np.r_[a, False]
-            a_rshifted = np.roll(a, 1)
-            starts = a & ~a_rshifted
-            ends = ~a & a_rshifted
-            a_starts = np.nonzero(starts)[0]
-            a_starts = np.reshape(a_starts, (len(a_starts), 1))
-            a_ends = np.nonzero(ends)[0]
-            a_ends = np.reshape(a_ends, (len(a_ends), 1))
+        matches = np.hstack((a_starts, a_ends))
 
-            matches = np.hstack((a_starts, a_ends))
+        c = np.r_[0, df.loc[(df["chrom"] == chrom)]["cM_from_prev_snp"].cumsum()][
+            matches
+        ]
+        cMs_match_segment = c[:, 1] - c[:, 0]
 
-            c = np.r_[0, df.loc[(df["chrom"] == chrom)]["cM_from_prev_snp"].cumsum()][
-                matches
-            ]
-            cMs_match_segment = c[:, 1] - c[:, 0]
+        # get matching segments where total cMs is greater than the threshold
+        matches_passed = matches[np.where(cMs_match_segment > cM_threshold)]
 
-            # get matching segments where total cMs is greater than the threshold
-            matches_passed = matches[np.where(cMs_match_segment > cM_threshold)]
+        # get indices where a_end boundary is adjacent to a_start, perhaps indicating a
+        # discrepant SNP
+        adjacent_ix = np.where(
+            np.roll(matches_passed[:, 0], -1) - matches_passed[:, 1] == 1
+        )
 
-            # get indices where a_end boundary is adjacent to a_start, perhaps indicating a
-            # discrepant SNP
-            adjacent_ix = np.where(
-                np.roll(matches_passed[:, 0], -1) - matches_passed[:, 1] == 1
-            )
-
-            # if there are adjacent segments
-            if len(adjacent_ix[0]) != 0:
-                matches_stitched = np.array([0, 0])
-                prev = -1
-                counter = 0
-
-                # stitch together adjacent segments
-                for x in matches_passed:
-                    if prev != -1 and prev + 1 == x[0]:
-                        matches_stitched[counter, 1] = x[1]
-                    else:
-                        matches_stitched = np.vstack((matches_stitched, x))
-                        counter += 1
-
-                    prev = x[1]
-
-                matches_passed = matches_stitched[1:]
-
-            snp_counts = matches_passed[:, 1] - matches_passed[:, 0]
-
-            # apply SNP count threshold for each matching segment; we now have the shared DNA
-            # segments that pass the centiMorgan and SNP thresholds
-            matches_passed = matches_passed[np.where(snp_counts > snp_threshold)]
-
-            # compute total cMs for each match segment
-            c = np.r_[0, df.loc[(df["chrom"] == chrom)]["cM_from_prev_snp"].cumsum()][
-                matches_passed
-            ]
-            cMs_match_segment = c[:, 1] - c[:, 0]
-
+        # if there are adjacent segments
+        if len(adjacent_ix[0]) != 0:
+            matches_stitched = np.array([0, 0])
+            prev = -1
             counter = 0
-            # save matches for this chromosome
-            if col == "one_chrom_match":
-                chrom_stain = "one_chrom"
-            else:
-                chrom_stain = "two_chrom"
 
+            # stitch together adjacent segments
             for x in matches_passed:
-                shared_dna.append(
-                    {
-                        "chrom": chrom,
-                        "start": df.loc[(df["chrom"] == chrom)].iloc[x[0]].pos,
-                        "end": df.loc[(df["chrom"] == chrom)].iloc[x[1] - 1].pos,
-                        "cMs": cMs_match_segment[counter],
-                        "snps": x[1] - x[0],
-                        "gie_stain": chrom_stain,
-                    }
-                )
-                counter += 1
+                if prev != -1 and prev + 1 == x[0]:
+                    matches_stitched[counter, 1] = x[1]
+                else:
+                    matches_stitched = np.vstack((matches_stitched, x))
+                    counter += 1
+
+                prev = x[1]
+
+            matches_passed = matches_stitched[1:]
+
+        snp_counts = matches_passed[:, 1] - matches_passed[:, 0]
+
+        # apply SNP count threshold for each matching segment; we now have the shared DNA
+        # segments that pass the centiMorgan and SNP thresholds
+        matches_passed = matches_passed[np.where(snp_counts > snp_threshold)]
+
+        # compute total cMs for each match segment
+        c = np.r_[0, df.loc[(df["chrom"] == chrom)]["cM_from_prev_snp"].cumsum()][
+            matches_passed
+        ]
+        cMs_match_segment = c[:, 1] - c[:, 0]
+
+        counter = 0
+        # save matches for this chromosome
+        if col == "one_chrom_match":
+            chrom_stain = "one_chrom"
+        else:
+            chrom_stain = "two_chrom"
+
+        for x in matches_passed:
+            shared_dna.append(
+                {
+                    "chrom": chrom,
+                    "start": df.loc[(df["chrom"] == chrom)].iloc[x[0]].pos,
+                    "end": df.loc[(df["chrom"] == chrom)].iloc[x[1] - 1].pos,
+                    "cMs": cMs_match_segment[counter],
+                    "snps": x[1] - x[0],
+                    "gie_stain": chrom_stain,
+                }
+            )
+            counter += 1
         return shared_dna
 
     def _remap_snps_to_GRCh37(self, individuals):
