@@ -392,11 +392,9 @@ class Lineage:
                 save_df_as_csv(
                     df,
                     self._output_dir,
-                    "discordant_snps_"
-                    + individual1.get_var_name()
-                    + "_"
-                    + individual2.get_var_name()
-                    + "_GRCh37.csv",
+                    "discordant_snps_{}_{}_GRCh37.csv".format(
+                        individual1.get_var_name(), individual2.get_var_name()
+                    ),
                 )
         else:
             # add SNPs shared with `individual3`
@@ -460,13 +458,11 @@ class Lineage:
                 save_df_as_csv(
                     df,
                     self._output_dir,
-                    "discordant_snps_"
-                    + individual1.get_var_name()
-                    + "_"
-                    + individual2.get_var_name()
-                    + "_"
-                    + individual3.get_var_name()
-                    + "_GRCh37.csv",
+                    "discordant_snps_{}_{}_{}_GRCh37.csv".format(
+                        individual1.get_var_name(),
+                        individual2.get_var_name(),
+                        individual3.get_var_name(),
+                    ),
                 )
 
         return df
