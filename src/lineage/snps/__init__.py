@@ -29,6 +29,7 @@ from pandas.api.types import CategoricalDtype
 import lineage
 from lineage.ensembl import EnsemblRestClient
 from lineage.snps.reader import Reader
+from lineage.utils import save_df_as_csv
 
 
 class SNPs:
@@ -225,7 +226,7 @@ class SNPs:
                 self.get_var_repr(self._source) + "_lineage_" + self.assembly + ".csv"
             )
 
-        return lineage.save_df_as_csv(
+        return save_df_as_csv(
             self._snps,
             self._output_dir,
             filename,
@@ -761,7 +762,7 @@ class SNPsCollection(SNPs):
         if filename is None:
             filename = self.get_var_repr(self._name) + "_" + name + ".csv"
 
-        return lineage.save_df_as_csv(
+        return save_df_as_csv(
             df,
             self._output_dir,
             filename,
@@ -834,7 +835,7 @@ class SNPsCollection(SNPs):
 
                 if save_output:
                     self._discrepant_positions_file_count += 1
-                    lineage.save_df_as_csv(
+                    save_df_as_csv(
                         discrepant_positions,
                         self._output_dir,
                         self.get_var_repr(self._name)
@@ -899,7 +900,7 @@ class SNPsCollection(SNPs):
 
                 if save_output:
                     self._discrepant_genotypes_file_count += 1
-                    lineage.save_df_as_csv(
+                    save_df_as_csv(
                         discrepant_genotypes,
                         self._output_dir,
                         self.get_var_repr(self._name)

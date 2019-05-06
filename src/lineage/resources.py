@@ -60,7 +60,7 @@ import zlib
 from atomicwrites import atomic_write
 import pandas as pd
 
-import lineage
+from lineage.utils import create_dir
 
 
 class Resources:
@@ -557,7 +557,7 @@ class Resources:
 
         """
 
-        if not lineage.create_dir(self._resources_dir):
+        if not create_dir(self._resources_dir):
             return None
 
         chroms = [
@@ -677,7 +677,7 @@ class Resources:
         str
             path to downloaded file, None if error
         """
-        if not lineage.create_dir(self._resources_dir):
+        if not create_dir(self._resources_dir):
             return None
 
         if compress and filename[-3:] != ".gz":
