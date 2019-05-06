@@ -218,12 +218,12 @@ Loading resources/4584.ftdna-illumina.3483.csv.gz
 Now let's find the shared genes:
 
 >>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = l.find_shared_dna(user4583, user4584, shared_genes=True)
-Saving output/shared_dna_User4583_User4584.png
-Saving output/shared_dna_one_chrom_User4583_User4584_GRCh37.csv
 Downloading resources/knownGene_hg19.txt.gz
 Downloading resources/kgXref_hg19.txt.gz
-Saving output/shared_genes_one_chrom_User4583_User4584_GRCh37.csv
+Saving output/shared_dna_User4583_User4584.png
+Saving output/shared_dna_one_chrom_User4583_User4584_GRCh37.csv
 Saving output/shared_dna_two_chroms_User4583_User4584_GRCh37.csv
+Saving output/shared_genes_one_chrom_User4583_User4584_GRCh37.csv
 Saving output/shared_genes_two_chroms_User4583_User4584_GRCh37.csv
 
 The plot that illustrates the shared DNA is shown below. Note that in addition to outputting the

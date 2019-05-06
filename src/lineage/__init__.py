@@ -529,12 +529,13 @@ class Lineage:
         one_x_chrom = self._is_one_individual_male([individual1, individual2])
 
         genetic_map = self._resources.get_genetic_map_HapMapII_GRCh37()
-        chromosomes = df["chrom"].unique()
 
         tasks = []
 
-        for chrom in chromosomes:
+        chroms_to_drop = []
+        for chrom in df["chrom"].unique():
             if chrom not in genetic_map.keys():
+                chroms_to_drop.append(chrom)
                 continue
 
             tasks.append(
@@ -544,6 +545,10 @@ class Lineage:
                     "snps": pd.DataFrame(df.loc[(df["chrom"] == chrom)]["pos"]),
                 }
             )
+
+        # drop chromosomes without genetic distance data
+        for chrom in chroms_to_drop:
+            df = df.drop(df.loc[df["chrom"] == chrom].index)
 
         # determine the genetic distance between each SNP using the HapMap Phase II genetic map
         snp_distances = map(self._compute_snp_distances, tasks)
@@ -581,91 +586,35 @@ class Lineage:
             False,
         )
 
-        tasks = []
+        # genotype columns are no longer required for calculation
+        df = df.drop([genotype1, genotype2], axis=1)
 
-        for chrom in chromosomes:
-            if chrom not in genetic_map.keys():
-                continue
+        one_chrom_shared_dna = self._find_shared_dna_helper(
+            df[["chrom", "pos", "cM_from_prev_snp", "one_chrom_match"]],
+            cM_threshold,
+            snp_threshold,
+            one_x_chrom,
+        )
+        two_chrom_shared_dna = self._find_shared_dna_helper(
+            df[["chrom", "pos", "cM_from_prev_snp", "two_chrom_match"]],
+            cM_threshold,
+            snp_threshold,
+            one_x_chrom,
+        )
 
-            tasks.append(
-                {
-                    "df": df.loc[df["chrom"] == chrom],
-                    "chrom": chrom,
-                    "col": "one_chrom_match",
-                    "cM_threshold": cM_threshold,
-                    "snp_threshold": snp_threshold,
-                    "one_x_chrom": one_x_chrom,
-                }
-            )
+        if shared_genes:
+            one_chrom_shared_genes = self._compute_shared_genes(one_chrom_shared_dna)
+            two_chrom_shared_genes = self._compute_shared_genes(two_chrom_shared_dna)
 
-        # compute shared DNA between individuals
-        one_chrom_shared_dna = map(self._compute_shared_dna, tasks)
-        one_chrom_shared_dna = self._convert_list_of_lists_to_list(one_chrom_shared_dna)
-
-        for task in tasks:
-            task["col"] = "two_chrom_match"
-
-        two_chrom_shared_dna = map(self._compute_shared_dna, tasks)
-        two_chrom_shared_dna = self._convert_list_of_lists_to_list(two_chrom_shared_dna)
-
-        cytobands = self._resources.get_cytoBand_hg19()
-
-        # plot data
         if save_output:
-            if create_dir(self._output_dir):
-                plot_chromosomes(
-                    one_chrom_shared_dna,
-                    two_chrom_shared_dna,
-                    cytobands,
-                    os.path.join(
-                        self._output_dir,
-                        "shared_dna_"
-                        + individual1.get_var_name()
-                        + "_"
-                        + individual2.get_var_name()
-                        + ".png",
-                    ),
-                    individual1.name + " / " + individual2.name + " shared DNA",
-                    37,
-                )
-
-        one_chrom_shared_dna = self._convert_shared_dna_list_to_df(one_chrom_shared_dna)
-
-        if len(one_chrom_shared_dna) > 0:
-            if save_output:
-                self._save_shared_dna_csv_format(
-                    one_chrom_shared_dna,
-                    "one",
-                    individual1.get_var_name(),
-                    individual2.get_var_name(),
-                )
-            if shared_genes:
-                one_chrom_shared_genes = self._compute_shared_genes(
-                    one_chrom_shared_dna,
-                    "one",
-                    individual1.get_var_name(),
-                    individual2.get_var_name(),
-                    save_output,
-                )
-
-        two_chrom_shared_dna = self._convert_shared_dna_list_to_df(two_chrom_shared_dna)
-
-        if len(two_chrom_shared_dna) > 0:
-            if save_output:
-                self._save_shared_dna_csv_format(
-                    two_chrom_shared_dna,
-                    "two",
-                    individual1.get_var_name(),
-                    individual2.get_var_name(),
-                )
-            if shared_genes:
-                two_chrom_shared_genes = self._compute_shared_genes(
-                    two_chrom_shared_dna,
-                    "two",
-                    individual1.get_var_name(),
-                    individual2.get_var_name(),
-                    save_output,
-                )
+            self._find_shared_dna_output_helper(
+                individual1,
+                individual2,
+                one_chrom_shared_dna,
+                two_chrom_shared_dna,
+                one_chrom_shared_genes,
+                two_chrom_shared_genes,
+            )
 
         return (
             one_chrom_shared_dna,
@@ -673,6 +622,79 @@ class Lineage:
             one_chrom_shared_genes,
             two_chrom_shared_genes,
         )
+
+    def _find_shared_dna_helper(self, df, cM_threshold, snp_threshold, one_x_chrom):
+        tasks = []
+
+        for chrom in df["chrom"].unique():
+            tasks.append(
+                {
+                    "df": df.loc[df["chrom"] == chrom],
+                    "chrom": chrom,
+                    "cM_threshold": cM_threshold,
+                    "snp_threshold": snp_threshold,
+                    "one_x_chrom": one_x_chrom,
+                }
+            )
+
+        # compute shared DNA between individuals
+        shared_dna = map(self._compute_shared_dna, tasks)
+        shared_dna = self._convert_list_of_lists_to_list(shared_dna)
+        return self._convert_shared_dna_list_to_df(shared_dna)
+
+    def _find_shared_dna_output_helper(
+        self,
+        individual1,
+        individual2,
+        one_chrom_shared_dna,
+        two_chrom_shared_dna,
+        one_chrom_shared_genes,
+        two_chrom_shared_genes,
+    ):
+        cytobands = self._resources.get_cytoBand_hg19()
+
+        if create_dir(self._output_dir):
+            plot_chromosomes(
+                one_chrom_shared_dna,
+                two_chrom_shared_dna,
+                cytobands,
+                os.path.join(
+                    self._output_dir,
+                    "shared_dna_{}_{}.png".format(
+                        individual1.get_var_name(), individual2.get_var_name()
+                    ),
+                ),
+                "{} / {} shared DNA".format(individual1.name, individual2.name),
+                37,
+            )
+
+        if len(one_chrom_shared_dna) > 0:
+            file = "shared_dna_one_chrom_{}_{}_GRCh37.csv".format(
+                individual1.get_var_name(), individual2.get_var_name()
+            )
+            save_df_as_csv(
+                one_chrom_shared_dna, self._output_dir, file, float_format="%.2f"
+            )
+
+        if len(two_chrom_shared_dna) > 0:
+            file = "shared_dna_two_chroms_{}_{}_GRCh37.csv".format(
+                individual1.get_var_name(), individual2.get_var_name()
+            )
+            save_df_as_csv(
+                two_chrom_shared_dna, self._output_dir, file, float_format="%.2f"
+            )
+
+        if len(one_chrom_shared_genes) > 0:
+            file = "shared_genes_one_chrom_{}_{}_GRCh37.csv".format(
+                individual1.get_var_name(), individual2.get_var_name()
+            )
+            save_df_as_csv(one_chrom_shared_genes, self._output_dir, file)
+
+        if len(two_chrom_shared_genes) > 0:
+            file = "shared_genes_two_chroms_{}_{}_GRCh37.csv".format(
+                individual1.get_var_name(), individual2.get_var_name()
+            )
+            save_df_as_csv(two_chrom_shared_genes, self._output_dir, file)
 
     def _convert_list_of_lists_to_list(self, l):
         # https://stackoverflow.com/a/952952
@@ -684,9 +706,7 @@ class Lineage:
         df.index = df.index + 1
         return df
 
-    def _compute_shared_genes(
-        self, shared_dna, type, individual1_name, individual2_name, save_output
-    ):
+    def _compute_shared_genes(self, shared_dna):
         knownGenes = self._resources.get_knownGene_hg19()
         kgXref = self._resources.get_kgXref_hg19()
 
@@ -724,45 +744,7 @@ class Lineage:
         if len(shared_genes_dfs) > 0:
             shared_genes = pd.concat(shared_genes_dfs, sort=True)
 
-            if save_output:
-                if type == "one":
-                    chroms = "one_chrom"
-                else:
-                    chroms = "two_chroms"
-
-                file = (
-                    "shared_genes_"
-                    + chroms
-                    + "_"
-                    + individual1_name
-                    + "_"
-                    + individual2_name
-                    + "_GRCh37.csv"
-                )
-
-                save_df_as_csv(shared_genes, self._output_dir, file)
-
         return shared_genes
-
-    def _save_shared_dna_csv_format(
-        self, shared_dna, type, individual1_name, individual2_name
-    ):
-        if type == "one":
-            chroms = "one_chrom"
-        else:
-            chroms = "two_chroms"
-
-        file = (
-            "shared_dna_"
-            + chroms
-            + "_"
-            + individual1_name
-            + "_"
-            + individual2_name
-            + "_GRCh37.csv"
-        )
-
-        save_df_as_csv(shared_dna, self._output_dir, file, float_format="%.2f")
 
     def _is_one_individual_male(self, individuals):
         for individual in individuals:
@@ -836,15 +818,19 @@ class Lineage:
     def _compute_shared_dna(self, task):
         df = task["df"]
         chrom = task["chrom"]
-        col = task["col"]
         cM_threshold = task["cM_threshold"]
         snp_threshold = task["snp_threshold"]
         one_x_chrom = task["one_x_chrom"]
 
+        if "one_chrom_match" in df.keys():
+            match_col = "one_chrom_match"
+        else:
+            match_col = "two_chrom_match"
+
         shared_dna = []
 
         # set two_chrom_match in non-PAR region to False if an individual is male
-        if chrom == "X" and col == "two_chrom_match" and one_x_chrom:
+        if chrom == "X" and match_col == "two_chrom_match" and one_x_chrom:
             df = df.copy()
             # https://www.ncbi.nlm.nih.gov/grc/human
             df.loc[
@@ -854,7 +840,7 @@ class Lineage:
 
         # get consecutive strings of trues
         # http://stackoverflow.com/a/17151327
-        a = df.loc[(df["chrom"] == chrom)][col].values
+        a = df.loc[(df["chrom"] == chrom)][match_col].values
         a = np.r_[a, False]
         a_rshifted = np.roll(a, 1)
         starts = a & ~a_rshifted
@@ -912,11 +898,6 @@ class Lineage:
 
         counter = 0
         # save matches for this chromosome
-        if col == "one_chrom_match":
-            chrom_stain = "one_chrom"
-        else:
-            chrom_stain = "two_chrom"
-
         for x in matches_passed:
             shared_dna.append(
                 {
@@ -925,7 +906,6 @@ class Lineage:
                     "end": df.loc[(df["chrom"] == chrom)].iloc[x[1] - 1].pos,
                     "cMs": cMs_match_segment[counter],
                     "snps": x[1] - x[0],
-                    "gie_stain": chrom_stain,
                 }
             )
             counter += 1

@@ -72,9 +72,9 @@ def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, b
 
     Parameters
     ----------
-    one_chrom_match : list of dicts
+    one_chrom_match : pandas.DataFrame
         segments to highlight on the chromosomes representing one shared chromosome
-    two_chrom_match : list of dicts
+    two_chrom_match : pandas.DataFrame
         segments to highlight on the chromosomes representing two shared chromosomes
     cytobands : pandas.DataFrame
         cytobands table loaded with Resources
@@ -215,9 +215,9 @@ def _patch_chromosomal_features(cytobands, one_chrom_match, two_chrom_match):
     ----------
     cytobands : pandas.DataFrame
         cytoband table from UCSC
-    one_chrom_match : list of dicts
+    one_chrom_match : pandas.DataFrame
         segments to highlight on the chromosomes representing one shared chromosome
-    two_chrom_match : list of dicts
+    two_chrom_match : pandas.DataFrame
         segments to highlight on the chromosomes representing two shared chromosomes
 
     Returns
@@ -236,11 +236,11 @@ def _patch_chromosomal_features(cytobands, one_chrom_match, two_chrom_match):
         )
 
         # get all markers for this chromosome
-        one_chrom_match_markers = [
-            marker for marker in one_chrom_match if marker["chrom"] == chromosome
+        one_chrom_match_markers = one_chrom_match.loc[
+            one_chrom_match["chrom"] == chromosome
         ]
-        two_chrom_match_markers = [
-            marker for marker in two_chrom_match if marker["chrom"] == chromosome
+        two_chrom_match_markers = two_chrom_match.loc[
+            two_chrom_match["chrom"] == chromosome
         ]
 
         # background of chromosome
@@ -255,25 +255,25 @@ def _patch_chromosomal_features(cytobands, one_chrom_match, two_chrom_match):
         )
 
         # add markers for shared DNA on one chromosome
-        for marker in one_chrom_match_markers:
+        for marker in one_chrom_match_markers.itertuples():
             df = df.append(
                 {
                     "chrom": chromosome,
-                    "start": marker["start"],
-                    "end": marker["end"],
-                    "gie_stain": marker["gie_stain"],
+                    "start": marker.start,
+                    "end": marker.end,
+                    "gie_stain": "one_chrom",
                 },
                 ignore_index=True,
             )
 
         # add markers for shared DNA on both chromosomes
-        for marker in two_chrom_match_markers:
+        for marker in two_chrom_match_markers.itertuples():
             df = df.append(
                 {
                     "chrom": chromosome,
-                    "start": marker["start"],
-                    "end": marker["end"],
-                    "gie_stain": marker["gie_stain"],
+                    "start": marker.start,
+                    "end": marker.end,
+                    "gie_stain": "two_chrom",
                 },
                 ignore_index=True,
             )
