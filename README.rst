@@ -172,7 +172,7 @@ mother and father for that segment.
 With that background, let's find the shared DNA between the ``User662`` and ``User663`` datasets,
 calculating the centiMorgans of shared DNA and plotting the results:
 
->>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = l.find_shared_dna(user662, user663, cM_threshold=0.75, snp_threshold=1100)
+>>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = l.find_shared_dna([user662, user663], cM_threshold=0.75, snp_threshold=1100)
 Downloading resources/genetic_map_HapMapII_GRCh37.tar.gz
 Downloading resources/cytoBand_hg19.txt.gz
 Saving output/shared_dna_User662_User663.png
@@ -180,7 +180,10 @@ Saving output/shared_dna_one_chrom_User662_User663_GRCh37.csv
 
 Notice that the centiMorgan and SNP thresholds for each DNA segment can be tuned. Additionally,
 notice that two files were downloaded to facilitate the analysis and plotting - future analyses
-will used the downloaded files instead of downloading the files again.
+will used the downloaded files instead of downloading the files again. Finally, notice that a list
+of individuals is passed to ``find_shared_dna``... This list can contain an arbitrary number of
+individuals, and ``lineage`` will find shared DNA across all individuals in the list (i.e.,
+where all individuals share segments of DNA on either one or both chromosomes).
 
 Here, the `output <https://lineage.readthedocs.io/en/latest/output_files.html>`_ consists of a CSV file
 that details the shared segments of DNA on one chromosome; the information is also available in
@@ -217,7 +220,7 @@ Loading resources/4584.ftdna-illumina.3483.csv.gz
 
 Now let's find the shared genes:
 
->>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = l.find_shared_dna(user4583, user4584, shared_genes=True)
+>>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = l.find_shared_dna([user4583, user4584], shared_genes=True)
 Downloading resources/knownGene_hg19.txt.gz
 Downloading resources/kgXref_hg19.txt.gz
 Saving output/shared_dna_User4583_User4584.png
