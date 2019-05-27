@@ -401,15 +401,10 @@ class Reader:
         """
         df = pd.DataFrame(columns=["rsid", "chrom", "pos", "genotype"])
         df = df.astype(
-            {
-                "rsid": object,
-                "chrom": object,
-                "pos": np.int64,
-                "genotype": object,
-            }
+            {"rsid": object, "chrom": object, "pos": np.int64, "genotype": object}
         )
 
-        vcf_reader = vcf.Reader(open(file, 'r'))
+        vcf_reader = vcf.Reader(open(file, "r"))
 
         # lineage does not yet support multi-sample vcf.
         if len(vcf_reader.samples) > 1:
@@ -435,14 +430,12 @@ class Reader:
 
             record_info = {
                 "rsid": record.ID if record.ID is not None else i,
-                "chrom": "{}".format(record.CHROM).strip('chr'),
+                "chrom": "{}".format(record.CHROM).strip("chr"),
                 "pos": record.POS,
                 "genotype": genotype,
             }
             # append the record to the DataFrame
-            df = df.append(pd.DataFrame([record_info]),
-                           ignore_index=True,
-                           sort=False)
+            df = df.append(pd.DataFrame([record_info]), ignore_index=True, sort=False)
         df.set_index("rsid", inplace=True, drop=True)
 
         return df, "vcf"
