@@ -25,6 +25,7 @@ from atomicwrites import atomic_write
 import numpy as np
 import pandas as pd
 import pytest
+import vcf
 
 from lineage import SNPs
 from tests import BaseLineageTestCase
@@ -133,6 +134,12 @@ class TestIndividual(BaseLineageTestCase):
         # https://www.myheritage.com
         ind = self.l.create_individual("", "tests/input/myheritage.csv")
         assert ind.source == "MyHeritage"
+        pd.testing.assert_frame_equal(ind.snps, self.generic_snps())
+
+    def test_snps_vcf(self):
+        # https://samtools.github.io/hts-specs/VCFv4.2.pdf
+        ind = self.l.create_individual("", "tests/input/testvcf.vcf")
+        assert ind.source == "vcf"
         pd.testing.assert_frame_equal(ind.snps, self.generic_snps())
 
     def test_source_lineage_file(self):

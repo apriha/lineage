@@ -9,6 +9,7 @@ pytest-cov = "*"
 
 [packages]
 lineage = {editable = true,path = "."}
+pyvcf = "*"
 
 [requires]
 python_version = "3.7"

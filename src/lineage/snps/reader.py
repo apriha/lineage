@@ -22,6 +22,7 @@ import zipfile
 
 import numpy as np
 import pandas as pd
+import vcf
 
 
 class Reader:
@@ -78,6 +79,8 @@ class Reader:
                 return self.read_lineage_csv(file, comments)
             elif first_line.startswith("rsid"):
                 return self.read_generic_csv(file)
+            elif "vcf" in comments.lower():
+                return self.read_vcf(file)
             else:
                 return None, ""
         except Exception as err:
@@ -373,3 +376,73 @@ class Reader:
         )
 
         return df, "generic"
+
+    @staticmethod
+    def read_vcf(file):
+        """ Read and parse VCF file.
+
+        Notes
+        -----
+        This function uses the PyVCF python module to parse the genotypes from VCF files:
+        https://pyvcf.readthedocs.io/en/latest/index.html
+
+
+        Parameters
+        ----------
+        file : str
+            path to file
+
+        Returns
+        -------
+        pandas.DataFrame
+            genetic data normalized for use with `lineage`
+        str
+            name of data source
+        """
+        df = pd.DataFrame(columns=["rsid", "chrom", "pos", "genotype"])
+        df = df.astype(
+            {
+                "rsid": object,
+                "chrom": object,
+                "pos": np.int64,
+                "genotype": object,
+            }
+        )
+
+        vcf_reader = vcf.Reader(open(file, 'r'))
+
+        # lineage does not yet support multi-sample vcf.
+        if len(vcf_reader.samples) > 1:
+            return None, "vcf"
+
+        for i, record in enumerate(vcf_reader):
+            # assign null genotypes if either allele is None
+            # Could capture full genotype, if REF is None, but genotype is 1/1 or
+            # if ALT is None, but genotype is 0/0
+            if record.REF is None or record.ALT[0] is None:
+                genotype = np.nan
+            # skip multi-allelic sites
+            elif len(record.ALT) > 1:
+                continue
+            # skip insertions and deletions
+            elif len(record.REF) > 1 or len(record.ALT[0]) > 1:
+                continue
+            else:
+                alleles = record.genotype(vcf_reader.samples[0]).gt_bases
+                a1 = alleles[0]
+                a2 = alleles[-1]
+                genotype = "{}{}".format(a1, a2)
+
+            record_info = {
+                "rsid": record.ID if record.ID is not None else i,
+                "chrom": "{}".format(record.CHROM).strip('chr'),
+                "pos": record.POS,
+                "genotype": genotype,
+            }
+            # append the record to the DataFrame
+            df = df.append(pd.DataFrame([record_info]),
+                           ignore_index=True,
+                           sort=False)
+        df.set_index("rsid", inplace=True, drop=True)
+
+        return df, "vcf"
