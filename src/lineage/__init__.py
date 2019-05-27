@@ -495,18 +495,21 @@ class Lineage:
 
         Returns
         -------
-        one_chrom_shared_dna : pandas.DataFrame
-            segments of shared DNA on one chromosome
-        two_chrom_shared_dna : pandas.DataFrame
-            segments of shared DNA on two chromosomes
-        one_chrom_shared_genes : pandas.DataFrame
-            shared genes on one chromosome
-        two_chrom_shared_genes : pandas.DataFrame
-            shared genes on two chromosomes
-        one_chrom_discrepant_snps : pandas.Index
-            discrepant SNPs discovered while finding shared DNA on one chromosome
-        two_chrom_discrepant_snps : pandas.Index
-            discrepant SNPs discovered while finding shared DNA on two chromosomes
+        dict
+            dict with the following items:
+
+            one_chrom_shared_dna (pandas.DataFrame)
+                segments of shared DNA on one chromosome
+            two_chrom_shared_dna (pandas.DataFrame)
+                segments of shared DNA on two chromosomes
+            one_chrom_shared_genes (pandas.DataFrame)
+                shared genes on one chromosome
+            two_chrom_shared_genes (pandas.DataFrame)
+                shared genes on two chromosomes
+            one_chrom_discrepant_snps (pandas.Index)
+                discrepant SNPs discovered while finding shared DNA on one chromosome
+            two_chrom_discrepant_snps (pandas.Index)
+                discrepant SNPs discovered while finding shared DNA on two chromosomes
         """
         one_chrom_shared_dna = pd.DataFrame()
         two_chrom_shared_dna = pd.DataFrame()
@@ -519,7 +522,7 @@ class Lineage:
 
         if len(individuals) < 2:
             print("find_shared_dna requires two or more individuals...")
-            return (
+            return self._find_shared_dna_return_helper(
                 one_chrom_shared_dna,
                 two_chrom_shared_dna,
                 one_chrom_shared_genes,
@@ -624,7 +627,7 @@ class Lineage:
                 two_chrom_shared_genes,
             )
 
-        return (
+        return self._find_shared_dna_return_helper(
             one_chrom_shared_dna,
             two_chrom_shared_dna,
             one_chrom_shared_genes,
@@ -712,6 +715,25 @@ class Lineage:
         if len(two_chrom_shared_genes) > 0:
             file = "shared_genes_two_chroms_{}_GRCh37.csv".format(individuals_filename)
             save_df_as_csv(two_chrom_shared_genes, self._output_dir, file)
+
+    def _find_shared_dna_return_helper(
+        self,
+        one_chrom_shared_dna,
+        two_chrom_shared_dna,
+        one_chrom_shared_genes,
+        two_chrom_shared_genes,
+        one_chrom_discrepant_snps,
+        two_chrom_discrepant_snps,
+    ):
+
+        return {
+            "one_chrom_shared_dna": one_chrom_shared_dna,
+            "two_chrom_shared_dna": two_chrom_shared_dna,
+            "one_chrom_shared_genes": one_chrom_shared_genes,
+            "two_chrom_shared_genes": two_chrom_shared_genes,
+            "one_chrom_discrepant_snps": one_chrom_discrepant_snps,
+            "two_chrom_discrepant_snps": two_chrom_discrepant_snps,
+        }
 
     def _convert_shared_dna_list_to_df(self, shared_dna):
         df = pd.DataFrame(shared_dna, columns=["chrom", "start", "end", "cMs", "snps"])
