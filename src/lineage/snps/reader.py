@@ -50,7 +50,7 @@ class Reader:
         try:
             if not os.path.exists(file):
                 print(file + " does not exist; skipping")
-                return None, ""
+                return pd.DataFrame(), ""
 
             # peek into files to determine the data format
             if ".zip" in file:
@@ -79,10 +79,10 @@ class Reader:
             elif first_line.startswith("rsid"):
                 return self.read_generic_csv(file)
             else:
-                return None, ""
+                return pd.DataFrame(), ""
         except Exception as err:
             print(err)
-            return None, ""
+            return pd.DataFrame(), ""
 
     @classmethod
     def read_file(cls, file):

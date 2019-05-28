@@ -45,21 +45,21 @@ class SNPs:
         output_dir : str
             path to output directory
         """
-        self._snps = None
+        self._snps = pd.DataFrame()
         self._source = ""
-        self._build = None
+        self._build = 0
         self._build_detected = False
         self._output_dir = output_dir
 
         if file:
             self._snps, self._source = self._read_raw_data(file)
 
-            if self._snps is not None:
+            if not self._snps.empty:
                 self.sort_snps()
 
                 self._build = self.detect_build()
 
-                if self._build is None:
+                if not self._build:
                     self._build = 37  # assume Build 37 / GRCh37 if not detected
                 else:
                     self._build_detected = True
@@ -85,10 +85,7 @@ class SNPs:
         -------
         pandas.DataFrame
         """
-        if self._snps is not None:
-            return self._snps.copy()
-        else:
-            return None
+        return self._snps.copy()
 
     @property
     def build(self):
@@ -169,10 +166,10 @@ class SNPs:
         Returns
         -------
         dict
-            summary info, else None if ``SNPs`` is not valid
+            summary info if ``SNPs`` is valid, else {}
         """
         if not self.is_valid():
-            return None
+            return {}
         else:
             return {
                 "source": self.source,
@@ -194,12 +191,12 @@ class SNPs:
         bool
             True if ``SNPs`` is valid
         """
-        if self._snps is None:
+        if self._snps.empty:
             return False
         else:
             return True
 
-    def save_snps(self, filename=None):
+    def save_snps(self, filename=""):
         """ Save SNPs to file.
 
         Parameters
@@ -221,7 +218,7 @@ class SNPs:
             )
         )
 
-        if filename is None:
+        if not filename:
             filename = (
                 self.get_var_repr(self._source) + "_lineage_" + self.assembly + ".csv"
             )
@@ -341,7 +338,7 @@ class SNPs:
         Returns
         -------
         int
-            detected build of SNPs, else None
+            detected build of SNPs, else 0
 
         References
         ----------
@@ -360,9 +357,9 @@ class SNPs:
             try:
                 return s.loc[s == pos].index[0]
             except:
-                return None
+                return 0
 
-        build = None
+        build = 0
 
         rsids = ["rs3094315", "rs11928389", "rs2500347", "rs964481", "rs2341354"]
         df = pd.DataFrame(
@@ -380,7 +377,7 @@ class SNPs:
                     self._snps.loc[rsid].pos, df.loc[rsid]
                 )
 
-            if build is not None:
+            if build:
                 break
 
         return build
@@ -391,17 +388,16 @@ class SNPs:
         Returns
         -------
         str
-            empty str if `build` is None
         """
 
-        if self._build is None:
-            return ""
+        if self._build == 37:
+            return "GRCh37"
         elif self._build == 36:
             return "NCBI36"
         elif self._build == 38:
             return "GRCh38"
         else:
-            return "GRCh37"
+            return ""
 
     def get_snp_count(self):
         """ Count of SNPs.
@@ -411,10 +407,7 @@ class SNPs:
         int
         """
 
-        if self._snps is not None:
-            return len(self._snps)
-        else:
-            return 0
+        return len(self._snps)
 
     def get_chromosomes(self):
         """ Get the chromosomes of SNPs.
@@ -425,7 +418,7 @@ class SNPs:
             list of str chromosomes (e.g., ['1', '2', '3', 'MT'], empty list if no chromosomes
         """
 
-        if isinstance(self._snps, pd.DataFrame):
+        if not self._snps.empty:
             return list(pd.unique(self._snps["chrom"]))
         else:
             return []
@@ -439,7 +432,7 @@ class SNPs:
             human-readable listing of chromosomes (e.g., '1-3, MT'), empty str if no chromosomes
         """
 
-        if isinstance(self._snps, pd.DataFrame):
+        if not self._snps.empty:
             chroms = list(pd.unique(self._snps["chrom"]))
 
             int_chroms = [int(chrom) for chrom in chroms if chrom.isdigit()]
@@ -485,7 +478,7 @@ class SNPs:
             'Male' or 'Female' if detected, else empty str
         """
 
-        if isinstance(self._snps, pd.DataFrame):
+        if not self._snps.empty:
             y_snps = len(self._snps.loc[(self._snps["chrom"] == "Y")])
 
             if y_snps > 0:
@@ -688,7 +681,7 @@ class SNPsCollection(SNPs):
             discrepant_genotypes, sort=True
         )
 
-    def save_snps(self, filename=None):
+    def save_snps(self, filename=""):
         """ Save SNPs to file.
 
         Parameters
@@ -701,13 +694,13 @@ class SNPsCollection(SNPs):
         str
             path to file in output directory if SNPs were saved, else empty str
         """
-        if filename is None:
+        if not filename:
             filename = (
                 self.get_var_repr(self._name) + "_lineage_" + self.assembly + ".csv"
             )
         return super().save_snps(filename)
 
-    def save_discrepant_positions(self, filename=None):
+    def save_discrepant_positions(self, filename=""):
         """ Save SNPs with discrepant positions to file.
 
         Parameters
@@ -724,7 +717,7 @@ class SNPsCollection(SNPs):
             self.discrepant_positions, "discrepant_positions", filename
         )
 
-    def save_discrepant_genotypes(self, filename=None):
+    def save_discrepant_genotypes(self, filename=""):
         """ Save SNPs with discrepant genotypes to file.
 
         Parameters
@@ -741,7 +734,7 @@ class SNPsCollection(SNPs):
             self.discrepant_genotypes, "discrepant_genotypes", filename
         )
 
-    def save_discrepant_snps(self, filename=None):
+    def save_discrepant_snps(self, filename=""):
         """ Save SNPs with discrepant positions and / or genotypes to file.
 
         Parameters
@@ -759,7 +752,7 @@ class SNPsCollection(SNPs):
         )
 
     def _save_discrepant_snps_file(self, df, name, filename):
-        if filename is None:
+        if not filename:
             filename = self.get_var_repr(self._name) + "_" + name + ".csv"
 
         return save_df_as_csv(
@@ -797,7 +790,7 @@ class SNPsCollection(SNPs):
         discrepant_positions = pd.DataFrame()
         discrepant_genotypes = pd.DataFrame()
 
-        if snps._snps is None:
+        if snps._snps.empty:
             return discrepant_positions, discrepant_genotypes
 
         build = snps._build
@@ -806,7 +799,7 @@ class SNPsCollection(SNPs):
         if not snps._build_detected:
             print("build not detected, assuming build {}".format(snps._build))
 
-        if self._build is None:
+        if not self._build:
             self._build = build
         elif self._build != build:
             print(
@@ -816,7 +809,7 @@ class SNPsCollection(SNPs):
         # ensure there area always two X alleles
         snps = self._double_single_alleles(snps._snps, "X")
 
-        if self._snps is None:
+        if self._snps.empty:
             self._source.extend(source)
             self._snps = snps
         else:

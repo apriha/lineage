@@ -98,7 +98,7 @@ class Lineage:
 
         Returns
         -------
-        paths : list of str or None
+        paths : list of str or empty str
             paths to example datasets
 
         References
@@ -109,7 +109,7 @@ class Lineage:
         """
         paths = self._resources.download_example_datasets()
 
-        if None in paths:
+        if "" in paths:
             print("Example dataset(s) not currently available")
 
         return paths
@@ -135,9 +135,9 @@ class Lineage:
         Returns
         -------
         chromosomes_remapped : list of str
-            chromosomes remapped; empty if None
+            chromosomes remapped
         chromosomes_not_remapped : list of str
-            chromosomes not remapped; empty if None
+            chromosomes not remapped
 
         Notes
         -----
@@ -160,7 +160,7 @@ class Lineage:
 
         snps = individual.snps
 
-        if snps is None:
+        if snps.empty:
             print("No SNPs to remap")
             return chromosomes_remapped, chromosomes_not_remapped
         else:
@@ -191,7 +191,7 @@ class Lineage:
             source_assembly, target_assembly
         )
 
-        if assembly_mapping_data is None:
+        if not assembly_mapping_data:
             return chromosomes_remapped, chromosomes_not_remapped
 
         tasks = []

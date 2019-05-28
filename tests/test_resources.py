@@ -55,7 +55,7 @@ class TestResources(BaseLineageTestCase):
         assembly_mapping_data = self.resource.get_assembly_mapping_data(
             "NCBI36", "GRCh37"
         )
-        assert assembly_mapping_data is None
+        assert not assembly_mapping_data
 
     def test_get_assembly_mapping_data_bad_tar(self):
         if os.getenv("DOWNLOADS_ENABLED"):
@@ -91,7 +91,7 @@ class TestResources(BaseLineageTestCase):
         assembly_mapping_data = self.resource_assembly_mapping.get_assembly_mapping_data(
             "NCBI36", "GRCh37"
         )
-        assert assembly_mapping_data is None
+        assert not assembly_mapping_data
 
     def test_download_example_datasets(self):
         paths = self.resource.download_example_datasets()
@@ -105,29 +105,29 @@ class TestResources(BaseLineageTestCase):
 
     def test__load_genetic_map_None(self):
         result = self.resource._load_genetic_map(None)
-        assert result is None
+        assert not result
 
     def test__load_cytoBand_None(self):
         result = self.resource._load_cytoBand(None)
-        assert result is None
+        assert result.empty
 
     def test__load_knownGene_None(self):
         result = self.resource._load_knownGene(None)
-        assert result is None
+        assert result.empty
 
     def test__load_kgXref_None(self):
         result = self.resource._load_kgXref(None)
-        assert result is None
+        assert result.empty
 
     def test__load_assembly_mapping_data_None(self):
         result = self.resource._load_assembly_mapping_data(None)
-        assert result is None
+        assert not result
 
     def test__download_file_compress(self):
         result = self.resource._download_file("", "", compress=True)
-        assert result is None
+        assert not result
 
     def test__download_file_invalid_dir(self):
         self.resource._resources_dir = None
         result = self.resource._download_file("", "")
-        assert result is None
+        assert not result

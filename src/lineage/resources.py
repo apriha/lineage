@@ -75,10 +75,10 @@ class Resources:
             name / path of resources directory
         """
         self._resources_dir = os.path.abspath(resources_dir)
-        self._genetic_map_HapMapII_GRCh37 = None
-        self._cytoBand_hg19 = None
-        self._knownGene_hg19 = None
-        self._kgXref_hg19 = None
+        self._genetic_map_HapMapII_GRCh37 = {}
+        self._cytoBand_hg19 = pd.DataFrame()
+        self._knownGene_hg19 = pd.DataFrame()
+        self._kgXref_hg19 = pd.DataFrame()
         self._ensembl_rest_client = ensembl_rest_client
 
     def get_genetic_map_HapMapII_GRCh37(self):
@@ -87,9 +87,9 @@ class Resources:
         Returns
         -------
         dict
-            dict of pandas.DataFrame HapMapII genetic maps if loading was successful, else None
+            dict of pandas.DataFrame HapMapII genetic maps if loading was successful, else {}
         """
-        if self._genetic_map_HapMapII_GRCh37 is None:
+        if not self._genetic_map_HapMapII_GRCh37:
             self._genetic_map_HapMapII_GRCh37 = self._load_genetic_map(
                 self._get_path_genetic_map_HapMapII_GRCh37()
             )
@@ -102,9 +102,9 @@ class Resources:
         Returns
         -------
         pandas.DataFrame
-            cytoBand table if loading was successful, else None
+            cytoBand table if loading was successful, else empty DataFrame
         """
-        if self._cytoBand_hg19 is None:
+        if self._cytoBand_hg19.empty:
             self._cytoBand_hg19 = self._load_cytoBand(self._get_path_cytoBand_hg19())
 
         return self._cytoBand_hg19
@@ -115,9 +115,9 @@ class Resources:
         Returns
         -------
         pandas.DataFrame
-            knownGene table if loading was successful, else None
+            knownGene table if loading was successful, else empty DataFrame
         """
-        if self._knownGene_hg19 is None:
+        if self._knownGene_hg19.empty:
             self._knownGene_hg19 = self._load_knownGene(self._get_path_knownGene_hg19())
 
         return self._knownGene_hg19
@@ -128,9 +128,9 @@ class Resources:
         Returns
         -------
         pandas.DataFrame
-            kgXref table if loading was successful, else None
+            kgXref table if loading was successful, else empty DataFrame
         """
-        if self._kgXref_hg19 is None:
+        if self._kgXref_hg19.empty:
             self._kgXref_hg19 = self._load_kgXref(self._get_path_kgXref_hg19())
 
         return self._kgXref_hg19
@@ -148,7 +148,7 @@ class Resources:
         Returns
         -------
         dict
-            dict of json assembly mapping data if loading was successful, else None
+            dict of json assembly mapping data if loading was successful, else {}
         """
         return self._load_assembly_mapping_data(
             self._get_path_assembly_mapping_data(source_assembly, target_assembly)
@@ -162,7 +162,7 @@ class Resources:
 
         Returns
         -------
-        paths : list of str or None
+        paths : list of str or empty str
             paths to example datasets
 
         References
@@ -283,7 +283,7 @@ class Resources:
         Returns
         -------
         genetic_map : dict
-            dict of pandas.DataFrame genetic maps if loading was successful, else None
+            dict of pandas.DataFrame genetic maps if loading was successful, else {}
 
         Notes
         -----
@@ -319,7 +319,7 @@ class Resources:
             return genetic_map
         except Exception as err:
             print(err)
-            return None
+            return {}
 
     @staticmethod
     def _load_assembly_mapping_data(filename):
@@ -333,7 +333,7 @@ class Resources:
         Returns
         -------
         assembly_mapping_data : dict
-            dict of assembly maps if loading was successful, else None
+            dict of assembly maps if loading was successful, else {}
 
         Notes
         -----
@@ -356,7 +356,7 @@ class Resources:
             return assembly_mapping_data
         except Exception as err:
             print(err)
-            return None
+            return {}
 
     @staticmethod
     def _load_cytoBand(filename):
@@ -370,7 +370,7 @@ class Resources:
         Returns
         -------
         df : pandas.DataFrame
-            cytoBand table if loading was successful, else None
+            cytoBand table if loading was successful, else empty DataFrame
 
         References
         ----------
@@ -386,7 +386,7 @@ class Resources:
             return df
         except Exception as err:
             print(err)
-            return None
+            return pd.DataFrame()
 
     @staticmethod
     def _load_knownGene(filename):
@@ -400,7 +400,7 @@ class Resources:
         Returns
         -------
         df : pandas.DataFrame
-            knownGene table if loading was successful, else None
+            knownGene table if loading was successful, else empty DataFrame
         """
         try:
             df = pd.read_csv(
@@ -426,7 +426,7 @@ class Resources:
             return df
         except Exception as err:
             print(err)
-            return None
+            return pd.DataFrame()
 
     @staticmethod
     def _load_kgXref(filename):
@@ -440,7 +440,7 @@ class Resources:
         Returns
         -------
         df : pandas.DataFrame
-            kgXref table if loading was successful, else None
+            kgXref table if loading was successful, else empty DataFrame
         """
         try:
             df = pd.read_csv(
@@ -464,7 +464,7 @@ class Resources:
             return df
         except Exception as err:
             print(err)
-            return None
+            return pd.DataFrame()
 
     def _get_path_cytoBand_hg19(self):
         """ Get local path to cytoBand file for hg19 / GRCh37 from UCSC, downloading if necessary.
@@ -558,7 +558,7 @@ class Resources:
         """
 
         if not create_dir(self._resources_dir):
-            return None
+            return ""
 
         chroms = [
             "1",
@@ -604,7 +604,7 @@ class Resources:
                 )
             except Exception as err:
                 print(err)
-                return None
+                return ""
 
         return destination
 
@@ -675,10 +675,10 @@ class Resources:
         Returns
         -------
         str
-            path to downloaded file, None if error
+            path to downloaded file, empty str if error
         """
         if not create_dir(self._resources_dir):
-            return None
+            return ""
 
         if compress and filename[-3:] != ".gz":
             filename += ".gz"
@@ -701,7 +701,7 @@ class Resources:
                         f.write(data)
             except urllib.error.URLError as err:
                 print(err)
-                destination = None
+                destination = ""
                 # try HTTP if an FTP error occurred
                 if "ftp://" in url:
                     destination = self._download_file(
@@ -712,7 +712,7 @@ class Resources:
                     )
             except Exception as err:
                 print(err)
-                return None
+                return ""
 
         return destination
 

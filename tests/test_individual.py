@@ -162,15 +162,15 @@ class TestIndividual(BaseLineageTestCase):
         ind = self.l.create_individual("", "tests/input/NCBI36.csv")
         assert ind.source == "generic"
 
-    def test_snps_None(self):
+    def test_snps_no_snps(self):
         ind = self.l.create_individual("")
-        assert ind.snps is None
+        assert ind.snps.empty
 
     def test_snp_count(self):
         ind = self.l.create_individual("", "tests/input/NCBI36.csv")
         assert ind.snp_count == 4
 
-    def test_snp_count_None(self):
+    def test_snp_count_no_snps(self):
         ind = self.l.create_individual("")
         assert ind.snp_count == 0
 
@@ -178,7 +178,7 @@ class TestIndividual(BaseLineageTestCase):
         ind = self.l.create_individual("", "tests/input/chromosomes.csv")
         assert ind.chromosomes == ["1", "2", "3", "5", "PAR", "MT"]
 
-    def test_chromosomes_None(self):
+    def test_chromosomes_no_snps(self):
         ind = self.l.create_individual("")
         assert ind.chromosomes == []
 
@@ -186,7 +186,7 @@ class TestIndividual(BaseLineageTestCase):
         ind = self.l.create_individual("", "tests/input/chromosomes.csv")
         assert ind.chromosomes_summary == "1-3, 5, PAR, MT"
 
-    def test_chromosomes_summary_None(self):
+    def test_chromosomes_summary_no_snps(self):
         ind = self.l.create_individual("")
         assert ind.chromosomes_summary == ""
 
@@ -432,11 +432,6 @@ class TestIndividual(BaseLineageTestCase):
         ind._output_dir = None
         assert not ind.save_snps()
 
-    def test_save_snps_exception(self):
-        ind = self.l.create_individual("")
-        ind._snps = "invalid"
-        assert not ind.save_snps()
-
     def test_save_discrepant_positions(self):
         ind = self.l.create_individual("ind")
         ind.load_snps(["tests/input/NCBI36.csv", "tests/input/GRCh37.csv"])
@@ -627,7 +622,7 @@ class TestIndividual(BaseLineageTestCase):
     def test_remap_snps_no_snps(self):
         ind = self.l.create_individual("")
         chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(38)
-        assert ind.build is None
+        assert not ind.build
         assert len(chromosomes_remapped) == 0
         assert len(chromosomes_not_remapped) == 0
 
