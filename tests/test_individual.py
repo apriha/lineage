@@ -24,7 +24,6 @@ import zipfile
 from atomicwrites import atomic_write
 import numpy as np
 import pandas as pd
-import pytest
 
 from lineage import SNPs
 from tests import BaseLineageTestCase
@@ -204,7 +203,7 @@ class TestIndividual(BaseLineageTestCase):
 
     def test_load_snps_None(self):
         ind = self.l.create_individual("")
-        with pytest.raises(TypeError):
+        with self.assertRaises(TypeError):
             ind.load_snps(None)
 
     def test_sex_Male_Y_chrom(self):
