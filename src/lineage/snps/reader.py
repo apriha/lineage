@@ -411,7 +411,7 @@ class Reader:
             print(
                 "Multiple samples detected in the vcf file, please use a single sample vcf."
             )
-            return None, "vcf"
+            return df, "vcf"
 
         for i, record in enumerate(vcf_reader):
             # assign null genotypes if either allele is None
