@@ -408,7 +408,9 @@ class Reader:
 
         # lineage does not yet support multi-sample vcf.
         if len(vcf_reader.samples) > 1:
-            print("Multiple samples detected in the vcf file, please use a single sample vcf.")
+            print(
+                "Multiple samples detected in the vcf file, please use a single sample vcf."
+            )
             return None, "vcf"
 
         for i, record in enumerate(vcf_reader):
