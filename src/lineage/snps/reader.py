@@ -408,6 +408,7 @@ class Reader:
 
         # lineage does not yet support multi-sample vcf.
         if len(vcf_reader.samples) > 1:
+            print("Multiple samples detected in the vcf file, please use a single sample vcf.")
             return None, "vcf"
 
         for i, record in enumerate(vcf_reader):
@@ -416,8 +417,8 @@ class Reader:
             # if ALT is None, but genotype is 0/0
             if record.REF is None or record.ALT[0] is None:
                 genotype = np.nan
-            # skip multi-allelic sites
-            elif len(record.ALT) > 1:
+            # skip SNPs with missing rsIDs.
+            elif record.ID is None:
                 continue
             # skip insertions and deletions
             elif len(record.REF) > 1 or len(record.ALT[0]) > 1:
@@ -429,7 +430,7 @@ class Reader:
                 genotype = "{}{}".format(a1, a2)
 
             record_info = {
-                "rsid": record.ID if record.ID is not None else i,
+                "rsid": record.ID,
                 "chrom": "{}".format(record.CHROM).strip("chr"),
                 "pos": record.POS,
                 "genotype": genotype,

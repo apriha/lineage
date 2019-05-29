@@ -40,6 +40,14 @@ class TestIndividual(BaseLineageTestCase):
             genotype=["AA", "CC", "GG", "TT", np.nan],
         )
 
+    def generic_het_snps(self):
+        return self.create_snp_df(
+            rsid=["rs6", "rs7", "rs8"],
+            chrom=["1", "1", "1"],
+            pos=[6, 7, 8],
+            genotype=["GC", "TC", "AT"],
+        )
+
     def snps_NCBI36(self):
         return self.create_snp_df(
             rsid=["rs3094315", "rs2500347", "rsIndelTest", "rs11928389"],
@@ -141,6 +149,13 @@ class TestIndividual(BaseLineageTestCase):
         ind = self.l.create_individual("", "tests/input/testvcf.vcf")
         assert ind.source == "vcf"
         pd.testing.assert_frame_equal(ind.snps, self.generic_snps())
+
+    def test_het_snps_vcf(self):
+        # similar to test_snps_vcf
+        # this tests for heterozygous snps, multiallelic snps, phased snps, and snps with missing rsID
+        ind = self.l.create_individual("", "tests/input/testhetvcf.vcf")
+        assert ind.source == "vcf"
+        pd.testing.assert_frame_equal(ind.snps, self.generic_het_snps())
 
     def test_source_lineage_file(self):
         ind = self.l.create_individual("", "tests/input/GRCh37.csv")
