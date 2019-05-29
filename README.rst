@@ -18,7 +18,8 @@ Capabilities
 
 Supported Genotype Files
 ------------------------
-``lineage`` supports genotype files from the following DTC DNA testing companies:
+``lineage`` supports `VCF <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3137218/>`_ files and
+genotype files from the following DTC DNA testing companies:
 
 - `23andMe <https://www.23andme.com>`_
 - `Ancestry <https://www.ancestry.com>`_
@@ -181,7 +182,7 @@ Saving output/shared_dna_one_chrom_User662_User663_GRCh37.csv
 
 Notice that the centiMorgan and SNP thresholds for each DNA segment can be tuned. Additionally,
 notice that two files were downloaded to facilitate the analysis and plotting - future analyses
-will used the downloaded files instead of downloading the files again. Finally, notice that a list
+will use the downloaded files instead of downloading the files again. Finally, notice that a list
 of individuals is passed to ``find_shared_dna``... This list can contain an arbitrary number of
 individuals, and ``lineage`` will find shared DNA across all individuals in the list (i.e.,
 where all individuals share segments of DNA on either one or both chromosomes).
