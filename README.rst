@@ -33,6 +33,7 @@ Dependencies
 - `pandas <http://pandas.pydata.org>`_
 - `matplotlib <http://matplotlib.org>`_
 - `atomicwrites <https://github.com/untitaker/python-atomicwrites>`_
+- `PyVCF <https://github.com/jamescasbon/PyVCF>`_
 
 On Linux systems, the following system-level installs may also be required::
 
