@@ -24,8 +24,6 @@ import zipfile
 from atomicwrites import atomic_write
 import numpy as np
 import pandas as pd
-import pytest
-import vcf
 
 
 from lineage import SNPs
