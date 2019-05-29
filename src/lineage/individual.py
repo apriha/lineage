@@ -95,9 +95,9 @@ class Individual(SNPsCollection):
         Returns
         -------
         chromosomes_remapped : list of str
-            chromosomes remapped; empty if None
+            chromosomes remapped
         chromosomes_not_remapped : list of str
-            chromosomes not remapped; empty if None
+            chromosomes not remapped
 
         Notes
         -----

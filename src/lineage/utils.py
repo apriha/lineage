@@ -88,7 +88,7 @@ def create_dir(path):
         return False
 
 
-def save_df_as_csv(df, path, filename, comment=None, **kwargs):
+def save_df_as_csv(df, path, filename, comment="", **kwargs):
     """ Save dataframe to a CSV file.
 
     Parameters
@@ -128,8 +128,7 @@ def save_df_as_csv(df, path, filename, comment=None, **kwargs):
                 datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             )
 
-            if isinstance(comment, str):
-                s += comment
+            s += comment
 
             with atomic_write(destination, mode="w", overwrite=True) as f:
                 f.write(s)

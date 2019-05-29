@@ -134,40 +134,80 @@ class TestLineage(BaseLineageTestCase):
         assert os.path.exists("output/discordant_snps_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/discordant_snps_ind1_ind2_ind3_GRCh37.csv")
 
+    def test_find_shared_dna_one_ind(self):
+        ind1 = self.simulate_snps(self.l.create_individual("ind1"))
+
+        d = self.l.find_shared_dna([ind1], shared_genes=True)
+
+        assert len(d["one_chrom_shared_dna"]) == 0
+        assert len(d["two_chrom_shared_dna"]) == 0
+        assert len(d["one_chrom_shared_genes"]) == 0
+        assert len(d["two_chrom_shared_genes"]) == 0
+        assert len(d["one_chrom_discrepant_snps"]) == 0
+        assert len(d["two_chrom_discrepant_snps"]) == 0
+        assert not os.path.exists("output/shared_dna_one_chrom_ind1_GRCh37.csv")
+        assert not os.path.exists("output/shared_dna_two_chroms_ind1_GRCh37.csv")
+        assert not os.path.exists("output/shared_genes_one_chrom_ind1_GRCh37.csv")
+        assert not os.path.exists("output/shared_genes_two_chroms_ind1_GRCh37.csv")
+        assert not os.path.exists("output/shared_dna_ind1.png")
+
     def test_find_shared_dna_two_chrom_shared(self):
         ind1 = self.simulate_snps(self.l.create_individual("ind1"))
         ind2 = self.simulate_snps(self.l.create_individual("ind2"))
 
-        one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = self.l.find_shared_dna(
-            ind1, ind2, shared_genes=True
-        )
+        d = self.l.find_shared_dna([ind1, ind2], shared_genes=True)
 
-        assert len(one_chrom_shared_dna) == 1
-        assert len(two_chrom_shared_dna) == 1
-        assert len(one_chrom_shared_genes) == 7918
-        assert len(two_chrom_shared_genes) == 7918
-        np.testing.assert_allclose(one_chrom_shared_dna.loc[1]["cMs"], 285.356293)
-        np.testing.assert_allclose(two_chrom_shared_dna.loc[1]["cMs"], 285.356293)
+        assert len(d["one_chrom_shared_dna"]) == 1
+        assert len(d["two_chrom_shared_dna"]) == 1
+        assert len(d["one_chrom_shared_genes"]) == 7918
+        assert len(d["two_chrom_shared_genes"]) == 7918
+        assert len(d["one_chrom_discrepant_snps"]) == 0
+        assert len(d["two_chrom_discrepant_snps"]) == 0
+        np.testing.assert_allclose(d["one_chrom_shared_dna"].loc[1]["cMs"], 285.356293)
+        np.testing.assert_allclose(d["two_chrom_shared_dna"].loc[1]["cMs"], 285.356293)
         assert os.path.exists("output/shared_dna_one_chrom_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_dna_two_chroms_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_genes_one_chrom_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_genes_two_chroms_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_dna_ind1_ind2.png")
 
+    def test_find_shared_dna_two_chrom_shared_three_ind(self):
+        ind1 = self.simulate_snps(self.l.create_individual("ind1"))
+        ind2 = self.simulate_snps(self.l.create_individual("ind2"))
+        ind3 = self.simulate_snps(self.l.create_individual("ind3"))
+
+        d = self.l.find_shared_dna([ind1, ind2, ind3], shared_genes=True)
+
+        assert len(d["one_chrom_shared_dna"]) == 1
+        assert len(d["two_chrom_shared_dna"]) == 1
+        assert len(d["one_chrom_shared_genes"]) == 7918
+        assert len(d["two_chrom_shared_genes"]) == 7918
+        assert len(d["one_chrom_discrepant_snps"]) == 0
+        assert len(d["two_chrom_discrepant_snps"]) == 0
+        np.testing.assert_allclose(d["one_chrom_shared_dna"].loc[1]["cMs"], 285.356293)
+        np.testing.assert_allclose(d["two_chrom_shared_dna"].loc[1]["cMs"], 285.356293)
+        assert os.path.exists("output/shared_dna_one_chrom_ind1_ind2_ind3_GRCh37.csv")
+        assert os.path.exists("output/shared_dna_two_chroms_ind1_ind2_ind3_GRCh37.csv")
+        assert os.path.exists("output/shared_genes_one_chrom_ind1_ind2_ind3_GRCh37.csv")
+        assert os.path.exists(
+            "output/shared_genes_two_chroms_ind1_ind2_ind3_GRCh37.csv"
+        )
+        assert os.path.exists("output/shared_dna_ind1_ind2_ind3.png")
+
     def test_find_shared_dna_two_chrom_shared_no_output(self):
         ind1 = self.simulate_snps(self.l.create_individual("ind1"))
         ind2 = self.simulate_snps(self.l.create_individual("ind2"))
 
-        one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = self.l.find_shared_dna(
-            ind1, ind2, shared_genes=True, save_output=False
-        )
+        d = self.l.find_shared_dna([ind1, ind2], shared_genes=True, save_output=False)
 
-        assert len(one_chrom_shared_dna) == 1
-        assert len(two_chrom_shared_dna) == 1
-        assert len(one_chrom_shared_genes) == 7918
-        assert len(two_chrom_shared_genes) == 7918
-        np.testing.assert_allclose(one_chrom_shared_dna.loc[1]["cMs"], 285.356293)
-        np.testing.assert_allclose(two_chrom_shared_dna.loc[1]["cMs"], 285.356293)
+        assert len(d["one_chrom_shared_dna"]) == 1
+        assert len(d["two_chrom_shared_dna"]) == 1
+        assert len(d["one_chrom_shared_genes"]) == 7918
+        assert len(d["two_chrom_shared_genes"]) == 7918
+        assert len(d["one_chrom_discrepant_snps"]) == 0
+        assert len(d["two_chrom_discrepant_snps"]) == 0
+        np.testing.assert_allclose(d["one_chrom_shared_dna"].loc[1]["cMs"], 285.356293)
+        np.testing.assert_allclose(d["two_chrom_shared_dna"].loc[1]["cMs"], 285.356293)
         assert not os.path.exists("output/shared_dna_one_chrom_ind1_ind2_GRCh37.csv")
         assert not os.path.exists("output/shared_dna_two_chroms_ind1_ind2_GRCh37.csv")
         assert not os.path.exists("output/shared_genes_one_chrom_ind1_ind2_GRCh37.csv")
@@ -180,20 +220,46 @@ class TestLineage(BaseLineageTestCase):
             self.l.create_individual("ind2"), complement_genotype_one_chrom=True
         )
 
-        one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = self.l.find_shared_dna(
-            ind1, ind2, shared_genes=True
-        )
+        d = self.l.find_shared_dna([ind1, ind2], shared_genes=True)
 
-        assert len(one_chrom_shared_dna) == 1
-        assert len(two_chrom_shared_dna) == 0
-        assert len(one_chrom_shared_genes) == 7918
-        assert len(two_chrom_shared_genes) == 0
-        np.testing.assert_allclose(one_chrom_shared_dna.loc[1]["cMs"], 285.356293)
+        assert len(d["one_chrom_shared_dna"]) == 1
+        assert len(d["two_chrom_shared_dna"]) == 0
+        assert len(d["one_chrom_shared_genes"]) == 7918
+        assert len(d["two_chrom_shared_genes"]) == 0
+        assert len(d["one_chrom_discrepant_snps"]) == 0
+        assert len(d["two_chrom_discrepant_snps"]) == 0
+        np.testing.assert_allclose(d["one_chrom_shared_dna"].loc[1]["cMs"], 285.356293)
         assert os.path.exists("output/shared_dna_one_chrom_ind1_ind2_GRCh37.csv")
         assert not os.path.exists("output/shared_dna_two_chroms_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_genes_one_chrom_ind1_ind2_GRCh37.csv")
         assert not os.path.exists("output/shared_genes_two_chroms_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_dna_ind1_ind2.png")
+
+    def test_find_shared_dna_one_chrom_shared_three_ind(self):
+        ind1 = self.simulate_snps(self.l.create_individual("ind1"))
+        ind2 = self.simulate_snps(
+            self.l.create_individual("ind2"), complement_genotype_one_chrom=True
+        )
+        ind3 = self.simulate_snps(self.l.create_individual("ind3"))
+
+        d = self.l.find_shared_dna([ind1, ind2, ind3], shared_genes=True)
+
+        assert len(d["one_chrom_shared_dna"]) == 1
+        assert len(d["two_chrom_shared_dna"]) == 0
+        assert len(d["one_chrom_shared_genes"]) == 7918
+        assert len(d["two_chrom_shared_genes"]) == 0
+        assert len(d["one_chrom_discrepant_snps"]) == 0
+        assert len(d["two_chrom_discrepant_snps"]) == 0
+        np.testing.assert_allclose(d["one_chrom_shared_dna"].loc[1]["cMs"], 285.356293)
+        assert os.path.exists("output/shared_dna_one_chrom_ind1_ind2_ind3_GRCh37.csv")
+        assert not os.path.exists(
+            "output/shared_dna_two_chroms_ind1_ind2_ind3_GRCh37.csv"
+        )
+        assert os.path.exists("output/shared_genes_one_chrom_ind1_ind2_ind3_GRCh37.csv")
+        assert not os.path.exists(
+            "output/shared_genes_two_chroms_ind1_ind2_ind3_GRCh37.csv"
+        )
+        assert os.path.exists("output/shared_dna_ind1_ind2_ind3.png")
 
     def test_find_shared_dna_X_chrom_two_individuals_male(self):
         ind1 = self.simulate_snps(
@@ -209,16 +275,16 @@ class TestLineage(BaseLineageTestCase):
             genotype="AA",
         )
 
-        one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = self.l.find_shared_dna(
-            ind1, ind2, shared_genes=True
-        )
+        d = self.l.find_shared_dna([ind1, ind2], shared_genes=True)
 
-        assert len(one_chrom_shared_dna) == 1  # PAR1, non-PAR, PAR2
-        assert len(two_chrom_shared_dna) == 1  # PAR1
-        assert len(one_chrom_shared_genes) == 3022
-        assert len(two_chrom_shared_genes) == 54
-        np.testing.assert_allclose(one_chrom_shared_dna.loc[1]["cMs"], 202.022891)
-        np.testing.assert_allclose(two_chrom_shared_dna.loc[1]["cMs"], 20.837792)
+        assert len(d["one_chrom_shared_dna"]) == 1  # PAR1, non-PAR, PAR2
+        assert len(d["two_chrom_shared_dna"]) == 1  # PAR1
+        assert len(d["one_chrom_shared_genes"]) == 3022
+        assert len(d["two_chrom_shared_genes"]) == 54
+        assert len(d["one_chrom_discrepant_snps"]) == 0
+        assert len(d["two_chrom_discrepant_snps"]) == 0
+        np.testing.assert_allclose(d["one_chrom_shared_dna"].loc[1]["cMs"], 202.022891)
+        np.testing.assert_allclose(d["two_chrom_shared_dna"].loc[1]["cMs"], 20.837792)
         assert os.path.exists("output/shared_dna_one_chrom_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_dna_two_chroms_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_genes_one_chrom_ind1_ind2_GRCh37.csv")
@@ -239,16 +305,16 @@ class TestLineage(BaseLineageTestCase):
             genotype="AC",
         )
 
-        one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = self.l.find_shared_dna(
-            ind1, ind2, shared_genes=True
-        )
+        d = self.l.find_shared_dna([ind1, ind2], shared_genes=True)
 
-        assert len(one_chrom_shared_dna) == 1  # PAR1, non-PAR, PAR2
-        assert len(two_chrom_shared_dna) == 1  # PAR1, non-PAR, PAR2
-        assert len(one_chrom_shared_genes) == 3022
-        assert len(two_chrom_shared_genes) == 3022
-        np.testing.assert_allclose(one_chrom_shared_dna.loc[1]["cMs"], 202.022891)
-        np.testing.assert_allclose(two_chrom_shared_dna.loc[1]["cMs"], 202.022891)
+        assert len(d["one_chrom_shared_dna"]) == 1  # PAR1, non-PAR, PAR2
+        assert len(d["two_chrom_shared_dna"]) == 1  # PAR1, non-PAR, PAR2
+        assert len(d["one_chrom_shared_genes"]) == 3022
+        assert len(d["two_chrom_shared_genes"]) == 3022
+        assert len(d["one_chrom_discrepant_snps"]) == 0
+        assert len(d["two_chrom_discrepant_snps"]) == 0
+        np.testing.assert_allclose(d["one_chrom_shared_dna"].loc[1]["cMs"], 202.022891)
+        np.testing.assert_allclose(d["two_chrom_shared_dna"].loc[1]["cMs"], 202.022891)
         assert os.path.exists("output/shared_dna_one_chrom_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_dna_two_chroms_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_genes_one_chrom_ind1_ind2_GRCh37.csv")
@@ -264,16 +330,16 @@ class TestLineage(BaseLineageTestCase):
             complement_snp_step=1000000,
         )
 
-        one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = self.l.find_shared_dna(
-            ind1, ind2, shared_genes=True
-        )
+        d = self.l.find_shared_dna([ind1, ind2], shared_genes=True)
 
-        assert len(one_chrom_shared_dna) == 1
-        assert len(two_chrom_shared_dna) == 1
-        assert len(one_chrom_shared_genes) == 7918
-        assert len(two_chrom_shared_genes) == 7918
-        np.testing.assert_allclose(one_chrom_shared_dna.loc[1]["cMs"], 285.356293)
-        np.testing.assert_allclose(two_chrom_shared_dna.loc[1]["cMs"], 285.356293)
+        assert len(d["one_chrom_shared_dna"]) == 1
+        assert len(d["two_chrom_shared_dna"]) == 1
+        assert len(d["one_chrom_shared_genes"]) == 7918
+        assert len(d["two_chrom_shared_genes"]) == 7918
+        assert len(d["one_chrom_discrepant_snps"]) == 0
+        assert len(d["two_chrom_discrepant_snps"]) == 2
+        np.testing.assert_allclose(d["one_chrom_shared_dna"].loc[1]["cMs"], 285.356293)
+        np.testing.assert_allclose(d["two_chrom_shared_dna"].loc[1]["cMs"], 285.356293)
         assert os.path.exists("output/shared_dna_one_chrom_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_dna_two_chroms_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_genes_one_chrom_ind1_ind2_GRCh37.csv")
@@ -286,16 +352,45 @@ class TestLineage(BaseLineageTestCase):
             self.l.create_individual("ind2"), complement_genotype_two_chroms=True
         )
 
-        one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = self.l.find_shared_dna(
-            ind1, ind2, shared_genes=True
-        )
+        d = self.l.find_shared_dna([ind1, ind2], shared_genes=True)
 
-        assert len(one_chrom_shared_dna) == 0
-        assert len(two_chrom_shared_dna) == 0
-        assert len(one_chrom_shared_genes) == 0
-        assert len(two_chrom_shared_genes) == 0
+        assert len(d["one_chrom_shared_dna"]) == 0
+        assert len(d["two_chrom_shared_dna"]) == 0
+        assert len(d["one_chrom_shared_genes"]) == 0
+        assert len(d["two_chrom_shared_genes"]) == 0
+        assert len(d["one_chrom_discrepant_snps"]) == 0
+        assert len(d["two_chrom_discrepant_snps"]) == 0
         assert not os.path.exists("output/shared_dna_one_chrom_ind1_ind2_GRCh37.csv")
         assert not os.path.exists("output/shared_dna_two_chroms_ind1_ind2_GRCh37.csv")
         assert not os.path.exists("output/shared_genes_one_chrom_ind1_ind2_GRCh37.csv")
         assert not os.path.exists("output/shared_genes_two_chroms_ind1_ind2_GRCh37.csv")
         assert os.path.exists("output/shared_dna_ind1_ind2.png")
+
+    def test_find_shared_dna_no_shared_dna_three_ind(self):
+        ind1 = self.simulate_snps(self.l.create_individual("ind1"))
+        ind2 = self.simulate_snps(
+            self.l.create_individual("ind2"), complement_genotype_two_chroms=True
+        )
+        ind3 = self.simulate_snps(self.l.create_individual("ind3"))
+
+        d = self.l.find_shared_dna([ind1, ind2, ind3], shared_genes=True)
+
+        assert len(d["one_chrom_shared_dna"]) == 0
+        assert len(d["two_chrom_shared_dna"]) == 0
+        assert len(d["one_chrom_shared_genes"]) == 0
+        assert len(d["two_chrom_shared_genes"]) == 0
+        assert len(d["one_chrom_discrepant_snps"]) == 0
+        assert len(d["two_chrom_discrepant_snps"]) == 0
+        assert not os.path.exists(
+            "output/shared_dna_one_chrom_ind1_ind2_ind3_GRCh37.csv"
+        )
+        assert not os.path.exists(
+            "output/shared_dna_two_chroms_ind1_ind2_ind3_GRCh37.csv"
+        )
+        assert not os.path.exists(
+            "output/shared_genes_one_chrom_ind1_ind2_ind3_GRCh37.csv"
+        )
+        assert not os.path.exists(
+            "output/shared_genes_two_chroms_ind1_ind2_ind3_GRCh37.csv"
+        )
+        assert os.path.exists("output/shared_dna_ind1_ind2_ind3.png")

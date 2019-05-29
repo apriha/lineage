@@ -60,7 +60,7 @@ class TestSnps(BaseLineageTestCase):
         assert self.snps_none.chromosomes_summary == ""
 
     def test_build_no_snps(self):
-        assert self.snps_none.build is None
+        assert not self.snps_none.build
 
     def test_build_detected_no_snps(self):
         assert not self.snps_none.build_detected
@@ -100,7 +100,7 @@ class TestSnps(BaseLineageTestCase):
         }
 
     def test_get_summary_no_snps(self):
-        assert self.snps_none.get_summary() is None
+        assert not self.snps_none.get_summary()
 
     def test_is_valid_True(self):
         assert self.snps_GRCh38.is_valid()
@@ -109,15 +109,14 @@ class TestSnps(BaseLineageTestCase):
         assert not self.snps_none.is_valid()
 
     def test__read_raw_data(self):
-        assert self.snps_none.snps is None
+        assert self.snps_none.snps.empty
         assert self.snps_none.source == ""
 
     def test__lookup_build_with_snp_pos_None(self):
         snps = SNPs()
         snps._snps = self.snps_discrepant_pos()
-        assert snps.detect_build() is None
+        assert not snps.detect_build()
 
     def test_get_assembly_None(self):
         snps = SNPs()
-        snps._build = None
         assert snps.get_assembly() is ""

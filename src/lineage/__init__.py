@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-from itertools import chain
+from itertools import chain, combinations
 import os
 
 import numpy as np
@@ -98,7 +98,7 @@ class Lineage:
 
         Returns
         -------
-        paths : list of str or None
+        paths : list of str or empty str
             paths to example datasets
 
         References
@@ -109,7 +109,7 @@ class Lineage:
         """
         paths = self._resources.download_example_datasets()
 
-        if None in paths:
+        if "" in paths:
             print("Example dataset(s) not currently available")
 
         return paths
@@ -135,9 +135,9 @@ class Lineage:
         Returns
         -------
         chromosomes_remapped : list of str
-            chromosomes remapped; empty if None
+            chromosomes remapped
         chromosomes_not_remapped : list of str
-            chromosomes not remapped; empty if None
+            chromosomes not remapped
 
         Notes
         -----
@@ -160,7 +160,7 @@ class Lineage:
 
         snps = individual.snps
 
-        if snps is None:
+        if snps.empty:
             print("No SNPs to remap")
             return chromosomes_remapped, chromosomes_not_remapped
         else:
@@ -191,7 +191,7 @@ class Lineage:
             source_assembly, target_assembly
         )
 
-        if assembly_mapping_data is None:
+        if not assembly_mapping_data:
             return chromosomes_remapped, chromosomes_not_remapped
 
         tasks = []
@@ -467,14 +467,13 @@ class Lineage:
 
     def find_shared_dna(
         self,
-        individual1,
-        individual2,
+        individuals=(),
         cM_threshold=0.75,
         snp_threshold=1100,
         shared_genes=False,
         save_output=True,
     ):
-        """ Find the shared DNA between two individuals.
+        """ Find the shared DNA between individuals.
 
         Computes the genetic distance in centiMorgans (cMs) between SNPs using the HapMap Phase II
         GRCh37 genetic map. Applies thresholds to determine the shared DNA. Plots shared DNA.
@@ -484,8 +483,7 @@ class Lineage:
 
         Parameters
         ----------
-        individual1 : Individual
-        individual2 : Individual
+        individuals : iterable of Individuals
         cM_threshold : float
             minimum centiMorgans for each shared DNA segment
         snp_threshold : int
@@ -497,30 +495,53 @@ class Lineage:
 
         Returns
         -------
-        one_chrom_shared_dna : pandas.DataFrame
-            segments of shared DNA on one chromosome
-        two_chrom_shared_dna : pandas.DataFrame
-            segments of shared DNA on two chromosomes
-        one_chrom_shared_genes : pandas.DataFrame
-            shared genes on one chromosome
-        two_chrom_shared_genes : pandas.DataFrame
-            shared genes on two chromosomes
+        dict
+            dict with the following items:
+
+            one_chrom_shared_dna (pandas.DataFrame)
+                segments of shared DNA on one chromosome
+            two_chrom_shared_dna (pandas.DataFrame)
+                segments of shared DNA on two chromosomes
+            one_chrom_shared_genes (pandas.DataFrame)
+                shared genes on one chromosome
+            two_chrom_shared_genes (pandas.DataFrame)
+                shared genes on two chromosomes
+            one_chrom_discrepant_snps (pandas.Index)
+                discrepant SNPs discovered while finding shared DNA on one chromosome
+            two_chrom_discrepant_snps (pandas.Index)
+                discrepant SNPs discovered while finding shared DNA on two chromosomes
         """
+        one_chrom_shared_dna = pd.DataFrame()
+        two_chrom_shared_dna = pd.DataFrame()
         one_chrom_shared_genes = pd.DataFrame()
         two_chrom_shared_genes = pd.DataFrame()
+        one_chrom_discrepant_snps = pd.Index([])
+        two_chrom_discrepant_snps = pd.Index([])
 
-        self._remap_snps_to_GRCh37([individual1, individual2])
+        self._remap_snps_to_GRCh37(individuals)
 
-        df = individual1.snps
+        if len(individuals) < 2:
+            print("find_shared_dna requires two or more individuals...")
+            return self._find_shared_dna_return_helper(
+                one_chrom_shared_dna,
+                two_chrom_shared_dna,
+                one_chrom_shared_genes,
+                two_chrom_shared_genes,
+                one_chrom_discrepant_snps,
+                two_chrom_discrepant_snps,
+            )
 
-        df = df.join(individual2.snps["genotype"], rsuffix="2", how="inner")
+        cols = ["genotype{}".format(str(i)) for i in range(len(individuals))]
 
-        genotype1 = "genotype_" + individual1.get_var_name()
-        genotype2 = "genotype_" + individual2.get_var_name()
+        df = individuals[0].snps
+        df = df.rename(columns={"genotype": cols[0]})
 
-        df = df.rename(columns={"genotype": genotype1, "genotype2": genotype2})
+        for i, individual in enumerate(individuals[1:]):
+            # join SNPs for all individuals
+            df = df.join(individual.snps["genotype"], how="inner")
+            df = df.rename(columns={"genotype": cols[i + 1]})
 
-        one_x_chrom = self._is_one_individual_male([individual1, individual2])
+        one_x_chrom = self._is_one_individual_male(individuals)
 
         genetic_map = self._resources.get_genetic_map_HapMapII_GRCh37()
 
@@ -549,47 +570,44 @@ class Lineage:
         snp_distances = pd.concat(snp_distances)
         df["cM_from_prev_snp"] = snp_distances["cM_from_prev_snp"]
 
+        df["one_chrom_match"] = True
+        df["two_chrom_match"] = True
+
         # determine where individuals share an allele on one chromosome
-        df["one_chrom_match"] = np.where(
-            df[genotype1].isnull()
-            | df[genotype2].isnull()
-            | (df[genotype1].str[0] == df[genotype2].str[0])
-            | (df[genotype1].str[0] == df[genotype2].str[1])
-            | (df[genotype1].str[1] == df[genotype2].str[0])
-            | (df[genotype1].str[1] == df[genotype2].str[1]),
-            True,
-            False,
-        )
+        for genotype1, genotype2 in combinations(cols, 2):
+            df.loc[
+                ~df[genotype1].isnull()
+                & ~df[genotype2].isnull()
+                & (df[genotype1].str[0] != df[genotype2].str[0])
+                & (df[genotype1].str[0] != df[genotype2].str[1])
+                & (df[genotype1].str[1] != df[genotype2].str[0])
+                & (df[genotype1].str[1] != df[genotype2].str[1]),
+                "one_chrom_match",
+            ] = False
 
         # determine where individuals share alleles on both chromosomes
-        df["two_chrom_match"] = np.where(
-            df[genotype1].isnull()
-            | df[genotype2].isnull()
-            | (
-                (df[genotype1].str.len() == 2)
-                & (df[genotype2].str.len() == 2)
-                & (
-                    (df[genotype1] == df[genotype2])
-                    | (
-                        (df[genotype1].str[0] == df[genotype2].str[1])
-                        & (df[genotype1].str[1] == df[genotype2].str[0])
-                    )
-                )
-            ),
-            True,
-            False,
-        )
+        for genotype1, genotype2 in combinations(cols, 2):
+            df.loc[
+                ~df[genotype1].isnull()
+                & ~df[genotype2].isnull()
+                & (df[genotype1] != df[genotype2])
+                & ~(
+                    (df[genotype1].str[0] == df[genotype2].str[1])
+                    & (df[genotype1].str[1] == df[genotype2].str[0])
+                ),
+                "two_chrom_match",
+            ] = False
 
         # genotype columns are no longer required for calculation
-        df = df.drop([genotype1, genotype2], axis=1)
+        df = df.drop(cols, axis=1)
 
-        one_chrom_shared_dna = self._find_shared_dna_helper(
+        one_chrom_shared_dna, one_chrom_discrepant_snps = self._find_shared_dna_helper(
             df[["chrom", "pos", "cM_from_prev_snp", "one_chrom_match"]],
             cM_threshold,
             snp_threshold,
             one_x_chrom,
         )
-        two_chrom_shared_dna = self._find_shared_dna_helper(
+        two_chrom_shared_dna, two_chrom_discrepant_snps = self._find_shared_dna_helper(
             df[["chrom", "pos", "cM_from_prev_snp", "two_chrom_match"]],
             cM_threshold,
             snp_threshold,
@@ -602,19 +620,20 @@ class Lineage:
 
         if save_output:
             self._find_shared_dna_output_helper(
-                individual1,
-                individual2,
+                individuals,
                 one_chrom_shared_dna,
                 two_chrom_shared_dna,
                 one_chrom_shared_genes,
                 two_chrom_shared_genes,
             )
 
-        return (
+        return self._find_shared_dna_return_helper(
             one_chrom_shared_dna,
             two_chrom_shared_dna,
             one_chrom_shared_genes,
             two_chrom_shared_genes,
+            one_chrom_discrepant_snps,
+            two_chrom_discrepant_snps,
         )
 
     def _find_shared_dna_helper(self, df, cM_threshold, snp_threshold, one_x_chrom):
@@ -632,14 +651,22 @@ class Lineage:
             )
 
         # compute shared DNA between individuals
-        shared_dna = map(self._compute_shared_dna, tasks)
-        shared_dna = self._convert_list_of_lists_to_list(shared_dna)
-        return self._convert_shared_dna_list_to_df(shared_dna)
+        results = map(self._compute_shared_dna, tasks)
+
+        shared_dna = []
+        discrepant_snps = pd.Index([])
+        for result in list(results):
+            shared_dna.append(result["shared_dna"])
+            discrepant_snps = discrepant_snps.append(result["discrepant_snps"])
+
+        # https://stackoverflow.com/a/952952
+        shared_dna = list(chain.from_iterable(shared_dna))
+
+        return (self._convert_shared_dna_list_to_df(shared_dna), discrepant_snps)
 
     def _find_shared_dna_output_helper(
         self,
-        individual1,
-        individual2,
+        individuals,
         one_chrom_shared_dna,
         two_chrom_shared_dna,
         one_chrom_shared_genes,
@@ -647,52 +674,66 @@ class Lineage:
     ):
         cytobands = self._resources.get_cytoBand_hg19()
 
+        individuals_filename = ""
+        individuals_plot_title = ""
+
+        for individual in individuals:
+            individuals_filename += individual.get_var_name() + "_"
+            individuals_plot_title += individual.name + " / "
+
+        individuals_filename = individuals_filename[:-1]
+        individuals_plot_title = individuals_plot_title[:-3]
+
         if create_dir(self._output_dir):
             plot_chromosomes(
                 one_chrom_shared_dna,
                 two_chrom_shared_dna,
                 cytobands,
                 os.path.join(
-                    self._output_dir,
-                    "shared_dna_{}_{}.png".format(
-                        individual1.get_var_name(), individual2.get_var_name()
-                    ),
+                    self._output_dir, "shared_dna_{}.png".format(individuals_filename)
                 ),
-                "{} / {} shared DNA".format(individual1.name, individual2.name),
+                "{} shared DNA".format(individuals_plot_title),
                 37,
             )
 
         if len(one_chrom_shared_dna) > 0:
-            file = "shared_dna_one_chrom_{}_{}_GRCh37.csv".format(
-                individual1.get_var_name(), individual2.get_var_name()
-            )
+            file = "shared_dna_one_chrom_{}_GRCh37.csv".format(individuals_filename)
             save_df_as_csv(
                 one_chrom_shared_dna, self._output_dir, file, float_format="%.2f"
             )
 
         if len(two_chrom_shared_dna) > 0:
-            file = "shared_dna_two_chroms_{}_{}_GRCh37.csv".format(
-                individual1.get_var_name(), individual2.get_var_name()
-            )
+            file = "shared_dna_two_chroms_{}_GRCh37.csv".format(individuals_filename)
             save_df_as_csv(
                 two_chrom_shared_dna, self._output_dir, file, float_format="%.2f"
             )
 
         if len(one_chrom_shared_genes) > 0:
-            file = "shared_genes_one_chrom_{}_{}_GRCh37.csv".format(
-                individual1.get_var_name(), individual2.get_var_name()
-            )
+            file = "shared_genes_one_chrom_{}_GRCh37.csv".format(individuals_filename)
             save_df_as_csv(one_chrom_shared_genes, self._output_dir, file)
 
         if len(two_chrom_shared_genes) > 0:
-            file = "shared_genes_two_chroms_{}_{}_GRCh37.csv".format(
-                individual1.get_var_name(), individual2.get_var_name()
-            )
+            file = "shared_genes_two_chroms_{}_GRCh37.csv".format(individuals_filename)
             save_df_as_csv(two_chrom_shared_genes, self._output_dir, file)
 
-    def _convert_list_of_lists_to_list(self, l):
-        # https://stackoverflow.com/a/952952
-        return list(chain.from_iterable(l))
+    def _find_shared_dna_return_helper(
+        self,
+        one_chrom_shared_dna,
+        two_chrom_shared_dna,
+        one_chrom_shared_genes,
+        two_chrom_shared_genes,
+        one_chrom_discrepant_snps,
+        two_chrom_discrepant_snps,
+    ):
+
+        return {
+            "one_chrom_shared_dna": one_chrom_shared_dna,
+            "two_chrom_shared_dna": two_chrom_shared_dna,
+            "one_chrom_shared_genes": one_chrom_shared_genes,
+            "two_chrom_shared_genes": two_chrom_shared_genes,
+            "one_chrom_discrepant_snps": one_chrom_discrepant_snps,
+            "two_chrom_discrepant_snps": two_chrom_discrepant_snps,
+        }
 
     def _convert_shared_dna_list_to_df(self, shared_dna):
         df = pd.DataFrame(shared_dna, columns=["chrom", "start", "end", "cMs", "snps"])
@@ -822,6 +863,7 @@ class Lineage:
             match_col = "two_chrom_match"
 
         shared_dna = []
+        discrepant_snps = pd.Index([])
 
         # set two_chrom_match in non-PAR region to False if an individual is male
         if chrom == "X" and match_col == "two_chrom_match" and one_x_chrom:
@@ -862,6 +904,7 @@ class Lineage:
 
         # if there are adjacent segments
         if len(adjacent_ix[0]) != 0:
+            discrepant_snps = df.iloc[matches_passed[adjacent_ix[0], 1]].index
             matches_stitched = np.array([0, 0])
             prev = -1
             counter = 0
@@ -903,7 +946,7 @@ class Lineage:
                 }
             )
             counter += 1
-        return shared_dna
+        return {"shared_dna": shared_dna, "discrepant_snps": discrepant_snps}
 
     def _remap_snps_to_GRCh37(self, individuals):
         for i in individuals:
