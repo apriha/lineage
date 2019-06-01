@@ -35,7 +35,7 @@ class TestIndividual(BaseLineageTestCase):
         return self.create_snp_df(
             rsid=["rs1", "rs2", "rs3", "rs4", "rs5"],
             chrom=["1", "1", "1", "1", "1"],
-            pos=[1, 2, 3, 4, 5],
+            pos=[101, 102, 103, 104, 105],
             genotype=["AA", "CC", "GG", "TT", np.nan],
         )
 
