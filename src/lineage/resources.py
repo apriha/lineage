@@ -60,13 +60,14 @@ import zlib
 from atomicwrites import atomic_write
 import pandas as pd
 
+from lineage.ensembl import EnsemblRestClient
 from lineage.utils import create_dir, Singleton
 
 
 class Resources(metaclass=Singleton):
     """ Object used to manage resources required by `lineage`. """
 
-    def __init__(self, resources_dir="resources", ensembl_rest_client=None):
+    def __init__(self, resources_dir="resources"):
         """ Initialize a ``Resources`` object.
 
         Parameters
@@ -79,7 +80,7 @@ class Resources(metaclass=Singleton):
         self._cytoBand_hg19 = pd.DataFrame()
         self._knownGene_hg19 = pd.DataFrame()
         self._kgXref_hg19 = pd.DataFrame()
-        self._ensembl_rest_client = ensembl_rest_client
+        self._ensembl_rest_client = EnsemblRestClient()
 
     def get_genetic_map_HapMapII_GRCh37(self):
         """ Get International HapMap Consortium HapMap Phase II genetic map for Build 37.

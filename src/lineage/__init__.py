@@ -67,10 +67,7 @@ class Lineage:
             processes to launch if multiprocessing
         """
         self._output_dir = os.path.abspath(output_dir)
-        self._ensembl_rest_client = EnsemblRestClient()
-        self._resources = Resources(
-            resources_dir=resources_dir, ensembl_rest_client=self._ensembl_rest_client
-        )
+        self._resources = Resources(resources_dir=resources_dir)
         self._parallelizer = Parallelizer(parallelize=parallelize, processes=processes)
 
     def create_individual(self, name, raw_data=None):
