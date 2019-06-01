@@ -33,18 +33,10 @@ from tests import BaseLineageTestCase
 class TestIndividual(BaseLineageTestCase):
     def generic_snps(self):
         return self.create_snp_df(
-            rsid=["rs1", "rs2", "rs3", "rs4", "rs5"],
-            chrom=["1", "1", "1", "1", "1"],
-            pos=[101, 102, 103, 104, 105],
-            genotype=["AA", "CC", "GG", "TT", np.nan],
-        )
-
-    def generic_het_snps(self):
-        return self.create_snp_df(
-            rsid=["rs6", "rs7", "rs8"],
-            chrom=["1", "1", "1"],
-            pos=[6, 7, 8],
-            genotype=["GC", "TC", "AT"],
+            rsid=["rs1", "rs2", "rs3", "rs4", "rs5", "rs6", "rs7", "rs8"],
+            chrom=["1", "1", "1", "1", "1", "1", "1", "1"],
+            pos=[101, 102, 103, 104, 105, 106, 107, 108],
+            genotype=["AA", "CC", "GG", "TT", np.nan, "GC", "TC", "AT"],
         )
 
     def snps_NCBI36(self):
@@ -145,16 +137,11 @@ class TestIndividual(BaseLineageTestCase):
 
     def test_snps_vcf(self):
         # https://samtools.github.io/hts-specs/VCFv4.2.pdf
+        # this tests for homozygous snps, heterozygous snps, multiallelic snps,
+        # phased snps, and snps with missing rsID
         ind = self.l.create_individual("", "tests/input/testvcf.vcf")
         assert ind.source == "vcf"
         pd.testing.assert_frame_equal(ind.snps, self.generic_snps())
-
-    def test_het_snps_vcf(self):
-        # similar to test_snps_vcf
-        # this tests for heterozygous snps, multiallelic snps, phased snps, and snps with missing rsID
-        ind = self.l.create_individual("", "tests/input/testhetvcf.vcf")
-        assert ind.source == "vcf"
-        pd.testing.assert_frame_equal(ind.snps, self.generic_het_snps())
 
     def test_source_lineage_file(self):
         ind = self.l.create_individual("", "tests/input/GRCh37.csv")
