@@ -62,6 +62,16 @@ class Parallelizer:
             return map(f, tasks)
 
 
+class Singleton(type):
+    # https://stackoverflow.com/a/6798042
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
 def create_dir(path):
     """ Create directory specified by `path` if it doesn't already exist.
 

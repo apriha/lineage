@@ -60,10 +60,10 @@ import zlib
 from atomicwrites import atomic_write
 import pandas as pd
 
-from lineage.utils import create_dir
+from lineage.utils import create_dir, Singleton
 
 
-class Resources:
+class Resources(metaclass=Singleton):
     """ Object used to manage resources required by `lineage`. """
 
     def __init__(self, resources_dir="resources", ensembl_rest_client=None):
