@@ -570,10 +570,8 @@ class TestIndividual(BaseLineageTestCase):
             pd.testing.assert_frame_equal(ind.snps, self.snps_GRCh37())
 
     def test_remap_snps_36_to_37_no_multiprocessing(self):
-        ind = self.l.create_individual("", "tests/input/NCBI36.csv")
-        chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(
-            37, parallelize=False
-        )
+        ind = self.l.create_individual("", "tests/input/NCBI36.csv", parallelize=False)
+        chromosomes_remapped, chromosomes_not_remapped = ind.remap_snps(37)
         assert ind.build == 37
         assert ind.assembly == "GRCh37"
         if len(chromosomes_remapped) == 2:

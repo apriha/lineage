@@ -28,12 +28,21 @@ from pandas.api.types import CategoricalDtype
 
 import lineage
 from lineage.ensembl import EnsemblRestClient
+from lineage.resources import Resources
 from lineage.snps.reader import Reader
-from lineage.utils import save_df_as_csv
+from lineage.utils import save_df_as_csv, Parallelizer
 
 
 class SNPs:
-    def __init__(self, file="", assign_par_snps=True, output_dir="output"):
+    def __init__(
+        self,
+        file="",
+        assign_par_snps=True,
+        output_dir="output",
+        resources_dir="resources",
+        parallelize=True,
+        processes=os.cpu_count(),
+    ):
         """ Object used to read and parse genotype / raw data files.
 
         Parameters
@@ -44,12 +53,20 @@ class SNPs:
             assign PAR SNPs to the X and Y chromosomes
         output_dir : str
             path to output directory
+        resources_dir : str
+            name / path of resources directory
+        parallelize : bool
+            utilize multiprocessing to speedup calculations
+        processes : int
+            processes to launch if multiprocessing
         """
         self._snps = pd.DataFrame()
         self._source = ""
         self._build = 0
         self._build_detected = False
         self._output_dir = output_dir
+        self._resources = Resources(resources_dir=resources_dir)
+        self._parallelizer = Parallelizer(parallelize=parallelize, processes=processes)
 
         if file:
             self._snps, self._source = self._read_raw_data(file)
@@ -542,6 +559,217 @@ class SNPs:
 
         self._snps = snps
 
+    def remap_snps(self, target_assembly, complement_bases=True):
+        """ Remap SNP coordinates from one assembly to another.
+
+        This method uses the assembly map endpoint of the Ensembl REST API service (via
+        ``Resources``'s ``EnsemblRestClient``) to convert SNP coordinates / positions from one
+        assembly to another. After remapping, the coordinates / positions for the
+        SNPs will be that of the target assembly.
+
+        If the SNPs are already mapped relative to the target assembly, remapping will not be
+        performed.
+
+        Parameters
+        ----------
+        target_assembly : {'NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38}
+            assembly to remap to
+        complement_bases : bool
+            complement bases when remapping SNPs to the minus strand
+
+        Returns
+        -------
+        chromosomes_remapped : list of str
+            chromosomes remapped
+        chromosomes_not_remapped : list of str
+            chromosomes not remapped
+
+        Notes
+        -----
+        An assembly is also know as a "build." For example:
+
+        Assembly NCBI36 = Build 36
+        Assembly GRCh37 = Build 37
+        Assembly GRCh38 = Build 38
+
+        See https://www.ncbi.nlm.nih.gov/assembly for more information about assemblies and
+        remapping.
+
+        References
+        ----------
+        ..[1] Ensembl, Assembly Map Endpoint,
+          http://rest.ensembl.org/documentation/info/assembly_map
+        """
+        chromosomes_remapped = []
+        chromosomes_not_remapped = []
+
+        snps = self.snps
+
+        if snps.empty:
+            print("No SNPs to remap")
+            return chromosomes_remapped, chromosomes_not_remapped
+        else:
+            chromosomes = snps["chrom"].unique()
+            chromosomes_not_remapped = list(chromosomes)
+
+        valid_assemblies = ["NCBI36", "GRCh37", "GRCh38", 36, 37, 38]
+
+        if target_assembly not in valid_assemblies:
+            print("Invalid target assembly")
+            return chromosomes_remapped, chromosomes_not_remapped
+
+        if isinstance(target_assembly, int):
+            if target_assembly == 36:
+                target_assembly = "NCBI36"
+            else:
+                target_assembly = "GRCh" + str(target_assembly)
+
+        if self.build == 36:
+            source_assembly = "NCBI36"
+        else:
+            source_assembly = "GRCh" + str(self.build)
+
+        if source_assembly == target_assembly:
+            return chromosomes_remapped, chromosomes_not_remapped
+
+        assembly_mapping_data = self._resources.get_assembly_mapping_data(
+            source_assembly, target_assembly
+        )
+
+        if not assembly_mapping_data:
+            return chromosomes_remapped, chromosomes_not_remapped
+
+        tasks = []
+
+        for chrom in chromosomes:
+            if chrom in assembly_mapping_data:
+                chromosomes_remapped.append(chrom)
+                chromosomes_not_remapped.remove(chrom)
+                mappings = assembly_mapping_data[chrom]
+                tasks.append(
+                    {
+                        "snps": snps.loc[snps["chrom"] == chrom],
+                        "mappings": mappings,
+                        "complement_bases": complement_bases,
+                    }
+                )
+            else:
+                print(
+                    "Chromosome {} not remapped; "
+                    "removing chromosome from SNPs for consistency".format(chrom)
+                )
+                snps = snps.drop(snps.loc[snps["chrom"] == chrom].index)
+
+        # remap SNPs
+        remapped_snps = self._parallelizer(self._remapper, tasks)
+        remapped_snps = pd.concat(remapped_snps)
+
+        # update SNP positions and genotypes
+        snps.loc[remapped_snps.index, "pos"] = remapped_snps["pos"]
+        snps.loc[remapped_snps.index, "genotype"] = remapped_snps["genotype"]
+
+        self._snps = snps
+        self.sort_snps()
+        self._build = int(target_assembly[-2:])
+
+        return chromosomes_remapped, chromosomes_not_remapped
+
+    def _remapper(self, task):
+        """ Remap SNPs for a chromosome.
+
+        Parameters
+        ----------
+        task : dict
+            dict with `snps` to remap per `mappings`, optionally `complement_bases`
+
+        Returns
+        -------
+        pandas.DataFrame
+            remapped SNPs
+        """
+        temp = task["snps"].copy()
+        mappings = task["mappings"]
+        complement_bases = task["complement_bases"]
+
+        temp["remapped"] = False
+
+        pos_start = int(temp["pos"].describe()["min"])
+        pos_end = int(temp["pos"].describe()["max"])
+
+        for mapping in mappings["mappings"]:
+            # skip if mapping is outside of range of SNP positions
+            if (
+                mapping["original"]["end"] <= pos_start
+                or mapping["original"]["start"] >= pos_end
+            ):
+                continue
+
+            orig_range_len = mapping["original"]["end"] - mapping["original"]["start"]
+            mapped_range_len = mapping["mapped"]["end"] - mapping["mapped"]["start"]
+
+            orig_region = mapping["original"]["seq_region_name"]
+            mapped_region = mapping["mapped"]["seq_region_name"]
+
+            if orig_region != mapped_region:
+                print("discrepant chroms")
+                continue
+
+            if orig_range_len != mapped_range_len:
+                print("discrepant coords")  # observed when mapping NCBI36 -> GRCh38
+                continue
+
+            # find the SNPs that are being remapped for this mapping
+            snp_indices = temp.loc[
+                ~temp["remapped"]
+                & (temp["pos"] >= mapping["original"]["start"])
+                & (temp["pos"] <= mapping["original"]["end"])
+            ].index
+
+            if len(snp_indices) > 0:
+                # remap the SNPs
+                if mapping["mapped"]["strand"] == -1:
+                    # flip and (optionally) complement since we're mapping to minus strand
+                    diff_from_start = (
+                        temp.loc[snp_indices, "pos"] - mapping["original"]["start"]
+                    )
+                    temp.loc[snp_indices, "pos"] = (
+                        mapping["mapped"]["end"] - diff_from_start
+                    )
+
+                    if complement_bases:
+                        temp.loc[snp_indices, "genotype"] = temp.loc[
+                            snp_indices, "genotype"
+                        ].apply(self._complement_bases)
+                else:
+                    # mapping is on same (plus) strand, so just remap based on offset
+                    offset = mapping["mapped"]["start"] - mapping["original"]["start"]
+                    temp.loc[snp_indices, "pos"] = temp["pos"] + offset
+
+                # mark these SNPs as remapped
+                temp.loc[snp_indices, "remapped"] = True
+
+        return temp
+
+    def _complement_bases(self, genotype):
+        if pd.isnull(genotype):
+            return np.nan
+
+        complement = ""
+
+        for base in list(genotype):
+            if base == "A":
+                complement += "T"
+            elif base == "G":
+                complement += "C"
+            elif base == "C":
+                complement += "G"
+            elif base == "T":
+                complement += "A"
+            else:
+                complement += base
+
+        return complement
+
     # https://stackoverflow.com/a/16090640
     @staticmethod
     def _natural_sort_key(s, natural_sort_re=re.compile("([0-9]+)")):
@@ -552,7 +780,7 @@ class SNPs:
 
 
 class SNPsCollection(SNPs):
-    def __init__(self, raw_data=None, output_dir="output", name=""):
+    def __init__(self, raw_data=None, output_dir="output", name="", **kwargs):
         """
 
         Parameters
@@ -564,7 +792,7 @@ class SNPsCollection(SNPs):
         name : str
             name for this ``SNPsCollection``
         """
-        super().__init__(file="", output_dir=output_dir)
+        super().__init__(file="", output_dir=output_dir, **kwargs)
 
         self._source = []
         self._discrepant_positions_file_count = 0

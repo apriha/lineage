@@ -18,8 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-import os
-
 from lineage.snps import SNPsCollection
 
 
@@ -32,7 +30,7 @@ class Individual(SNPsCollection):
 
     """
 
-    def __init__(self, name, raw_data=None, output_dir="output"):
+    def __init__(self, name, raw_data=None, output_dir="output", **kwargs):
         """ Initialize an ``Individual`` object.
 
         Parameters
@@ -45,7 +43,7 @@ class Individual(SNPsCollection):
             path to output directory
         """
         self._name = name
-        super().__init__(name=name, raw_data=raw_data, output_dir=output_dir)
+        super().__init__(name=name, raw_data=raw_data, output_dir=output_dir, **kwargs)
 
     def __repr__(self):
         return "Individual({!r})".format(self._name)
@@ -62,78 +60,3 @@ class Individual(SNPsCollection):
 
     def get_var_name(self):
         return self.get_var_repr(self.name)
-
-    def remap_snps(
-        self,
-        target_assembly,
-        complement_bases=True,
-        parallelize=True,
-        processes=os.cpu_count(),
-    ):
-        """ Remap the SNP coordinates of this ``Individual`` from one assembly to another.
-
-        This method is a wrapper for `remap_snps` in the ``Lineage`` class.
-
-        This method uses the assembly map endpoint of the Ensembl REST API service to convert SNP
-        coordinates / positions from one assembly to another. After remapping, the coordinates /
-        positions for the ``Individual``'s SNPs will be that of the target assembly.
-
-        If the SNPs are already mapped relative to the target assembly, remapping will not be
-        performed.
-
-        Parameters
-        ----------
-        target_assembly : {'NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38}
-            assembly to remap to
-        complement_bases : bool
-            complement bases when remapping SNPs to the minus strand
-        parallelize : bool
-            utilize multiprocessing to speedup calculations
-        processes : int
-            processes to launch if multiprocessing
-
-        Returns
-        -------
-        chromosomes_remapped : list of str
-            chromosomes remapped
-        chromosomes_not_remapped : list of str
-            chromosomes not remapped
-
-        Notes
-        -----
-        An assembly is also know as a "build." For example:
-
-        Assembly NCBI36 = Build 36
-        Assembly GRCh37 = Build 37
-        Assembly GRCh38 = Build 38
-
-        See https://www.ncbi.nlm.nih.gov/assembly for more information about assemblies and
-        remapping.
-
-        References
-        ----------
-        ..[1] Ensembl, Assembly Map Endpoint,
-          http://rest.ensembl.org/documentation/info/assembly_map
-        """
-        from lineage import Lineage
-
-        l = Lineage(parallelize=parallelize, processes=processes)
-        return l.remap_snps(self, target_assembly, complement_bases)
-
-    def _set_snps(self, snps, build=37):
-        """ Set `_snps` and `_build` properties of this ``Individual``.
-
-        Notes
-        -----
-        Intended to be used internally to `lineage`.
-
-        Parameters
-        ----------
-        snps : pandas.DataFrame
-            individual's genetic data normalized for use with `lineage`
-        build : int
-            build of this ``Individual``'s SNPs
-        """
-        self._snps = snps
-        self.sort_snps()
-        self._build = build
