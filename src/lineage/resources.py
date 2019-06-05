@@ -81,6 +81,7 @@ class Resources(metaclass=Singleton):
         self._knownGene_hg19 = pd.DataFrame()
         self._kgXref_hg19 = pd.DataFrame()
         self._ensembl_rest_client = EnsemblRestClient()
+        self._reference_sequences = {}
 
     def get_genetic_map_HapMapII_GRCh37(self):
         """ Get International HapMap Consortium HapMap Phase II genetic map for Build 37.
@@ -96,6 +97,77 @@ class Resources(metaclass=Singleton):
             )
 
         return self._genetic_map_HapMapII_GRCh37
+
+    def get_reference_sequences(
+        self,
+        assembly="GRCh37",
+        chroms=(
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "X",
+            "Y",
+            "MT",
+        ),
+    ):
+        """ Get Homo sapiens reference sequences for `chroms` of `assembly`.
+
+        Notes
+        -----
+        This function can download over 800MB of data for each assembly.
+
+        Parameters
+        ----------
+        assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
+            reference sequence assembly
+        chroms : list of str
+            reference sequence chromosomes
+
+        Returns
+        -------
+        dict
+            dict of metadata (paths, etc.) for local reference sequences, else {}
+        """
+        valid_assemblies = ["NCBI36", "GRCh37", "GRCh38"]
+
+        if assembly not in valid_assemblies:
+            print("Invalid assembly")
+            return {}
+
+        if not self._reference_chroms_available(assembly, chroms):
+            self._reference_sequences[assembly] = self._get_sequence_metadata(
+                *self._get_paths_reference_sequences(assembly=assembly, chroms=chroms)
+            )
+
+        return self._reference_sequences[assembly]
+
+    def _reference_chroms_available(self, assembly, chroms):
+        if assembly in self._reference_sequences:
+            for chrom in chroms:
+                if chrom not in self._reference_sequences[assembly]:
+                    return False
+            return True
+        else:
+            return False
 
     def get_cytoBand_hg19(self):
         """ Get UCSC cytoBand table for Build 37.
@@ -240,7 +312,7 @@ class Resources(metaclass=Singleton):
         return paths
 
     def get_all_resources(self):
-        """ Get / download all resources used throughout `lineage`.
+        """ Get / download all resources (except reference sequences) used throughout `lineage`.
 
         Returns
         -------
@@ -259,6 +331,22 @@ class Resources(metaclass=Singleton):
                 source, target
             )
         return resources
+
+    def get_all_reference_sequences(self):
+        """ Get Homo sapiens reference sequences for Builds 36, 37, and 38 from Ensembl.
+
+        Notes
+        -----
+        This function can download over 2.5GB of data!
+
+        Returns
+        -------
+        dict
+            dict of metadata (paths, etc.) for local reference sequences, else {}
+        """
+        for assembly in ("NCBI36", "GRCh37", "GRCh38"):
+            self.get_reference_sequences(assembly=assembly)
+        return self._reference_sequences
 
     @staticmethod
     def _write_data_to_gzip(f, data):
@@ -480,6 +568,111 @@ class Resources(metaclass=Singleton):
             "cytoBand_hg19.txt.gz",
         )
 
+    def _get_paths_reference_sequences(
+        self, sub_dir="reference_sequences", assembly="GRCh37", chroms=()
+    ):
+        """ Get local paths to Homo sapiens reference sequences from Ensembl.
+
+        Notes
+        -----
+        This function can download over 800MB of data for each assembly.
+
+        Parameters
+        ----------
+        sub_dir : str
+            directory under resources to store reference sequence data
+        assembly : {'NCBI36', 'GRCh37', 'GRCh38'}
+            reference sequence assembly
+        chroms : list of str
+            reference sequence chromosomes
+
+        Returns
+        -------
+        assembly : str
+            reference sequence assembly
+        chroms : list of str
+            reference sequence chromosomes
+        urls : list of str
+            urls to Ensembl reference sequences
+        paths : list of str
+            paths to local reference sequences
+
+        References
+        ----------
+        ..[1] Daniel R. Zerbino, Premanand Achuthan, Wasiu Akanni, M. Ridwan Amode,
+          Daniel Barrell, Jyothish Bhai, Konstantinos Billis, Carla Cummins, Astrid Gall,
+          Carlos García Giro´n, Laurent Gil, Leo Gordon, Leanne Haggerty, Erin Haskell,
+          Thibaut Hourlier, Osagie G. Izuogu, Sophie H. Janacek, Thomas Juettemann,
+          Jimmy Kiang To, Matthew R. Laird, Ilias Lavidas, Zhicheng Liu, Jane E. Loveland,
+          Thomas Maurel, William McLaren, Benjamin Moore, Jonathan Mudge, Daniel N. Murphy,
+          Victoria Newman, Michael Nuhn, Denye Ogeh, Chuang Kee Ong, Anne Parker,
+          Mateus Patricio, Harpreet Singh Riat, Helen Schuilenburg, Dan Sheppard,
+          Helen Sparrow, Kieron Taylor, Anja Thormann, Alessandro Vullo, Brandon Walts,
+          Amonida Zadissa, Adam Frankish, Sarah E. Hunt, Myrto Kostadima, Nicholas Langridge,
+          Fergal J. Martin, Matthieu Muffato, Emily Perry, Magali Ruffier, Dan M. Staines,
+          Stephen J. Trevanion, Bronwen L. Aken, Fiona Cunningham, Andrew Yates, Paul Flicek
+          Ensembl 2018.
+          PubMed PMID: 29155950.
+          doi:10.1093/nar/gkx1098
+        ..[2] NCBI 36, Oct 2005, Ensembl release 54, Database version: 54.36p
+        ..[3] GRCh37.p13 (Genome Reference Consortium Human Reference 37),
+          INSDC Assembly GCA_000001405.14, Feb 2009, Ensembl GRCh37 release 96, Database
+          version: 96.37
+        ..[4] GRCh38.p12 (Genome Reference Consortium Human Build 38),
+          INSDC Assembly GCA_000001405.27, Dec 2013, Ensembl release 96, Database
+          version: 96.38
+        """
+        release = ""
+
+        # https://www.biostars.org/p/374149/#374219
+        if assembly == "GRCh37":
+            base = "ftp://ftp.ensembl.org/pub/grch37/current/fasta/homo_sapiens/dna/"
+        elif assembly == "NCBI36":
+            base = "ftp://ftp.ensembl.org/pub/release-54/fasta/homo_sapiens/dna/"
+            release = "54."
+        elif assembly == "GRCh38":
+            base = "ftp://ftp.ensembl.org/pub/release-96/fasta/homo_sapiens/dna/"
+        else:
+            return ("", [], [], [])
+
+        filenames = [
+            "Homo_sapiens.{}.{}dna.chromosome.{}.fa.gz".format(assembly, release, chrom)
+            for chrom in chroms
+        ]
+
+        urls = ["{}{}".format(base, filename) for filename in filenames]
+
+        local_filenames = [
+            "{}{}{}{}{}".format(sub_dir, os.sep, assembly, os.sep, filename)
+            for filename in filenames
+        ]
+
+        return (
+            assembly,
+            chroms,
+            urls,
+            list(map(self._download_file, urls, local_filenames)),
+        )
+
+    def _get_sequence_metadata(self, assembly, chroms, urls, paths):
+        # https://samtools.github.io/hts-specs/VCFv4.2.pdf
+        metadata = {}
+
+        for i, path in enumerate(paths):
+            if not path:
+                continue
+
+            d = {}
+            d["ID"] = chroms[i]
+            d["url"] = urls[i]
+            d["path"] = os.path.relpath(path)
+            d["assembly"] = "B{}".format(assembly[-2:])
+            d["species"] = "Homo sapiens"
+            d["taxonomy"] = "x"
+            metadata[chroms[i]] = d
+
+        return metadata
+
     def _get_path_genetic_map_HapMapII_GRCh37(self):
         """ Get local path to HapMap Phase II genetic map for hg19 / GRCh37 (HapMapII),
         downloading if necessary.
@@ -678,13 +871,13 @@ class Resources(metaclass=Singleton):
         str
             path to downloaded file, empty str if error
         """
-        if not create_dir(self._resources_dir):
-            return ""
-
         if compress and filename[-3:] != ".gz":
             filename += ".gz"
 
         destination = os.path.join(self._resources_dir, filename)
+
+        if not create_dir(os.path.relpath(os.path.dirname(destination))):
+            return ""
 
         if not os.path.exists(destination):
             try:
