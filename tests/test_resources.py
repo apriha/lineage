@@ -118,90 +118,117 @@ class TestResources(BaseLineageTestCase):
         assert not urls
         assert not paths
 
-    def test_get_sequence_metadata_NCBI36(self):
+    def test_create_reference_sequences_NCBI36(self):
         assembly, chroms, urls, paths = self.resource._get_paths_reference_sequences(
             assembly="NCBI36", chroms=["MT"]
         )
-        seqs = self.resource._get_sequence_metadata(assembly, chroms, urls, paths)
+        seqs = self.resource._create_reference_sequences(assembly, chroms, urls, paths)
         assert len(seqs) == 1
-        assert seqs["MT"]["ID"] == "MT"
+        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='B36', ID='MT')"
+        assert seqs["MT"].ID == "MT"
+        assert seqs["MT"].chrom == "MT"
         assert (
-            seqs["MT"]["url"]
+            seqs["MT"].url
             == "ftp://ftp.ensembl.org/pub/release-54/fasta/homo_sapiens/dna/Homo_sapiens.NCBI36.54.dna.chromosome.MT.fa.gz"
         )
         assert (
-            seqs["MT"]["path"]
+            seqs["MT"].path
             == "resources/reference_sequences/NCBI36/Homo_sapiens.NCBI36.54.dna.chromosome.MT.fa.gz"
         )
-        assert os.path.exists(seqs["MT"]["path"])
-        assert seqs["MT"]["assembly"] == "B36"
-        assert seqs["MT"]["species"] == "Homo sapiens"
-        assert seqs["MT"]["taxonomy"] == "x"
+        assert os.path.exists(seqs["MT"].path)
+        assert seqs["MT"].assembly == "B36"
+        assert seqs["MT"].species == "Homo sapiens"
+        assert seqs["MT"].taxonomy == "x"
 
-    def test_get_sequence_metadata_GRCh37(self):
+    def test_create_reference_sequences_GRCh37(self):
         assembly, chroms, urls, paths = self.resource._get_paths_reference_sequences(
             assembly="GRCh37", chroms=["MT"]
         )
-        seqs = self.resource._get_sequence_metadata(assembly, chroms, urls, paths)
+        seqs = self.resource._create_reference_sequences(assembly, chroms, urls, paths)
         assert len(seqs) == 1
-        assert seqs["MT"]["ID"] == "MT"
+        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='B37', ID='MT')"
+        assert seqs["MT"].ID == "MT"
+        assert seqs["MT"].chrom == "MT"
         assert (
-            seqs["MT"]["url"]
+            seqs["MT"].url
             == "ftp://ftp.ensembl.org/pub/grch37/current/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna.chromosome.MT.fa.gz"
         )
         assert (
-            seqs["MT"]["path"]
+            seqs["MT"].path
             == "resources/reference_sequences/GRCh37/Homo_sapiens.GRCh37.dna.chromosome.MT.fa.gz"
         )
-        assert os.path.exists(seqs["MT"]["path"])
-        assert seqs["MT"]["assembly"] == "B37"
-        assert seqs["MT"]["species"] == "Homo sapiens"
-        assert seqs["MT"]["taxonomy"] == "x"
+        assert os.path.exists(seqs["MT"].path)
+        assert seqs["MT"].assembly == "B37"
+        assert seqs["MT"].species == "Homo sapiens"
+        assert seqs["MT"].taxonomy == "x"
 
-    def test_get_sequence_metadata_GRCh38(self):
+    def test_create_reference_sequences_GRCh38(self):
         assembly, chroms, urls, paths = self.resource._get_paths_reference_sequences(
             assembly="GRCh38", chroms=["MT"]
         )
-        seqs = self.resource._get_sequence_metadata(assembly, chroms, urls, paths)
+        seqs = self.resource._create_reference_sequences(assembly, chroms, urls, paths)
         assert len(seqs) == 1
-        assert seqs["MT"]["ID"] == "MT"
+        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='B38', ID='MT')"
+        assert seqs["MT"].ID == "MT"
+        assert seqs["MT"].chrom == "MT"
         assert (
-            seqs["MT"]["url"]
+            seqs["MT"].url
             == "ftp://ftp.ensembl.org/pub/release-96/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.MT.fa.gz"
         )
         assert (
-            seqs["MT"]["path"]
+            seqs["MT"].path
             == "resources/reference_sequences/GRCh38/Homo_sapiens.GRCh38.dna.chromosome.MT.fa.gz"
         )
-        assert os.path.exists(seqs["MT"]["path"])
-        assert seqs["MT"]["assembly"] == "B38"
-        assert seqs["MT"]["species"] == "Homo sapiens"
-        assert seqs["MT"]["taxonomy"] == "x"
+        assert os.path.exists(seqs["MT"].path)
+        assert seqs["MT"].assembly == "B38"
+        assert seqs["MT"].species == "Homo sapiens"
+        assert seqs["MT"].taxonomy == "x"
 
-    def test_get_sequence_metadata_GRCh38_invalid_path(self):
+    def test_create_reference_sequences_invalid_path(self):
         assembly, chroms, urls, paths = self.resource._get_paths_reference_sequences(
             assembly="GRCh38", chroms=["MT"]
         )
         paths[0] = ""
-        seqs = self.resource._get_sequence_metadata(assembly, chroms, urls, paths)
+        seqs = self.resource._create_reference_sequences(assembly, chroms, urls, paths)
         assert len(seqs) == 0
 
     def test_get_reference_sequences(self):
         seqs = self.resource.get_reference_sequences(chroms=["MT"])
         assert len(seqs) == 1
-        assert seqs["MT"]["ID"] == "MT"
+        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='B37', ID='MT')"
+        assert seqs["MT"].ID == "MT"
+        assert seqs["MT"].chrom == "MT"
         assert (
-            seqs["MT"]["url"]
+            seqs["MT"].url
             == "ftp://ftp.ensembl.org/pub/grch37/current/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna.chromosome.MT.fa.gz"
         )
         assert (
-            seqs["MT"]["path"]
+            seqs["MT"].path
             == "resources/reference_sequences/GRCh37/Homo_sapiens.GRCh37.dna.chromosome.MT.fa.gz"
         )
-        assert os.path.exists(seqs["MT"]["path"])
-        assert seqs["MT"]["assembly"] == "B37"
-        assert seqs["MT"]["species"] == "Homo sapiens"
-        assert seqs["MT"]["taxonomy"] == "x"
+        assert os.path.exists(seqs["MT"].path)
+        assert seqs["MT"].assembly == "B37"
+        assert seqs["MT"].species == "Homo sapiens"
+        assert seqs["MT"].taxonomy == "x"
+
+    def test_get_all_reference_sequences(self):
+        seqs = self.resource.get_all_reference_sequences(chroms=["MT"])
+        assert len(seqs) == 3
+        assert len(seqs["NCBI36"]) == 1
+        assert (
+            seqs["NCBI36"]["MT"].path
+            == "resources/reference_sequences/NCBI36/Homo_sapiens.NCBI36.54.dna.chromosome.MT.fa.gz"
+        )
+        assert len(seqs["GRCh37"]) == 1
+        assert (
+            seqs["GRCh37"]["MT"].path
+            == "resources/reference_sequences/GRCh37/Homo_sapiens.GRCh37.dna.chromosome.MT.fa.gz"
+        )
+        assert len(seqs["GRCh38"]) == 1
+        assert (
+            seqs["GRCh38"]["MT"].path
+            == "resources/reference_sequences/GRCh38/Homo_sapiens.GRCh38.dna.chromosome.MT.fa.gz"
+        )
 
     def test_get_reference_sequences_invalid_assembly(self):
         seqs = self.resource.get_reference_sequences(assembly="36")
@@ -212,16 +239,18 @@ class TestResources(BaseLineageTestCase):
         del self.resource._reference_sequences["GRCh37"]["MT"]
         seqs = self.resource.get_reference_sequences(chroms=["MT"])
         assert len(seqs) == 1
-        assert seqs["MT"]["ID"] == "MT"
+        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='B37', ID='MT')"
+        assert seqs["MT"].ID == "MT"
+        assert seqs["MT"].chrom == "MT"
         assert (
-            seqs["MT"]["url"]
+            seqs["MT"].url
             == "ftp://ftp.ensembl.org/pub/grch37/current/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna.chromosome.MT.fa.gz"
         )
         assert (
-            seqs["MT"]["path"]
+            seqs["MT"].path
             == "resources/reference_sequences/GRCh37/Homo_sapiens.GRCh37.dna.chromosome.MT.fa.gz"
         )
-        assert os.path.exists(seqs["MT"]["path"])
-        assert seqs["MT"]["assembly"] == "B37"
-        assert seqs["MT"]["species"] == "Homo sapiens"
-        assert seqs["MT"]["taxonomy"] == "x"
+        assert os.path.exists(seqs["MT"].path)
+        assert seqs["MT"].assembly == "B37"
+        assert seqs["MT"].species == "Homo sapiens"
+        assert seqs["MT"].taxonomy == "x"

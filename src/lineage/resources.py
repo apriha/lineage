@@ -145,7 +145,7 @@ class Resources(metaclass=Singleton):
         Returns
         -------
         dict
-            dict of metadata (paths, etc.) for local reference sequences, else {}
+            dict of ReferenceSequence, else {}
         """
         valid_assemblies = ["NCBI36", "GRCh37", "GRCh38"]
 
@@ -154,7 +154,7 @@ class Resources(metaclass=Singleton):
             return {}
 
         if not self._reference_chroms_available(assembly, chroms):
-            self._reference_sequences[assembly] = self._get_sequence_metadata(
+            self._reference_sequences[assembly] = self._create_reference_sequences(
                 *self._get_paths_reference_sequences(assembly=assembly, chroms=chroms)
             )
 
@@ -332,20 +332,20 @@ class Resources(metaclass=Singleton):
             )
         return resources
 
-    def get_all_reference_sequences(self):
+    def get_all_reference_sequences(self, **kwargs):
         """ Get Homo sapiens reference sequences for Builds 36, 37, and 38 from Ensembl.
 
         Notes
         -----
-        This function can download over 2.5GB of data!
+        This function can download over 2.5GB of data.
 
         Returns
         -------
         dict
-            dict of metadata (paths, etc.) for local reference sequences, else {}
+            dict of ReferenceSequence, else {}
         """
         for assembly in ("NCBI36", "GRCh37", "GRCh38"):
-            self.get_reference_sequences(assembly=assembly)
+            self.get_reference_sequences(assembly=assembly, **kwargs)
         return self._reference_sequences
 
     @staticmethod
@@ -654,9 +654,9 @@ class Resources(metaclass=Singleton):
             list(map(self._download_file, urls, local_filenames)),
         )
 
-    def _get_sequence_metadata(self, assembly, chroms, urls, paths):
+    def _create_reference_sequences(self, assembly, chroms, urls, paths):
         # https://samtools.github.io/hts-specs/VCFv4.2.pdf
-        metadata = {}
+        seqs = {}
 
         for i, path in enumerate(paths):
             if not path:
@@ -669,9 +669,9 @@ class Resources(metaclass=Singleton):
             d["assembly"] = "B{}".format(assembly[-2:])
             d["species"] = "Homo sapiens"
             d["taxonomy"] = "x"
-            metadata[chroms[i]] = d
+            seqs[chroms[i]] = ReferenceSequence(**d)
 
-        return metadata
+        return seqs
 
     def _get_path_genetic_map_HapMapII_GRCh37(self):
         """ Get local path to HapMap Phase II genetic map for hg19 / GRCh37 (HapMapII),
@@ -920,3 +920,112 @@ class Resources(metaclass=Singleton):
             path to file being downloaded
         """
         print("Downloading " + os.path.relpath(path))
+
+
+class ReferenceSequence:
+    """ Object used to represent and interact with a reference sequence. """
+
+    def __init__(self, ID="", url="", path="", assembly="", species="", taxonomy=""):
+        """ Initialize a ``ReferenceSequence`` object.
+
+        Parameters
+        ----------
+        ID : str
+            reference sequence chromosome
+        url : str
+            url to Ensembl reference sequence
+        path : str
+            path to local reference sequence
+        assembly : str
+            reference sequence assembly / build (e.g., "B37")
+        species : str
+            reference sequence species
+        taxonomy : str
+            reference sequence taxonomy
+
+        References
+        ----------
+        ..[1] The Variant Call Format (VCF) Version 4.2 Specification, 8 Mar 2019,
+          https://samtools.github.io/hts-specs/VCFv4.2.pdf
+        """
+        self._ID = ID
+        self._url = url
+        self._path = path
+        self._assembly = assembly
+        self._species = species
+        self._taxonomy = taxonomy
+
+    def __repr__(self):
+        return "ReferenceSequence(assembly={!r}, ID={!r})".format(
+            self._assembly, self._ID
+        )
+
+    @property
+    def ID(self):
+        """ Get reference sequence chromosome.
+
+        Returns
+        -------
+        str
+        """
+        return self._ID
+
+    @property
+    def chrom(self):
+        """ Get reference sequence chromosome.
+
+        Returns
+        -------
+        str
+        """
+        return self._ID
+
+    @property
+    def url(self):
+        """ Get URL to Ensembl reference sequence.
+
+        Returns
+        -------
+        str
+        """
+        return self._url
+
+    @property
+    def path(self):
+        """ Get path to local reference sequence.
+
+        Returns
+        -------
+        str
+        """
+        return self._path
+
+    @property
+    def assembly(self):
+        """ Get reference sequence assembly.
+
+        Returns
+        -------
+        str
+        """
+        return self._assembly
+
+    @property
+    def species(self):
+        """ Get reference sequence species.
+
+        Returns
+        -------
+        str
+        """
+        return self._species
+
+    @property
+    def taxonomy(self):
+        """ Get reference sequence taxonomy.
+
+        Returns
+        -------
+        str
+        """
+        return self._taxonomy
