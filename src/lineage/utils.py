@@ -27,7 +27,7 @@ import lineage
 
 
 class Parallelizer:
-    def __init__(self, parallelize=True, processes=os.cpu_count()):
+    def __init__(self, parallelize=False, processes=os.cpu_count()):
         """ Initialize a `Parallelizer`.
 
         Parameters

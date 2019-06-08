@@ -47,7 +47,7 @@ class Lineage:
         self,
         output_dir="output",
         resources_dir="resources",
-        parallelize=True,
+        parallelize=False,
         processes=os.cpu_count(),
     ):
         """ Initialize a ``Lineage`` object.

@@ -39,7 +39,7 @@ class SNPs:
         assign_par_snps=True,
         output_dir="output",
         resources_dir="resources",
-        parallelize=True,
+        parallelize=False,
         processes=os.cpu_count(),
     ):
         """ Object used to read and parse genotype / raw data files.
