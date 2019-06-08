@@ -1008,8 +1008,9 @@ class SNPsCollection(SNPs):
 
             if 0 < len(discrepant_positions) < discrepant_snp_positions_threshold:
                 print(
-                    str(len(discrepant_positions)) + " SNP positions were discrepant; "
-                    "keeping original positions"
+                    "{} SNP positions were discrepant; keeping original positions".format(
+                        str(len(discrepant_positions))
+                    )
                 )
 
                 if save_output:
@@ -1017,10 +1018,11 @@ class SNPsCollection(SNPs):
                     save_df_as_csv(
                         discrepant_positions,
                         self._output_dir,
-                        clean_str(self._name)
-                        + "_discrepant_positions_"
-                        + str(self._discrepant_positions_file_count)
-                        + ".csv",
+                        "{}_discrepant_positions_{}{}".format(
+                            clean_str(self._name),
+                            str(self._discrepant_positions_file_count),
+                            ".csv",
+                        ),
                     )
             elif len(discrepant_positions) >= discrepant_snp_positions_threshold:
                 print(
@@ -1073,8 +1075,9 @@ class SNPsCollection(SNPs):
 
             if 0 < len(discrepant_genotypes) < discrepant_genotypes_threshold:
                 print(
-                    str(len(discrepant_genotypes)) + " SNP genotypes were discrepant; "
-                    "marking those as null"
+                    "{} SNP genotypes were discrepant; marking those as null".format(
+                        str(len(discrepant_genotypes))
+                    )
                 )
 
                 if save_output:
@@ -1082,10 +1085,11 @@ class SNPsCollection(SNPs):
                     save_df_as_csv(
                         discrepant_genotypes,
                         self._output_dir,
-                        clean_str(self._name)
-                        + "_discrepant_genotypes_"
-                        + str(self._discrepant_genotypes_file_count)
-                        + ".csv",
+                        "{}_discrepant_genotypes_{}{}".format(
+                            clean_str(self._name),
+                            str(self._discrepant_genotypes_file_count),
+                            ".csv",
+                        ),
                     )
             elif len(discrepant_genotypes) >= discrepant_genotypes_threshold:
                 print(
