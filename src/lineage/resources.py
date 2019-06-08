@@ -48,6 +48,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import gzip
+import hashlib
 import itertools
 import json
 import os
@@ -58,6 +59,7 @@ import urllib.request
 import zlib
 
 from atomicwrites import atomic_write
+import numpy as np
 import pandas as pd
 
 from lineage.ensembl import EnsemblRestClient
@@ -954,6 +956,11 @@ class ReferenceSequence:
         self._assembly = assembly
         self._species = species
         self._taxonomy = taxonomy
+        self._sequence = np.array([], dtype=np.uint8)
+        self._md5 = ""
+        self._start = 0
+        self._end = 0
+        self._length = 0
 
     def __repr__(self):
         return "ReferenceSequence(assembly={!r}, ID={!r})".format(
@@ -1029,3 +1036,95 @@ class ReferenceSequence:
         str
         """
         return self._taxonomy
+
+    @property
+    def sequence(self):
+        """ Get reference sequence.
+
+        Returns
+        -------
+        np.array(dtype=np.uint8)
+        """
+        self._load_sequence()
+        return self._sequence
+
+    @property
+    def md5(self):
+        """ Get reference sequence MD5 hash.
+
+        Returns
+        -------
+        str
+        """
+        self._load_sequence()
+        return self._md5
+
+    @property
+    def start(self):
+        """ Get reference sequence start position (1-based).
+
+        Returns
+        -------
+        int
+        """
+        self._load_sequence()
+        return self._start
+
+    @property
+    def end(self):
+        """ Get reference sequence end position (1-based).
+
+        Returns
+        -------
+        int
+        """
+        self._load_sequence()
+        return self._end
+
+    @property
+    def length(self):
+        """ Get reference sequence length.
+
+        Returns
+        -------
+        int
+        """
+        self._load_sequence()
+        return self._sequence.size
+
+    def clear(self):
+        """ Clear reference sequence. """
+        self._sequence = np.array([], dtype=np.uint8)
+        self._md5 = ""
+        self._start = 0
+        self._end = 0
+        self._length = 0
+
+    def _load_sequence(self):
+        if not self._sequence.size:
+            # decompress and read file
+            with gzip.open(self._path, "rb") as f:
+                data = f.read()
+
+            # convert bytes to str
+            data = str(data, encoding="utf-8", errors="strict")
+
+            data = data.split("\n")
+
+            self._start, self._end = self._parse_first_line(data[0])
+
+            # convert str (FASTA sequence) to bytes
+            data = bytearray("".join(data[1:]), encoding="utf-8", errors="strict")
+
+            # get MD5 of FASTA sequence
+            self._md5 = hashlib.md5(data).hexdigest()
+
+            # store FASTA sequence as `np.uint8` array
+            self._sequence = np.array(data, dtype=np.uint8)
+
+    def _parse_first_line(self, first_line):
+        items = first_line.split(":")
+        return (
+            int(items[items.index(self._ID) + 1]),
+            int(items[items.index(self._ID) + 2]),
+        )

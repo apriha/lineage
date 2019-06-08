@@ -254,3 +254,24 @@ class TestResources(BaseLineageTestCase):
         assert seqs["MT"].assembly == "B37"
         assert seqs["MT"].species == "Homo sapiens"
         assert seqs["MT"].taxonomy == "x"
+
+    def test_reference_sequence_load_sequence(self):
+        seqs = self.resource.get_reference_sequences(chroms=["MT"])
+        assert len(seqs["MT"].sequence) == 16569
+        assert seqs["MT"].md5 == "c68f52674c9fb33aef52dcf399755519"
+        assert seqs["MT"].start == 1
+        assert seqs["MT"].end == 16569
+        assert seqs["MT"].length == 16569
+
+        seqs["MT"].clear()
+        assert seqs["MT"]._sequence.size == 0
+        assert seqs["MT"]._md5 == ""
+        assert seqs["MT"]._start == 0
+        assert seqs["MT"]._end == 0
+        assert seqs["MT"]._length == 0
+
+        assert len(seqs["MT"].sequence) == 16569
+        assert seqs["MT"].md5 == "c68f52674c9fb33aef52dcf399755519"
+        assert seqs["MT"].start == 1
+        assert seqs["MT"].end == 16569
+        assert seqs["MT"].length == 16569
