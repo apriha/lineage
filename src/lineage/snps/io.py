@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 import vcf
 
-from lineage.utils import save_df_as_csv
+from lineage.utils import save_df_as_csv, clean_str
 
 
 class Reader:
@@ -501,7 +501,7 @@ class Writer:
         filename = self._filename
         if not filename:
             filename = "{}_lineage_{}{}".format(
-                self._snps.get_var_repr(self._snps._source), self._snps.assembly, ".csv"
+                clean_str(self._snps._source), self._snps.assembly, ".csv"
             )
 
         return save_df_as_csv(

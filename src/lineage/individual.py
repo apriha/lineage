@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from lineage.snps import SNPsCollection
+from lineage.utils import clean_str
 
 
 class Individual(SNPsCollection):
@@ -59,4 +60,4 @@ class Individual(SNPsCollection):
         return self._name
 
     def get_var_name(self):
-        return self.get_var_repr(self.name)
+        return clean_str(self.name)

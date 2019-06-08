@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import datetime
 from multiprocessing import Pool
 import os
+import re
 
 from atomicwrites import atomic_write
 import pandas as pd
@@ -152,3 +153,21 @@ def save_df_as_csv(df, path, filename, comment="", **kwargs):
     else:
         print("no data to save...")
         return ""
+
+
+def clean_str(s):
+    """ Clean a string so that it can be used as a Python variable name.
+
+    Parameters
+    ----------
+    s : str
+        string to clean
+
+    Returns
+    -------
+    str
+        string that can be used as a Python variable name
+    """
+    # http://stackoverflow.com/a/3305731
+    # https://stackoverflow.com/a/52335971
+    return re.sub(r"\W|^(?=\d)", "_", s)

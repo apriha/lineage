@@ -29,7 +29,7 @@ from pandas.api.types import CategoricalDtype
 from lineage.ensembl import EnsemblRestClient
 from lineage.resources import Resources
 from lineage.snps.io import Reader, Writer
-from lineage.utils import save_df_as_csv, Parallelizer
+from lineage.utils import save_df_as_csv, Parallelizer, clean_str
 
 
 class SNPs:
@@ -226,27 +226,6 @@ class SNPs:
             path to file in output directory if SNPs were saved, else empty str
         """
         return Writer.write_file(snps=self, filename=filename)
-
-    def get_var_repr(self, s):
-        return self._clean_string(s)
-
-    def _clean_string(self, s):
-        """ Clean a string so that it can be a valid Python variable
-        name.
-
-        Parameters
-        ----------
-        s : str
-            string to clean
-
-        Returns
-        -------
-        str
-            cleaned string that can be used as a variable name
-        """
-        # http://stackoverflow.com/a/3305731
-        # https://stackoverflow.com/a/52335971
-        return re.sub(r"\W|^(?=\d)", "_", s)
 
     def _read_raw_data(self, file):
         return Reader.read_file(file)
@@ -903,7 +882,7 @@ class SNPsCollection(SNPs):
         """
         if not filename:
             filename = "{}_lineage_{}{}".format(
-                self.get_var_repr(self._name), self.assembly, ".csv"
+                clean_str(self._name), self.assembly, ".csv"
             )
         return super().save_snps(filename)
 
@@ -960,7 +939,7 @@ class SNPsCollection(SNPs):
 
     def _save_discrepant_snps_file(self, df, name, filename):
         if not filename:
-            filename = self.get_var_repr(self._name) + "_" + name + ".csv"
+            filename = clean_str(self._name) + "_" + name + ".csv"
 
         return save_df_as_csv(
             df,
@@ -1038,7 +1017,7 @@ class SNPsCollection(SNPs):
                     save_df_as_csv(
                         discrepant_positions,
                         self._output_dir,
-                        self.get_var_repr(self._name)
+                        clean_str(self._name)
                         + "_discrepant_positions_"
                         + str(self._discrepant_positions_file_count)
                         + ".csv",
@@ -1103,7 +1082,7 @@ class SNPsCollection(SNPs):
                     save_df_as_csv(
                         discrepant_genotypes,
                         self._output_dir,
-                        self.get_var_repr(self._name)
+                        clean_str(self._name)
                         + "_discrepant_genotypes_"
                         + str(self._discrepant_genotypes_file_count)
                         + ".csv",
