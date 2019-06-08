@@ -36,7 +36,7 @@ class Reader:
         file : str
             path to file to read
         """
-        self.file = file
+        self._file = file
 
     def __call__(self):
         """ Read and parse a raw data / genotype file.
@@ -46,7 +46,7 @@ class Reader:
         tuple : (pandas.DataFrame, str)
             dataframe of parsed SNPs, detected source of SNPs
         """
-        file = self.file
+        file = self._file
 
         try:
             if not os.path.exists(file):
