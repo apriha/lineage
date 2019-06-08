@@ -16,12 +16,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+import gzip
 import os
+import shutil
 import warnings
 
 from atomicwrites import atomic_write
+import numpy as np
 
-from lineage import Resources
+from lineage.resources import Resources, ReferenceSequence
 from tests import BaseLineageTestCase
 
 
@@ -275,3 +278,32 @@ class TestResources(BaseLineageTestCase):
         assert seqs["MT"].start == 1
         assert seqs["MT"].end == 16569
         assert seqs["MT"].length == 16569
+
+    def test_reference_sequence_generic_load_sequence(self):
+        with open("tests/input/generic.fa", "rb") as f_in:
+            with atomic_write(
+                "tests/input/generic.fa.gz", mode="wb", overwrite=True
+            ) as f_out:
+                with gzip.open(f_out, "wb") as f_gzip:
+                    shutil.copyfileobj(f_in, f_gzip)
+
+        seq = ReferenceSequence(ID="1", path="tests/input/generic.fa.gz")
+        assert seq.ID == "1"
+        assert seq.chrom == "1"
+        assert seq.path == "tests/input/generic.fa.gz"
+        np.testing.assert_array_equal(
+            seq.sequence,
+            np.array(
+                bytearray(
+                    "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNAGGCCGGACN",
+                    encoding="utf-8",
+                    errors="strict",
+                ),
+                dtype=np.uint8,
+            ),
+        )
+        assert list("AGGCCGGAC") == list(map(chr, seq.sequence[100:109]))
+        assert seq.md5 == "dc86fbda2f6febd77622407beae66b9a"
+        assert seq.start == 1
+        assert seq.end == 110
+        assert seq.length == 110

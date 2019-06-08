@@ -115,3 +115,4 @@ tests/input/23andme.txt.zip
 tests/input/discrepant_snps[12].csv
 tests/input/empty.txt
 tests/input/ftdna.csv.gz
+tests/input/generic.fa.gz
