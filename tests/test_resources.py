@@ -127,7 +127,7 @@ class TestResources(BaseLineageTestCase):
         )
         seqs = self.resource._create_reference_sequences(assembly, chroms, urls, paths)
         assert len(seqs) == 1
-        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='B36', ID='MT')"
+        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='NCBI36', ID='MT')"
         assert seqs["MT"].ID == "MT"
         assert seqs["MT"].chrom == "MT"
         assert (
@@ -139,7 +139,8 @@ class TestResources(BaseLineageTestCase):
             == "resources/reference_sequences/NCBI36/Homo_sapiens.NCBI36.54.dna.chromosome.MT.fa.gz"
         )
         assert os.path.exists(seqs["MT"].path)
-        assert seqs["MT"].assembly == "B36"
+        assert seqs["MT"].assembly == "NCBI36"
+        assert seqs["MT"].build == "B36"
         assert seqs["MT"].species == "Homo sapiens"
         assert seqs["MT"].taxonomy == "x"
 
@@ -149,7 +150,7 @@ class TestResources(BaseLineageTestCase):
         )
         seqs = self.resource._create_reference_sequences(assembly, chroms, urls, paths)
         assert len(seqs) == 1
-        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='B37', ID='MT')"
+        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='GRCh37', ID='MT')"
         assert seqs["MT"].ID == "MT"
         assert seqs["MT"].chrom == "MT"
         assert (
@@ -161,7 +162,8 @@ class TestResources(BaseLineageTestCase):
             == "resources/reference_sequences/GRCh37/Homo_sapiens.GRCh37.dna.chromosome.MT.fa.gz"
         )
         assert os.path.exists(seqs["MT"].path)
-        assert seqs["MT"].assembly == "B37"
+        assert seqs["MT"].assembly == "GRCh37"
+        assert seqs["MT"].build == "B37"
         assert seqs["MT"].species == "Homo sapiens"
         assert seqs["MT"].taxonomy == "x"
 
@@ -171,7 +173,7 @@ class TestResources(BaseLineageTestCase):
         )
         seqs = self.resource._create_reference_sequences(assembly, chroms, urls, paths)
         assert len(seqs) == 1
-        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='B38', ID='MT')"
+        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='GRCh38', ID='MT')"
         assert seqs["MT"].ID == "MT"
         assert seqs["MT"].chrom == "MT"
         assert (
@@ -183,7 +185,8 @@ class TestResources(BaseLineageTestCase):
             == "resources/reference_sequences/GRCh38/Homo_sapiens.GRCh38.dna.chromosome.MT.fa.gz"
         )
         assert os.path.exists(seqs["MT"].path)
-        assert seqs["MT"].assembly == "B38"
+        assert seqs["MT"].assembly == "GRCh38"
+        assert seqs["MT"].build == "B38"
         assert seqs["MT"].species == "Homo sapiens"
         assert seqs["MT"].taxonomy == "x"
 
@@ -198,7 +201,7 @@ class TestResources(BaseLineageTestCase):
     def test_get_reference_sequences(self):
         seqs = self.resource.get_reference_sequences(chroms=["MT"])
         assert len(seqs) == 1
-        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='B37', ID='MT')"
+        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='GRCh37', ID='MT')"
         assert seqs["MT"].ID == "MT"
         assert seqs["MT"].chrom == "MT"
         assert (
@@ -210,7 +213,8 @@ class TestResources(BaseLineageTestCase):
             == "resources/reference_sequences/GRCh37/Homo_sapiens.GRCh37.dna.chromosome.MT.fa.gz"
         )
         assert os.path.exists(seqs["MT"].path)
-        assert seqs["MT"].assembly == "B37"
+        assert seqs["MT"].assembly == "GRCh37"
+        assert seqs["MT"].build == "B37"
         assert seqs["MT"].species == "Homo sapiens"
         assert seqs["MT"].taxonomy == "x"
 
@@ -242,7 +246,7 @@ class TestResources(BaseLineageTestCase):
         del self.resource._reference_sequences["GRCh37"]["MT"]
         seqs = self.resource.get_reference_sequences(chroms=["MT"])
         assert len(seqs) == 1
-        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='B37', ID='MT')"
+        assert seqs["MT"].__repr__() == "ReferenceSequence(assembly='GRCh37', ID='MT')"
         assert seqs["MT"].ID == "MT"
         assert seqs["MT"].chrom == "MT"
         assert (
@@ -254,7 +258,8 @@ class TestResources(BaseLineageTestCase):
             == "resources/reference_sequences/GRCh37/Homo_sapiens.GRCh37.dna.chromosome.MT.fa.gz"
         )
         assert os.path.exists(seqs["MT"].path)
-        assert seqs["MT"].assembly == "B37"
+        assert seqs["MT"].assembly == "GRCh37"
+        assert seqs["MT"].build == "B37"
         assert seqs["MT"].species == "Homo sapiens"
         assert seqs["MT"].taxonomy == "x"
 

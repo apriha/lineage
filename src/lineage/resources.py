@@ -668,7 +668,7 @@ class Resources(metaclass=Singleton):
             d["ID"] = chroms[i]
             d["url"] = urls[i]
             d["path"] = os.path.relpath(path)
-            d["assembly"] = "B{}".format(assembly[-2:])
+            d["assembly"] = assembly
             d["species"] = "Homo sapiens"
             d["taxonomy"] = "x"
             seqs[chroms[i]] = ReferenceSequence(**d)
@@ -939,7 +939,7 @@ class ReferenceSequence:
         path : str
             path to local reference sequence
         assembly : str
-            reference sequence assembly / build (e.g., "B37")
+            reference sequence assembly (e.g., "GRCh37")
         species : str
             reference sequence species
         taxonomy : str
@@ -1016,6 +1016,17 @@ class ReferenceSequence:
         str
         """
         return self._assembly
+
+    @property
+    def build(self):
+        """ Get reference sequence build.
+
+        Returns
+        -------
+        str
+            e.g., "B37"
+        """
+        return "B{}".format(self._assembly[-2:])
 
     @property
     def species(self):
