@@ -18,7 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 
-from lineage import Lineage, SNPs
+from lineage import Lineage
+from lineage.snps import SNPs
 from tests import BaseLineageTestCase
 
 
@@ -83,8 +84,6 @@ class TestSnps(BaseLineageTestCase):
             pos_step=10000,
         )
         file = ind.save_snps()
-        from lineage.snps import SNPs
-
         snps = SNPs(file)
         assert snps.sex == "Male"
 

@@ -28,11 +28,8 @@ import os
 import numpy as np
 import pandas as pd
 
-# http://mikegrouchy.com/blog/2012/05/be-pythonic-__init__py.html
-from lineage.ensembl import EnsemblRestClient
 from lineage.individual import Individual
 from lineage.resources import Resources
-from lineage.snps import SNPs
 from lineage.utils import Parallelizer, create_dir, save_df_as_csv
 from lineage.visualization import plot_chromosomes
 

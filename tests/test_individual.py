@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 
 
-from lineage import SNPs
+from lineage.snps import SNPs
 from tests import BaseLineageTestCase
 
 

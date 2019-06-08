@@ -26,7 +26,6 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import CategoricalDtype
 
-import lineage
 from lineage.ensembl import EnsemblRestClient
 from lineage.resources import Resources
 from lineage.snps.reader import Reader
