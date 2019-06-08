@@ -18,6 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 
+import pandas as pd
+
 from lineage import Lineage
 from lineage.snps import SNPs
 from tests import BaseLineageTestCase
@@ -119,3 +121,11 @@ class TestSnps(BaseLineageTestCase):
     def test_get_assembly_None(self):
         snps = SNPs()
         assert snps.get_assembly() is ""
+
+    def test_save_snps_source(self):
+        assert (
+            os.path.relpath(self.snps_GRCh38.save_snps())
+            == "output/generic_lineage_GRCh38.csv"
+        )
+        snps = SNPs("output/generic_lineage_GRCh38.csv")
+        pd.testing.assert_frame_equal(snps.snps, self.snps_GRCh38.snps)

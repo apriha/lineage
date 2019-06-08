@@ -24,6 +24,8 @@ import numpy as np
 import pandas as pd
 import vcf
 
+from lineage.utils import save_df_as_csv
+
 
 class Reader:
     """ Class for reading and parsing raw data / genotype files. """
@@ -101,8 +103,8 @@ class Reader:
         tuple : (pandas.DataFrame, str)
             dataframe of parsed SNPs, detected source of SNPs
         """
-        p = cls(file)
-        return p()
+        r = cls(file)
+        return r()
 
     def _extract_comments(self, f, decode):
         line = self._read_line(f, decode)
@@ -442,3 +444,70 @@ class Reader:
         df.set_index("rsid", inplace=True, drop=True)
 
         return df, "vcf"
+
+
+class Writer:
+    """ Class for writing SNPs to files. """
+
+    def __init__(self, snps=None, filename=""):
+        """ Initialize a `Writer`.
+
+        Parameters
+        ----------
+        snps : SNPs
+            SNPs to save to file
+        filename : str
+            filename for file to save
+
+        """
+        self._snps = snps
+        self._filename = filename
+
+    def __call__(self):
+        return self._write_csv()
+
+    @classmethod
+    def write_file(cls, snps=None, filename=""):
+        """ Save SNPs to file.
+
+        Parameters
+        ----------
+        snps : SNPs
+            SNPs to save to file
+        filename : str
+            filename for file to save
+
+        Returns
+        -------
+        str
+            path to file in output directory if SNPs were saved, else empty str
+        """
+        w = cls(snps=snps, filename=filename)
+        return w()
+
+    def _write_csv(self):
+        comment = (
+            "# Source(s): {}\n"
+            "# Assembly: {}\n"
+            "# SNPs: {}\n"
+            "# Chromosomes: {}\n".format(
+                self._snps.source,
+                self._snps.assembly,
+                self._snps.snp_count,
+                self._snps.chromosomes_summary,
+            )
+        )
+
+        filename = self._filename
+        if not filename:
+            filename = "{}_lineage_{}{}".format(
+                self._snps.get_var_repr(self._snps._source), self._snps.assembly, ".csv"
+            )
+
+        return save_df_as_csv(
+            self._snps._snps,
+            self._snps._output_dir,
+            filename,
+            comment=comment,
+            header=["chromosome", "position", "genotype"],
+        )

@@ -28,7 +28,7 @@ from pandas.api.types import CategoricalDtype
 
 from lineage.ensembl import EnsemblRestClient
 from lineage.resources import Resources
-from lineage.snps.io import Reader
+from lineage.snps.io import Reader, Writer
 from lineage.utils import save_df_as_csv, Parallelizer
 
 
@@ -225,27 +225,7 @@ class SNPs:
         str
             path to file in output directory if SNPs were saved, else empty str
         """
-        comment = (
-            "# Source(s): {}\n"
-            "# Assembly: {}\n"
-            "# SNPs: {}\n"
-            "# Chromosomes: {}\n".format(
-                self.source, self.assembly, self.snp_count, self.chromosomes_summary
-            )
-        )
-
-        if not filename:
-            filename = (
-                self.get_var_repr(self._source) + "_lineage_" + self.assembly + ".csv"
-            )
-
-        return save_df_as_csv(
-            self._snps,
-            self._output_dir,
-            filename,
-            comment=comment,
-            header=["chromosome", "position", "genotype"],
-        )
+        return Writer.write_file(snps=self, filename=filename)
 
     def get_var_repr(self, s):
         return self._clean_string(s)
@@ -922,8 +902,8 @@ class SNPsCollection(SNPs):
             path to file in output directory if SNPs were saved, else empty str
         """
         if not filename:
-            filename = (
-                self.get_var_repr(self._name) + "_lineage_" + self.assembly + ".csv"
+            filename = "{}_lineage_{}{}".format(
+                self.get_var_repr(self._name), self.assembly, ".csv"
             )
         return super().save_snps(filename)
 
