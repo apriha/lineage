@@ -28,7 +28,7 @@ from pandas.api.types import CategoricalDtype
 
 from lineage.ensembl import EnsemblRestClient
 from lineage.resources import Resources
-from lineage.snps.reader import Reader
+from lineage.snps.io import Reader
 from lineage.utils import save_df_as_csv, Parallelizer
 
 
