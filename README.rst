@@ -15,6 +15,7 @@ Capabilities
 - Determine genes shared between individuals (i.e., genes transcribed from shared DNA segments)
 - Find discordant SNPs between child and parent(s)
 - Remap SNPs between assemblies / builds (e.g., convert SNPs from Build 36 to Build 37, etc.)
+- Read and write VCF files for Builds 36, 37, and 38
 
 Supported Genotype Files
 ------------------------

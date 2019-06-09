@@ -212,20 +212,22 @@ class SNPs:
         else:
             return True
 
-    def save_snps(self, filename=""):
+    def save_snps(self, filename="", vcf=False):
         """ Save SNPs to file.
 
         Parameters
         ----------
         filename : str
             filename for file to save
+        vcf : bool
+            flag to save file as VCF
 
         Returns
         -------
         str
             path to file in output directory if SNPs were saved, else empty str
         """
-        return Writer.write_file(snps=self, filename=filename)
+        return Writer.write_file(snps=self, filename=filename, vcf=vcf)
 
     def _read_raw_data(self, file):
         return Reader.read_file(file)
@@ -867,13 +869,15 @@ class SNPsCollection(SNPs):
             discrepant_genotypes, sort=True
         )
 
-    def save_snps(self, filename=""):
+    def save_snps(self, filename="", vcf=False):
         """ Save SNPs to file.
 
         Parameters
         ----------
         filename : str
             filename for file to save
+        vcf : bool
+            flag to save file as VCF
 
         Returns
         -------
@@ -881,10 +885,15 @@ class SNPsCollection(SNPs):
             path to file in output directory if SNPs were saved, else empty str
         """
         if not filename:
+            if vcf:
+                ext = ".vcf"
+            else:
+                ext = ".csv"
+
             filename = "{}_lineage_{}{}".format(
-                clean_str(self._name), self.assembly, ".csv"
+                clean_str(self._name), self.assembly, ext
             )
-        return super().save_snps(filename)
+        return super().save_snps(filename=filename, vcf=vcf)
 
     def save_discrepant_positions(self, filename=""):
         """ Save SNPs with discrepant positions to file.

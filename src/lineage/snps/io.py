@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+import datetime
 import os
 import gzip
 import zipfile
@@ -24,6 +25,7 @@ import numpy as np
 import pandas as pd
 import vcf
 
+import lineage
 from lineage.utils import save_df_as_csv, clean_str
 
 
@@ -449,7 +451,7 @@ class Reader:
 class Writer:
     """ Class for writing SNPs to files. """
 
-    def __init__(self, snps=None, filename=""):
+    def __init__(self, snps=None, filename="", vcf=False):
         """ Initialize a `Writer`.
 
         Parameters
@@ -458,16 +460,21 @@ class Writer:
             SNPs to save to file
         filename : str
             filename for file to save
-
+        vcf : bool
+            flag to save file as VCF
         """
         self._snps = snps
         self._filename = filename
+        self._vcf = vcf
 
     def __call__(self):
-        return self._write_csv()
+        if self._vcf:
+            return self._write_vcf()
+        else:
+            return self._write_csv()
 
     @classmethod
-    def write_file(cls, snps=None, filename=""):
+    def write_file(cls, snps=None, filename="", vcf=False):
         """ Save SNPs to file.
 
         Parameters
@@ -476,16 +483,31 @@ class Writer:
             SNPs to save to file
         filename : str
             filename for file to save
+        vcf : bool
+            flag to save file as VCF
 
         Returns
         -------
         str
             path to file in output directory if SNPs were saved, else empty str
         """
-        w = cls(snps=snps, filename=filename)
+        w = cls(snps=snps, filename=filename, vcf=vcf)
         return w()
 
     def _write_csv(self):
+        """ Write SNPs to a CSV file.
+
+        Returns
+        -------
+        str
+            path to file in output directory if SNPs were saved, else empty str
+        """
+        filename = self._filename
+        if not filename:
+            filename = "{}_lineage_{}{}".format(
+                clean_str(self._snps._source), self._snps.assembly, ".csv"
+            )
+
         comment = (
             "# Source(s): {}\n"
             "# Assembly: {}\n"
@@ -498,12 +520,6 @@ class Writer:
             )
         )
 
-        filename = self._filename
-        if not filename:
-            filename = "{}_lineage_{}{}".format(
-                clean_str(self._snps._source), self._snps.assembly, ".csv"
-            )
-
         return save_df_as_csv(
             self._snps._snps,
             self._snps._output_dir,
@@ -511,3 +527,222 @@ class Writer:
             comment=comment,
             header=["chromosome", "position", "genotype"],
         )
+
+    def _write_vcf(self):
+        """ Write SNPs to a VCF file.
+
+        References
+        ----------
+        ..[1] The Variant Call Format (VCF) Version 4.2 Specification, 8 Mar 2019,
+          https://samtools.github.io/hts-specs/VCFv4.2.pdf
+
+        Returns
+        -------
+        str
+            path to file in output directory if SNPs were saved, else empty str
+        """
+        filename = self._filename
+        if not filename:
+            filename = "{}_lineage_{}{}".format(
+                clean_str(self._snps._source), self._snps.assembly, ".vcf"
+            )
+
+        comment = (
+            "##fileformat=VCFv4.2\n"
+            "##fileDate={}\n"
+            '##source="lineage v{}; https://github.com/apriha/lineage"\n'.format(
+                datetime.datetime.utcnow().strftime("%Y%m%d"), lineage.__version__
+            )
+        )
+
+        reference_sequence_chroms = (
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "12",
+            "13",
+            "14",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21",
+            "22",
+            "X",
+            "Y",
+            "MT",
+        )
+
+        df = self._snps.snps
+
+        tasks = []
+
+        # skip insertions and deletions
+        df = df.drop(
+            df.loc[
+                df["genotype"].notnull()
+                & (
+                    (df["genotype"].str[0] == "I")
+                    | (df["genotype"].str[0] == "D")
+                    | (df["genotype"].str[1] == "I")
+                    | (df["genotype"].str[1] == "D")
+                )
+            ].index
+        )
+
+        chroms_to_drop = []
+        for chrom in df["chrom"].unique():
+            if chrom not in reference_sequence_chroms:
+                chroms_to_drop.append(chrom)
+                continue
+
+            tasks.append(
+                {
+                    "resources": self._snps._resources,
+                    "assembly": self._snps.assembly,
+                    "chrom": chrom,
+                    "snps": pd.DataFrame(df.loc[(df["chrom"] == chrom)]),
+                }
+            )
+
+        # drop chromosomes without reference sequence data (e.g., unassigned PAR)
+        for chrom in chroms_to_drop:
+            df = df.drop(df.loc[df["chrom"] == chrom].index)
+
+        # create the VCF representation for SNPs
+        results = map(self._create_vcf_representation, tasks)
+
+        contigs = []
+        vcf = []
+        for result in list(results):
+            contigs.append(result["contig"])
+            vcf.append(result["vcf"])
+
+        vcf = pd.concat(vcf)
+
+        comment += "".join(contigs)
+        comment += '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">\n'
+        comment += "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tSAMPLE\n"
+
+        return save_df_as_csv(
+            vcf,
+            self._snps._output_dir,
+            filename,
+            comment=comment,
+            prepend_info=False,
+            header=False,
+            index=False,
+            na_rep=".",
+            sep="\t",
+        )
+
+    def _create_vcf_representation(self, task):
+        resources = task["resources"]
+        assembly = task["assembly"]
+        chrom = task["chrom"]
+        snps = task["snps"]
+
+        seqs = resources.get_reference_sequences(assembly, [chrom])
+        seq = seqs[chrom]
+
+        contig = '##contig=<ID={},URL={},length={},assembly={},md5={},species="{}">\n'.format(
+            seq.ID, seq.url, seq.length, seq.build, seq.md5, seq.species
+        )
+
+        snps = snps.reset_index()
+
+        df = pd.DataFrame(
+            columns=[
+                "CHROM",
+                "POS",
+                "ID",
+                "REF",
+                "ALT",
+                "QUAL",
+                "FILTER",
+                "INFO",
+                "FORMAT",
+                "SAMPLE",
+            ]
+        )
+        df = df.astype(
+            {
+                "CHROM": object,
+                "POS": np.int64,
+                "ID": object,
+                "REF": object,
+                "ALT": object,
+                "QUAL": np.int64,
+                "FILTER": object,
+                "INFO": object,
+                "FORMAT": object,
+                "SAMPLE": object,
+            }
+        )
+
+        df["CHROM"] = snps["chrom"]
+        df["POS"] = snps["pos"]
+        df["ID"] = snps["rsid"]
+
+        # https://stackoverflow.com/a/24838429
+        df["REF"] = list(map(chr, seq.sequence[snps.pos - seq.start]))
+
+        df["FORMAT"] = "GT"
+
+        seq.clear()
+
+        df["genotype"] = snps["genotype"]
+
+        temp = df.loc[df["genotype"].notnull()]
+
+        # https://stackoverflow.com/a/19976286
+        df.loc[df["genotype"].notnull(), "ALT"] = np.vectorize(self._compute_alt)(
+            temp["REF"], temp["genotype"]
+        )
+
+        temp = df.loc[df["genotype"].notnull()]
+
+        df.loc[df["genotype"].notnull(), "SAMPLE"] = np.vectorize(
+            self._compute_genotype
+        )(temp["REF"], temp["ALT"], temp["genotype"])
+
+        df.loc[df["SAMPLE"].isnull(), "SAMPLE"] = "./."
+
+        del df["genotype"]
+
+        return {"contig": contig, "vcf": df}
+
+    def _compute_alt(self, ref, genotype):
+        genotype_alleles = list(set(genotype))
+
+        if ref in genotype_alleles:
+            if len(genotype_alleles) == 1:
+                return "N"
+            else:
+                genotype_alleles.remove(ref)
+                return genotype_alleles.pop(0)
+        else:
+            return ",".join(genotype_alleles)
+
+    def _compute_genotype(self, ref, alt, genotype):
+        alleles = [ref]
+
+        if pd.notna(alt):
+            alleles.extend(alt.split(","))
+
+        if len(genotype) == 2:
+            return "{}/{}".format(
+                alleles.index(genotype[0]), alleles.index(genotype[1])
+            )
+        else:
+            return "{}".format(alleles.index(genotype[0]))

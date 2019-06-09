@@ -26,6 +26,7 @@ import numpy as np
 import pandas as pd
 
 
+from lineage.resources import ReferenceSequence
 from lineage.snps import SNPs
 from tests import BaseLineageTestCase
 
@@ -425,6 +426,30 @@ class TestIndividual(BaseLineageTestCase):
             "", "output/test_save_snps_lineage_GRCh37.csv"
         )
         pd.testing.assert_frame_equal(ind_saved_snps.snps, self.snps_GRCh37())
+
+    def test_save_snps_vcf(self):
+        ind = self.l.create_individual("test save snps vcf", "tests/input/testvcf.vcf")
+
+        self.l._resources._reference_sequences["GRCh37"] = {}
+        with open("tests/input/generic.fa", "rb") as f_in:
+            with atomic_write(
+                "tests/input/generic.fa.gz", mode="wb", overwrite=True
+            ) as f_out:
+                with gzip.open(f_out, "wb") as f_gzip:
+                    shutil.copyfileobj(f_in, f_gzip)
+
+        seq = ReferenceSequence(ID="1", path="tests/input/generic.fa.gz")
+
+        self.l._resources._reference_sequences["GRCh37"]["1"] = seq
+
+        assert (
+            os.path.relpath(ind.save_snps(vcf=True))
+            == "output/test_save_snps_vcf_lineage_GRCh37.vcf"
+        )
+        ind_saved_snps = self.l.create_individual(
+            "", "output/test_save_snps_vcf_lineage_GRCh37.vcf"
+        )
+        pd.testing.assert_frame_equal(ind_saved_snps.snps, self.generic_snps())
 
     def test_save_snps_specify_file(self):
         ind = self.l.create_individual("test save snps", "tests/input/GRCh37.csv")
