@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-from lineage.snps import SNPsCollection
-from lineage.utils import clean_str
+from snps import SNPsCollection
+from snps.utils import clean_str
 
 
 class Individual(SNPsCollection):

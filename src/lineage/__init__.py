@@ -27,10 +27,10 @@ import os
 
 import numpy as np
 import pandas as pd
+from snps.utils import Parallelizer, create_dir, save_df_as_csv
 
 from lineage.individual import Individual
 from lineage.resources import Resources
-from lineage.utils import Parallelizer, create_dir, save_df_as_csv
 from lineage.visualization import plot_chromosomes
 
 # set version string with Versioneer
@@ -107,27 +107,6 @@ class Lineage:
             print("Example dataset(s) not currently available")
 
         return paths
-
-    def remap_snps(self, individual, target_assembly, complement_bases=True):
-        """ Remap the SNP coordinates of an individual from one assembly to another.
-
-        Refer to `SNPs.remap_snps` for additional documentation.
-
-        Parameters
-        ----------
-        target_assembly : {'NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38}
-            assembly to remap to
-        complement_bases : bool
-            complement bases when remapping SNPs to the minus strand
-
-        Returns
-        -------
-        chromosomes_remapped : list of str
-            chromosomes remapped
-        chromosomes_not_remapped : list of str
-            chromosomes not remapped
-        """
-        return individual.remap_snps(target_assembly, complement_bases=complement_bases)
 
     def find_discordant_snps(
         self, individual1, individual2, individual3=None, save_output=False

@@ -9,13 +9,11 @@ lineage
 
 Capabilities
 ------------
-- Merge raw data files from different DNA testing companies, identifying discrepant SNPs in the process
 - Compute centiMorgans (cMs) of shared DNA between individuals using the HapMap Phase II genetic map
 - Plot shared DNA between individuals
 - Determine genes shared between individuals (i.e., genes transcribed from shared DNA segments)
 - Find discordant SNPs between child and parent(s)
-- Remap SNPs between assemblies / builds (e.g., convert SNPs from Build 36 to Build 37, etc.)
-- Read and write VCF files for Builds 36, 37, and 38
+- Read, write, merge, and remaps SNPs for an individual via the  `snps <https://github.com/apriha/snps>`_ package
 
 Supported Genotype Files
 ------------------------
@@ -35,7 +33,7 @@ Dependencies
 - `pandas <http://pandas.pydata.org>`_
 - `matplotlib <http://matplotlib.org>`_
 - `atomicwrites <https://github.com/untitaker/python-atomicwrites>`_
-- `PyVCF <https://github.com/jamescasbon/PyVCF>`_
+- `snps <https://github.com/apriha/snps>`_
 
 On Linux systems, the following system-level installs may also be required::
 
@@ -133,7 +131,7 @@ identifying discrepancies along the way. Let's save the merged dataset consistin
 SNPs to a CSV file:
 
 >>> saved_snps = user662.save_snps()
-Saving output/User662_lineage_GRCh37.csv
+Saving output/User662_GRCh37.csv
 
 All `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are saved to the output
 directory.
@@ -263,7 +261,7 @@ Documentation is available `here <https://lineage.readthedocs.io/>`_.
 
 Acknowledgements
 ----------------
-Thanks to Whit Athey, Ryan Dale, Mike Agostino, Padma Reddy, Binh Bui, Jeff Gill, Gopal Vashishtha,
+Thanks to Whit Athey, Ryan Dale, Binh Bui, Jeff Gill, Gopal Vashishtha,
 `CS50 <https://cs50.harvard.edu>`_, and `openSNP <https://opensnp.org>`_.
 
 License

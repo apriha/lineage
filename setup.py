@@ -106,7 +106,7 @@ setup(
     },
     keywords="dna genes genetics genealogy snps chromosomes genotype "
     "bioinformatics ancestry",
-    install_requires=["numpy", "pandas", "matplotlib", "atomicwrites", "PyVCF"],
+    install_requires=["numpy", "pandas", "matplotlib", "atomicwrites", "snps"],
     python_requires=">=3.5",
     platforms=["any"],
 )
