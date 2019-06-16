@@ -9,16 +9,16 @@ lineage
 
 Capabilities
 ------------
-- Merge raw data files from different DNA testing companies, identifying discrepant SNPs in the process
 - Compute centiMorgans (cMs) of shared DNA between individuals using the HapMap Phase II genetic map
 - Plot shared DNA between individuals
 - Determine genes shared between individuals (i.e., genes transcribed from shared DNA segments)
 - Find discordant SNPs between child and parent(s)
-- Remap SNPs between assemblies / builds (e.g., convert SNPs from Build 36 to Build 37, etc.)
+- Read, write, merge, and remaps SNPs for an individual via the  `snps <https://github.com/apriha/snps>`_ package
 
 Supported Genotype Files
 ------------------------
-``lineage`` supports genotype files from the following DTC DNA testing companies:
+``lineage`` supports `VCF <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3137218/>`_ files and
+genotype files from the following DTC DNA testing companies:
 
 - `23andMe <https://www.23andme.com>`_
 - `Ancestry <https://www.ancestry.com>`_
@@ -33,6 +33,7 @@ Dependencies
 - `pandas <http://pandas.pydata.org>`_
 - `matplotlib <http://matplotlib.org>`_
 - `atomicwrites <https://github.com/untitaker/python-atomicwrites>`_
+- `snps <https://github.com/apriha/snps>`_
 
 On Linux systems, the following system-level installs may also be required::
 
@@ -130,7 +131,7 @@ identifying discrepancies along the way. Let's save the merged dataset consistin
 SNPs to a CSV file:
 
 >>> saved_snps = user662.save_snps()
-Saving output/User662_lineage_GRCh37.csv
+Saving output/User662_GRCh37.csv
 
 All `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are saved to the output
 directory.
@@ -172,7 +173,7 @@ mother and father for that segment.
 With that background, let's find the shared DNA between the ``User662`` and ``User663`` datasets,
 calculating the centiMorgans of shared DNA and plotting the results:
 
->>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = l.find_shared_dna(user662, user663, cM_threshold=0.75, snp_threshold=1100)
+>>> results = l.find_shared_dna([user662, user663], cM_threshold=0.75, snp_threshold=1100)
 Downloading resources/genetic_map_HapMapII_GRCh37.tar.gz
 Downloading resources/cytoBand_hg19.txt.gz
 Saving output/shared_dna_User662_User663.png
@@ -180,12 +181,26 @@ Saving output/shared_dna_one_chrom_User662_User663_GRCh37.csv
 
 Notice that the centiMorgan and SNP thresholds for each DNA segment can be tuned. Additionally,
 notice that two files were downloaded to facilitate the analysis and plotting - future analyses
-will used the downloaded files instead of downloading the files again.
+will use the downloaded files instead of downloading the files again. Finally, notice that a list
+of individuals is passed to ``find_shared_dna``... This list can contain an arbitrary number of
+individuals, and ``lineage`` will find shared DNA across all individuals in the list (i.e.,
+where all individuals share segments of DNA on either one or both chromosomes).
 
-Here, the `output <https://lineage.readthedocs.io/en/latest/output_files.html>`_ consists of a CSV file
-that details the shared segments of DNA on one chromosome; the information is also available in
-the ``pandas.DataFrame`` (``one_chrom_shared_dna``) returned by ``find_shared_dna``.
-Additionally, a plot is generated that illustrates the shared DNA:
+Output is returned as a dictionary with the following keys (``pandas.DataFrame`` and
+``pandas.Index`` items):
+
+>>> sorted(results.keys())
+['one_chrom_discrepant_snps', 'one_chrom_shared_dna', 'one_chrom_shared_genes', 'two_chrom_discrepant_snps', 'two_chrom_shared_dna', 'two_chrom_shared_genes']
+
+In this example, there are 27 segments of shared DNA:
+
+>>> len(results['one_chrom_shared_dna'])
+27
+
+Also, `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are
+created; these files are detailed in the documentation and their generation can be disabled with a
+``save_output=False`` argument. In this example, the output files consist of a CSV file that
+details the shared segments of DNA on one chromosome and a plot that illustrates the shared DNA:
 
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663.png
 
@@ -217,7 +232,7 @@ Loading resources/4584.ftdna-illumina.3483.csv.gz
 
 Now let's find the shared genes:
 
->>> one_chrom_shared_dna, two_chrom_shared_dna, one_chrom_shared_genes, two_chrom_shared_genes = l.find_shared_dna(user4583, user4584, shared_genes=True)
+>>> results = l.find_shared_dna([user4583, user4584], shared_genes=True)
 Downloading resources/knownGene_hg19.txt.gz
 Downloading resources/kgXref_hg19.txt.gz
 Saving output/shared_dna_User4583_User4584.png
@@ -228,9 +243,15 @@ Saving output/shared_genes_two_chroms_User4583_User4584_GRCh37.csv
 
 The plot that illustrates the shared DNA is shown below. Note that in addition to outputting the
 shared DNA segments on either one or both chromosomes, the shared genes on either one or both
-chromosomes are also output (``find_shared_dna`` returns ``pandas.DataFrame`` objects).
-The `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are detailed
-in the documentation and their generation can be disabled with a ``save_output=False`` argument.
+chromosomes are also output.
+
+In this example, there are 15,976 shared genes on both chromosomes transcribed from 36 segments
+of shared DNA:
+
+>>> len(results['two_chrom_shared_genes'])
+15976
+>>> len(results['two_chrom_shared_dna'])
+36
 
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User4583_User4584.png
 
@@ -240,7 +261,7 @@ Documentation is available `here <https://lineage.readthedocs.io/>`_.
 
 Acknowledgements
 ----------------
-Thanks to Whit Athey, Ryan Dale, Mike Agostino, Padma Reddy, Binh Bui, Jeff Gill, Gopal Vashishtha,
+Thanks to Whit Athey, Ryan Dale, Binh Bui, Jeff Gill, Gopal Vashishtha,
 `CS50 <https://cs50.harvard.edu>`_, and `openSNP <https://opensnp.org>`_.
 
 License

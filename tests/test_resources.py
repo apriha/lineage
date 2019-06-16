@@ -19,18 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import warnings
 
-from atomicwrites import atomic_write
-
-from lineage import Resources, EnsemblRestClient
+from lineage.resources import Resources
 from tests import BaseLineageTestCase
 
 
 class TestResources(BaseLineageTestCase):
     def setUp(self):
         self.resource = Resources(resources_dir="resources")
-        self.resource_assembly_mapping = Resources(
-            resources_dir="resources", ensembl_rest_client=EnsemblRestClient()
-        )
         self.del_output_dir_helper()
 
     def test_get_genetic_map_HapMapII_GRCh37(self):
@@ -49,49 +44,12 @@ class TestResources(BaseLineageTestCase):
         kgXref_hg19 = self.resource.get_kgXref_hg19()
         assert len(kgXref_hg19) == 82960
 
-    def test_get_assembly_mapping_data_no_EnsemblRestClient(self):
-        if os.path.exists("resources/NCBI36_GRCh37.tar.gz"):
-            os.remove("resources/NCBI36_GRCh37.tar.gz")
-        assembly_mapping_data = self.resource.get_assembly_mapping_data(
-            "NCBI36", "GRCh37"
-        )
-        assert assembly_mapping_data is None
-
-    def test_get_assembly_mapping_data_bad_tar(self):
-        if os.getenv("DOWNLOADS_ENABLED"):
-            with atomic_write(
-                "resources/NCBI36_GRCh37.tar.gz", mode="w", overwrite=True
-            ):
-                pass
-            assembly_mapping_data = self.resource_assembly_mapping.get_assembly_mapping_data(
-                "NCBI36", "GRCh37"
-            )
-            assert len(assembly_mapping_data) == 25
-
-    def test_get_assembly_mapping_data(self):
-        assembly_mapping_data = self.resource_assembly_mapping.get_assembly_mapping_data(
-            "NCBI36", "GRCh37"
-        )
-        assert len(assembly_mapping_data) == 25
-
     def test_get_all_resources(self):
-        resources = self.resource_assembly_mapping.get_all_resources()
+        resources = self.resource.get_all_resources()
         for k, v in resources.items():
             if v is None:
                 assert False
         assert True
-
-    def test__all_chroms_in_tar(self):
-        assert not self.resource_assembly_mapping._all_chroms_in_tar(
-            ["PAR"], "resources/NCBI36_GRCh37.tar.gz"
-        )
-
-    def test_get_assembly_mapping_data_invalid_dir(self):
-        self.resource_assembly_mapping._resources_dir = None
-        assembly_mapping_data = self.resource_assembly_mapping.get_assembly_mapping_data(
-            "NCBI36", "GRCh37"
-        )
-        assert assembly_mapping_data is None
 
     def test_download_example_datasets(self):
         paths = self.resource.download_example_datasets()
@@ -105,29 +63,16 @@ class TestResources(BaseLineageTestCase):
 
     def test__load_genetic_map_None(self):
         result = self.resource._load_genetic_map(None)
-        assert result is None
+        assert not result
 
     def test__load_cytoBand_None(self):
         result = self.resource._load_cytoBand(None)
-        assert result is None
+        assert result.empty
 
     def test__load_knownGene_None(self):
         result = self.resource._load_knownGene(None)
-        assert result is None
+        assert result.empty
 
     def test__load_kgXref_None(self):
         result = self.resource._load_kgXref(None)
-        assert result is None
-
-    def test__load_assembly_mapping_data_None(self):
-        result = self.resource._load_assembly_mapping_data(None)
-        assert result is None
-
-    def test__download_file_compress(self):
-        result = self.resource._download_file("", "", compress=True)
-        assert result is None
-
-    def test__download_file_invalid_dir(self):
-        self.resource._resources_dir = None
-        result = self.resource._download_file("", "")
-        assert result is None
+        assert result.empty

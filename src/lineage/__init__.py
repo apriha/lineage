@@ -22,18 +22,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
-from itertools import chain
+import datetime
+from itertools import chain, combinations
 import os
 
 import numpy as np
 import pandas as pd
+from snps.utils import Parallelizer, create_dir, save_df_as_csv
 
-# http://mikegrouchy.com/blog/2012/05/be-pythonic-__init__py.html
-from lineage.ensembl import EnsemblRestClient
 from lineage.individual import Individual
 from lineage.resources import Resources
-from lineage.snps import SNPs
-from lineage.utils import Parallelizer, create_dir, save_df_as_csv
 from lineage.visualization import plot_chromosomes
 
 # set version string with Versioneer
@@ -50,7 +48,7 @@ class Lineage:
         self,
         output_dir="output",
         resources_dir="resources",
-        parallelize=True,
+        parallelize=False,
         processes=os.cpu_count(),
     ):
         """ Initialize a ``Lineage`` object.
@@ -67,13 +65,10 @@ class Lineage:
             processes to launch if multiprocessing
         """
         self._output_dir = os.path.abspath(output_dir)
-        self._ensembl_rest_client = EnsemblRestClient()
-        self._resources = Resources(
-            resources_dir=resources_dir, ensembl_rest_client=self._ensembl_rest_client
-        )
+        self._resources = Resources(resources_dir=resources_dir)
         self._parallelizer = Parallelizer(parallelize=parallelize, processes=processes)
 
-    def create_individual(self, name, raw_data=None):
+    def create_individual(self, name, raw_data=None, **kwargs):
         """ Initialize an individual in the context of the `lineage` framework.
 
         Parameters
@@ -88,7 +83,7 @@ class Lineage:
         Individual
             ``Individual`` initialized in the context of the `lineage` framework
         """
-        return Individual(name, raw_data, self._output_dir)
+        return Individual(name, raw_data, self._output_dir, **kwargs)
 
     def download_example_datasets(self):
         """ Download example datasets from `openSNP <https://opensnp.org>`_.
@@ -98,7 +93,7 @@ class Lineage:
 
         Returns
         -------
-        paths : list of str or None
+        paths : list of str or empty str
             paths to example datasets
 
         References
@@ -109,219 +104,10 @@ class Lineage:
         """
         paths = self._resources.download_example_datasets()
 
-        if None in paths:
+        if "" in paths:
             print("Example dataset(s) not currently available")
 
         return paths
-
-    def remap_snps(self, individual, target_assembly, complement_bases=True):
-        """ Remap the SNP coordinates of an individual from one assembly to another.
-
-        This method uses the assembly map endpoint of the Ensembl REST API service (via
-        ``Resources``'s ``EnsemblRestClient``) to convert SNP coordinates / positions from one
-        assembly to another. After remapping, the coordinates / positions for the individual's
-        SNPs will be that of the target assembly.
-
-        If the SNPs are already mapped relative to the target assembly, remapping will not be
-        performed.
-
-        Parameters
-        ----------
-        target_assembly : {'NCBI36', 'GRCh37', 'GRCh38', 36, 37, 38}
-            assembly to remap to
-        complement_bases : bool
-            complement bases when remapping SNPs to the minus strand
-
-        Returns
-        -------
-        chromosomes_remapped : list of str
-            chromosomes remapped; empty if None
-        chromosomes_not_remapped : list of str
-            chromosomes not remapped; empty if None
-
-        Notes
-        -----
-        An assembly is also know as a "build." For example:
-
-        Assembly NCBI36 = Build 36
-        Assembly GRCh37 = Build 37
-        Assembly GRCh38 = Build 38
-
-        See https://www.ncbi.nlm.nih.gov/assembly for more information about assemblies and
-        remapping.
-
-        References
-        ----------
-        ..[1] Ensembl, Assembly Map Endpoint,
-          http://rest.ensembl.org/documentation/info/assembly_map
-        """
-        chromosomes_remapped = []
-        chromosomes_not_remapped = []
-
-        snps = individual.snps
-
-        if snps is None:
-            print("No SNPs to remap")
-            return chromosomes_remapped, chromosomes_not_remapped
-        else:
-            chromosomes = snps["chrom"].unique()
-            chromosomes_not_remapped = list(chromosomes)
-
-        valid_assemblies = ["NCBI36", "GRCh37", "GRCh38", 36, 37, 38]
-
-        if target_assembly not in valid_assemblies:
-            print("Invalid target assembly")
-            return chromosomes_remapped, chromosomes_not_remapped
-
-        if isinstance(target_assembly, int):
-            if target_assembly == 36:
-                target_assembly = "NCBI36"
-            else:
-                target_assembly = "GRCh" + str(target_assembly)
-
-        if individual.build == 36:
-            source_assembly = "NCBI36"
-        else:
-            source_assembly = "GRCh" + str(individual.build)
-
-        if source_assembly == target_assembly:
-            return chromosomes_remapped, chromosomes_not_remapped
-
-        assembly_mapping_data = self._resources.get_assembly_mapping_data(
-            source_assembly, target_assembly
-        )
-
-        if assembly_mapping_data is None:
-            return chromosomes_remapped, chromosomes_not_remapped
-
-        tasks = []
-
-        for chrom in chromosomes:
-            if chrom in assembly_mapping_data:
-                chromosomes_remapped.append(chrom)
-                chromosomes_not_remapped.remove(chrom)
-                mappings = assembly_mapping_data[chrom]
-                tasks.append(
-                    {
-                        "snps": snps.loc[snps["chrom"] == chrom],
-                        "mappings": mappings,
-                        "complement_bases": complement_bases,
-                    }
-                )
-            else:
-                print(
-                    "Chromosome {} not remapped; "
-                    "removing chromosome from SNPs for consistency".format(chrom)
-                )
-                snps = snps.drop(snps.loc[snps["chrom"] == chrom].index)
-
-        # remap SNPs
-        remapped_snps = self._parallelizer(self._remapper, tasks)
-        remapped_snps = pd.concat(remapped_snps)
-
-        # update SNP positions and genotypes
-        snps.loc[remapped_snps.index, "pos"] = remapped_snps["pos"]
-        snps.loc[remapped_snps.index, "genotype"] = remapped_snps["genotype"]
-
-        individual._set_snps(snps, int(target_assembly[-2:]))
-
-        return chromosomes_remapped, chromosomes_not_remapped
-
-    def _remapper(self, task):
-        """ Remap SNPs for a chromosome.
-
-        Parameters
-        ----------
-        task : dict
-            dict with `snps` to remap per `mappings`, optionally `complement_bases`
-
-        Returns
-        -------
-        pandas.DataFrame
-            remapped SNPs
-        """
-        temp = task["snps"].copy()
-        mappings = task["mappings"]
-        complement_bases = task["complement_bases"]
-
-        temp["remapped"] = False
-
-        pos_start = int(temp["pos"].describe()["min"])
-        pos_end = int(temp["pos"].describe()["max"])
-
-        for mapping in mappings["mappings"]:
-            # skip if mapping is outside of range of SNP positions
-            if (
-                mapping["original"]["end"] <= pos_start
-                or mapping["original"]["start"] >= pos_end
-            ):
-                continue
-
-            orig_range_len = mapping["original"]["end"] - mapping["original"]["start"]
-            mapped_range_len = mapping["mapped"]["end"] - mapping["mapped"]["start"]
-
-            orig_region = mapping["original"]["seq_region_name"]
-            mapped_region = mapping["mapped"]["seq_region_name"]
-
-            if orig_region != mapped_region:
-                print("discrepant chroms")
-                continue
-
-            if orig_range_len != mapped_range_len:
-                print("discrepant coords")  # observed when mapping NCBI36 -> GRCh38
-                continue
-
-            # find the SNPs that are being remapped for this mapping
-            snp_indices = temp.loc[
-                ~temp["remapped"]
-                & (temp["pos"] >= mapping["original"]["start"])
-                & (temp["pos"] <= mapping["original"]["end"])
-            ].index
-
-            if len(snp_indices) > 0:
-                # remap the SNPs
-                if mapping["mapped"]["strand"] == -1:
-                    # flip and (optionally) complement since we're mapping to minus strand
-                    diff_from_start = (
-                        temp.loc[snp_indices, "pos"] - mapping["original"]["start"]
-                    )
-                    temp.loc[snp_indices, "pos"] = (
-                        mapping["mapped"]["end"] - diff_from_start
-                    )
-
-                    if complement_bases:
-                        temp.loc[snp_indices, "genotype"] = temp.loc[
-                            snp_indices, "genotype"
-                        ].apply(self._complement_bases)
-                else:
-                    # mapping is on same (plus) strand, so just remap based on offset
-                    offset = mapping["mapped"]["start"] - mapping["original"]["start"]
-                    temp.loc[snp_indices, "pos"] = temp["pos"] + offset
-
-                # mark these SNPs as remapped
-                temp.loc[snp_indices, "remapped"] = True
-
-        return temp
-
-    def _complement_bases(self, genotype):
-        if pd.isnull(genotype):
-            return np.nan
-
-        complement = ""
-
-        for base in list(genotype):
-            if base == "A":
-                complement += "T"
-            elif base == "G":
-                complement += "C"
-            elif base == "C":
-                complement += "G"
-            elif base == "T":
-                complement += "A"
-            else:
-                complement += base
-
-        return complement
 
     def find_discordant_snps(
         self, individual1, individual2, individual3=None, save_output=False
@@ -393,6 +179,8 @@ class Lineage:
                     "discordant_snps_{}_{}_GRCh37.csv".format(
                         individual1.get_var_name(), individual2.get_var_name()
                     ),
+                    comment=self._get_csv_header(),
+                    prepend_info=False,
                 )
         else:
             # add SNPs shared with `individual3`
@@ -461,20 +249,21 @@ class Lineage:
                         individual2.get_var_name(),
                         individual3.get_var_name(),
                     ),
+                    comment=self._get_csv_header(),
+                    prepend_info=False,
                 )
 
         return df
 
     def find_shared_dna(
         self,
-        individual1,
-        individual2,
+        individuals=(),
         cM_threshold=0.75,
         snp_threshold=1100,
         shared_genes=False,
         save_output=True,
     ):
-        """ Find the shared DNA between two individuals.
+        """ Find the shared DNA between individuals.
 
         Computes the genetic distance in centiMorgans (cMs) between SNPs using the HapMap Phase II
         GRCh37 genetic map. Applies thresholds to determine the shared DNA. Plots shared DNA.
@@ -484,8 +273,7 @@ class Lineage:
 
         Parameters
         ----------
-        individual1 : Individual
-        individual2 : Individual
+        individuals : iterable of Individuals
         cM_threshold : float
             minimum centiMorgans for each shared DNA segment
         snp_threshold : int
@@ -497,30 +285,53 @@ class Lineage:
 
         Returns
         -------
-        one_chrom_shared_dna : pandas.DataFrame
-            segments of shared DNA on one chromosome
-        two_chrom_shared_dna : pandas.DataFrame
-            segments of shared DNA on two chromosomes
-        one_chrom_shared_genes : pandas.DataFrame
-            shared genes on one chromosome
-        two_chrom_shared_genes : pandas.DataFrame
-            shared genes on two chromosomes
+        dict
+            dict with the following items:
+
+            one_chrom_shared_dna (pandas.DataFrame)
+                segments of shared DNA on one chromosome
+            two_chrom_shared_dna (pandas.DataFrame)
+                segments of shared DNA on two chromosomes
+            one_chrom_shared_genes (pandas.DataFrame)
+                shared genes on one chromosome
+            two_chrom_shared_genes (pandas.DataFrame)
+                shared genes on two chromosomes
+            one_chrom_discrepant_snps (pandas.Index)
+                discrepant SNPs discovered while finding shared DNA on one chromosome
+            two_chrom_discrepant_snps (pandas.Index)
+                discrepant SNPs discovered while finding shared DNA on two chromosomes
         """
+        one_chrom_shared_dna = pd.DataFrame()
+        two_chrom_shared_dna = pd.DataFrame()
         one_chrom_shared_genes = pd.DataFrame()
         two_chrom_shared_genes = pd.DataFrame()
+        one_chrom_discrepant_snps = pd.Index([])
+        two_chrom_discrepant_snps = pd.Index([])
 
-        self._remap_snps_to_GRCh37([individual1, individual2])
+        self._remap_snps_to_GRCh37(individuals)
 
-        df = individual1.snps
+        if len(individuals) < 2:
+            print("find_shared_dna requires two or more individuals...")
+            return self._find_shared_dna_return_helper(
+                one_chrom_shared_dna,
+                two_chrom_shared_dna,
+                one_chrom_shared_genes,
+                two_chrom_shared_genes,
+                one_chrom_discrepant_snps,
+                two_chrom_discrepant_snps,
+            )
 
-        df = df.join(individual2.snps["genotype"], rsuffix="2", how="inner")
+        cols = ["genotype{}".format(str(i)) for i in range(len(individuals))]
 
-        genotype1 = "genotype_" + individual1.get_var_name()
-        genotype2 = "genotype_" + individual2.get_var_name()
+        df = individuals[0].snps
+        df = df.rename(columns={"genotype": cols[0]})
 
-        df = df.rename(columns={"genotype": genotype1, "genotype2": genotype2})
+        for i, individual in enumerate(individuals[1:]):
+            # join SNPs for all individuals
+            df = df.join(individual.snps["genotype"], how="inner")
+            df = df.rename(columns={"genotype": cols[i + 1]})
 
-        one_x_chrom = self._is_one_individual_male([individual1, individual2])
+        one_x_chrom = self._is_one_individual_male(individuals)
 
         genetic_map = self._resources.get_genetic_map_HapMapII_GRCh37()
 
@@ -549,47 +360,44 @@ class Lineage:
         snp_distances = pd.concat(snp_distances)
         df["cM_from_prev_snp"] = snp_distances["cM_from_prev_snp"]
 
+        df["one_chrom_match"] = True
+        df["two_chrom_match"] = True
+
         # determine where individuals share an allele on one chromosome
-        df["one_chrom_match"] = np.where(
-            df[genotype1].isnull()
-            | df[genotype2].isnull()
-            | (df[genotype1].str[0] == df[genotype2].str[0])
-            | (df[genotype1].str[0] == df[genotype2].str[1])
-            | (df[genotype1].str[1] == df[genotype2].str[0])
-            | (df[genotype1].str[1] == df[genotype2].str[1]),
-            True,
-            False,
-        )
+        for genotype1, genotype2 in combinations(cols, 2):
+            df.loc[
+                ~df[genotype1].isnull()
+                & ~df[genotype2].isnull()
+                & (df[genotype1].str[0] != df[genotype2].str[0])
+                & (df[genotype1].str[0] != df[genotype2].str[1])
+                & (df[genotype1].str[1] != df[genotype2].str[0])
+                & (df[genotype1].str[1] != df[genotype2].str[1]),
+                "one_chrom_match",
+            ] = False
 
         # determine where individuals share alleles on both chromosomes
-        df["two_chrom_match"] = np.where(
-            df[genotype1].isnull()
-            | df[genotype2].isnull()
-            | (
-                (df[genotype1].str.len() == 2)
-                & (df[genotype2].str.len() == 2)
-                & (
-                    (df[genotype1] == df[genotype2])
-                    | (
-                        (df[genotype1].str[0] == df[genotype2].str[1])
-                        & (df[genotype1].str[1] == df[genotype2].str[0])
-                    )
-                )
-            ),
-            True,
-            False,
-        )
+        for genotype1, genotype2 in combinations(cols, 2):
+            df.loc[
+                ~df[genotype1].isnull()
+                & ~df[genotype2].isnull()
+                & (df[genotype1] != df[genotype2])
+                & ~(
+                    (df[genotype1].str[0] == df[genotype2].str[1])
+                    & (df[genotype1].str[1] == df[genotype2].str[0])
+                ),
+                "two_chrom_match",
+            ] = False
 
         # genotype columns are no longer required for calculation
-        df = df.drop([genotype1, genotype2], axis=1)
+        df = df.drop(cols, axis=1)
 
-        one_chrom_shared_dna = self._find_shared_dna_helper(
+        one_chrom_shared_dna, one_chrom_discrepant_snps = self._find_shared_dna_helper(
             df[["chrom", "pos", "cM_from_prev_snp", "one_chrom_match"]],
             cM_threshold,
             snp_threshold,
             one_x_chrom,
         )
-        two_chrom_shared_dna = self._find_shared_dna_helper(
+        two_chrom_shared_dna, two_chrom_discrepant_snps = self._find_shared_dna_helper(
             df[["chrom", "pos", "cM_from_prev_snp", "two_chrom_match"]],
             cM_threshold,
             snp_threshold,
@@ -602,19 +410,20 @@ class Lineage:
 
         if save_output:
             self._find_shared_dna_output_helper(
-                individual1,
-                individual2,
+                individuals,
                 one_chrom_shared_dna,
                 two_chrom_shared_dna,
                 one_chrom_shared_genes,
                 two_chrom_shared_genes,
             )
 
-        return (
+        return self._find_shared_dna_return_helper(
             one_chrom_shared_dna,
             two_chrom_shared_dna,
             one_chrom_shared_genes,
             two_chrom_shared_genes,
+            one_chrom_discrepant_snps,
+            two_chrom_discrepant_snps,
         )
 
     def _find_shared_dna_helper(self, df, cM_threshold, snp_threshold, one_x_chrom):
@@ -632,14 +441,22 @@ class Lineage:
             )
 
         # compute shared DNA between individuals
-        shared_dna = map(self._compute_shared_dna, tasks)
-        shared_dna = self._convert_list_of_lists_to_list(shared_dna)
-        return self._convert_shared_dna_list_to_df(shared_dna)
+        results = map(self._compute_shared_dna, tasks)
+
+        shared_dna = []
+        discrepant_snps = pd.Index([])
+        for result in list(results):
+            shared_dna.append(result["shared_dna"])
+            discrepant_snps = discrepant_snps.append(result["discrepant_snps"])
+
+        # https://stackoverflow.com/a/952952
+        shared_dna = list(chain.from_iterable(shared_dna))
+
+        return (self._convert_shared_dna_list_to_df(shared_dna), discrepant_snps)
 
     def _find_shared_dna_output_helper(
         self,
-        individual1,
-        individual2,
+        individuals,
         one_chrom_shared_dna,
         two_chrom_shared_dna,
         one_chrom_shared_genes,
@@ -647,52 +464,88 @@ class Lineage:
     ):
         cytobands = self._resources.get_cytoBand_hg19()
 
+        individuals_filename = ""
+        individuals_plot_title = ""
+
+        for individual in individuals:
+            individuals_filename += individual.get_var_name() + "_"
+            individuals_plot_title += individual.name + " / "
+
+        individuals_filename = individuals_filename[:-1]
+        individuals_plot_title = individuals_plot_title[:-3]
+
         if create_dir(self._output_dir):
             plot_chromosomes(
                 one_chrom_shared_dna,
                 two_chrom_shared_dna,
                 cytobands,
                 os.path.join(
-                    self._output_dir,
-                    "shared_dna_{}_{}.png".format(
-                        individual1.get_var_name(), individual2.get_var_name()
-                    ),
+                    self._output_dir, "shared_dna_{}.png".format(individuals_filename)
                 ),
-                "{} / {} shared DNA".format(individual1.name, individual2.name),
+                "{} shared DNA".format(individuals_plot_title),
                 37,
             )
 
         if len(one_chrom_shared_dna) > 0:
-            file = "shared_dna_one_chrom_{}_{}_GRCh37.csv".format(
-                individual1.get_var_name(), individual2.get_var_name()
-            )
+            file = "shared_dna_one_chrom_{}_GRCh37.csv".format(individuals_filename)
             save_df_as_csv(
-                one_chrom_shared_dna, self._output_dir, file, float_format="%.2f"
+                one_chrom_shared_dna,
+                self._output_dir,
+                file,
+                comment=self._get_csv_header(),
+                prepend_info=False,
+                float_format="%.2f",
             )
 
         if len(two_chrom_shared_dna) > 0:
-            file = "shared_dna_two_chroms_{}_{}_GRCh37.csv".format(
-                individual1.get_var_name(), individual2.get_var_name()
-            )
+            file = "shared_dna_two_chroms_{}_GRCh37.csv".format(individuals_filename)
             save_df_as_csv(
-                two_chrom_shared_dna, self._output_dir, file, float_format="%.2f"
+                two_chrom_shared_dna,
+                self._output_dir,
+                file,
+                comment=self._get_csv_header(),
+                prepend_info=False,
+                float_format="%.2f",
             )
 
         if len(one_chrom_shared_genes) > 0:
-            file = "shared_genes_one_chrom_{}_{}_GRCh37.csv".format(
-                individual1.get_var_name(), individual2.get_var_name()
+            file = "shared_genes_one_chrom_{}_GRCh37.csv".format(individuals_filename)
+            save_df_as_csv(
+                one_chrom_shared_genes,
+                self._output_dir,
+                file,
+                comment=self._get_csv_header(),
+                prepend_info=False,
             )
-            save_df_as_csv(one_chrom_shared_genes, self._output_dir, file)
 
         if len(two_chrom_shared_genes) > 0:
-            file = "shared_genes_two_chroms_{}_{}_GRCh37.csv".format(
-                individual1.get_var_name(), individual2.get_var_name()
+            file = "shared_genes_two_chroms_{}_GRCh37.csv".format(individuals_filename)
+            save_df_as_csv(
+                two_chrom_shared_genes,
+                self._output_dir,
+                file,
+                comment=self._get_csv_header(),
+                prepend_info=False,
             )
-            save_df_as_csv(two_chrom_shared_genes, self._output_dir, file)
 
-    def _convert_list_of_lists_to_list(self, l):
-        # https://stackoverflow.com/a/952952
-        return list(chain.from_iterable(l))
+    def _find_shared_dna_return_helper(
+        self,
+        one_chrom_shared_dna,
+        two_chrom_shared_dna,
+        one_chrom_shared_genes,
+        two_chrom_shared_genes,
+        one_chrom_discrepant_snps,
+        two_chrom_discrepant_snps,
+    ):
+
+        return {
+            "one_chrom_shared_dna": one_chrom_shared_dna,
+            "two_chrom_shared_dna": two_chrom_shared_dna,
+            "one_chrom_shared_genes": one_chrom_shared_genes,
+            "two_chrom_shared_genes": two_chrom_shared_genes,
+            "one_chrom_discrepant_snps": one_chrom_discrepant_snps,
+            "two_chrom_discrepant_snps": two_chrom_discrepant_snps,
+        }
 
     def _convert_shared_dna_list_to_df(self, shared_dna):
         df = pd.DataFrame(shared_dna, columns=["chrom", "start", "end", "cMs", "snps"])
@@ -822,6 +675,7 @@ class Lineage:
             match_col = "two_chrom_match"
 
         shared_dna = []
+        discrepant_snps = pd.Index([])
 
         # set two_chrom_match in non-PAR region to False if an individual is male
         if chrom == "X" and match_col == "two_chrom_match" and one_x_chrom:
@@ -862,6 +716,7 @@ class Lineage:
 
         # if there are adjacent segments
         if len(adjacent_ix[0]) != 0:
+            discrepant_snps = df.iloc[matches_passed[adjacent_ix[0], 1]].index
             matches_stitched = np.array([0, 0])
             prev = -1
             counter = 0
@@ -903,11 +758,19 @@ class Lineage:
                 }
             )
             counter += 1
-        return shared_dna
+        return {"shared_dna": shared_dna, "discrepant_snps": discrepant_snps}
 
     def _remap_snps_to_GRCh37(self, individuals):
         for i in individuals:
             if i is None:
                 continue
 
-            self.remap_snps(i, 37)
+            i.remap_snps(37)
+
+    def _get_csv_header(self):
+        return (
+            "# Generated by lineage v{}, https://pypi.org/project/lineage/\n"
+            "# Generated at {} UTC\n".format(
+                __version__, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            )
+        )
