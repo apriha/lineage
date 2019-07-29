@@ -3,6 +3,7 @@
 # https://docs.travis-ci.com
 # https://stackoverflow.com/a/3237883
 # https://stackoverflow.com/a/5688592
+# https://stackoverflow.com/a/6270803
 
 language: python
 
@@ -14,36 +15,33 @@ install:
   - pip install .
 
 script:
-  # For testing, we want to limit downloads from the resource servers, and we
-  # achieve this by the following:
-  # 1) assign each job an ID
-  # 2) select (identify) one of the jobs based on week of the year
-  # 3) limit downloading of resources to selected job on master branch
-  # 4) use cached resources on Amazon S3 for all other jobs
-  # Note that the master branch is tested weekly via `cron`, so this ensures
-  # all Python versions will be periodically integration tested with the
-  # resource servers.
+  # for testing, limit downloads from the resource servers by using cached resources;
+  # note that the master branch is tested weekly via `cron`, so this ensures all Python
+  # versions will be periodically integration tested with the resource servers
   - set -e
   - NUM_JOBS=3
-  - SELECTED_JOB=$(($(date +%V) % $NUM_JOBS))
+  - SELECTED_JOB=$(($(date +%V) % $NUM_JOBS))  # identify a job based on week of the year
+  - DOWNLOADS_ENABLED=false
   - |
-    if [ $TRAVIS_BRANCH == "master" ]; then
-      if [ $SELECTED_JOB != $JOB_ID ]; then
-        aws s3 cp s3://lineage-resources/resources.tar.gz resources.tar.gz
-      else
-        DOWNLOADS_ENABLED=True
-      fi
-    else
-      aws s3 cp s3://lineage-resources/resources.tar.gz resources.tar.gz
+    if [[ $TRAVIS_PULL_REQUEST != "false" ]]; then
+      # download resources for all jobs on a pull request
+      DOWNLOADS_ENABLED=true
+    elif [[ $TRAVIS_BRANCH == "master" && $SELECTED_JOB == $JOB_ID ]]; then
+      # download resources for selected job on master branch
+      DOWNLOADS_ENABLED=true
     fi
   - |
-    if [ -f resources.tar.gz ]; then
-      tar -xzf resources.tar.gz
-      rm resources.tar.gz
+    if [[ $DOWNLOADS_ENABLED == "false" ]]; then
+      # use cached resources on Amazon S3
+      aws s3 cp s3://lineage-resources/resources.tar.gz resources.tar.gz
+      if [[ -f resources.tar.gz ]]; then
+        tar -xzf resources.tar.gz
+        rm resources.tar.gz
+      fi
     fi
   - pytest --cov=lineage tests
   - |
-    if [ $SELECTED_JOB == $JOB_ID ]; then
+    if [[ $SELECTED_JOB == $JOB_ID ]]; then
       codecov
     fi
 
