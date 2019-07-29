@@ -444,7 +444,7 @@ class Lineage:
         results = map(self._compute_shared_dna, tasks)
 
         shared_dna = []
-        discrepant_snps = pd.Index([])
+        discrepant_snps = pd.Index([], name="rsid")
         for result in list(results):
             shared_dna.append(result["shared_dna"])
             discrepant_snps = discrepant_snps.append(result["discrepant_snps"])
@@ -675,7 +675,7 @@ class Lineage:
             match_col = "two_chrom_match"
 
         shared_dna = []
-        discrepant_snps = pd.Index([])
+        discrepant_snps = pd.Index([], name="rsid")
 
         # set two_chrom_match in non-PAR region to False if an individual is male
         if chrom == "X" and match_col == "two_chrom_match" and one_x_chrom:
@@ -745,20 +745,29 @@ class Lineage:
         ]
         cMs_match_segment = c[:, 1] - c[:, 0]
 
+        discrepant_snps_passed = pd.Index([], name="rsid")
         counter = 0
         # save matches for this chromosome
         for x in matches_passed:
-            shared_dna.append(
-                {
-                    "chrom": chrom,
-                    "start": df.loc[(df["chrom"] == chrom)].iloc[x[0]].pos,
-                    "end": df.loc[(df["chrom"] == chrom)].iloc[x[1] - 1].pos,
-                    "cMs": cMs_match_segment[counter],
-                    "snps": x[1] - x[0],
-                }
-            )
+            d = {
+                "chrom": chrom,
+                "start": df.loc[(df["chrom"] == chrom)].iloc[x[0]].pos,
+                "end": df.loc[(df["chrom"] == chrom)].iloc[x[1] - 1].pos,
+                "cMs": cMs_match_segment[counter],
+                "snps": x[1] - x[0],
+            }
+
+            # ensure discrepant SNPs are in shared DNA segments
+            for discrepant_snp in discrepant_snps.copy():
+                if d["start"] <= df.loc[discrepant_snp].pos <= d["end"]:
+                    discrepant_snps = discrepant_snps.drop(discrepant_snp)
+                    discrepant_snps_passed = discrepant_snps_passed.append(
+                        df.loc[[discrepant_snp]].index
+                    )
+
+            shared_dna.append(d)
             counter += 1
-        return {"shared_dna": shared_dna, "discrepant_snps": discrepant_snps}
+        return {"shared_dna": shared_dna, "discrepant_snps": discrepant_snps_passed}
 
     def _remap_snps_to_GRCh37(self, individuals):
         for i in individuals:
