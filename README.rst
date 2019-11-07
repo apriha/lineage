@@ -17,13 +17,7 @@ Capabilities
 
 Supported Genotype Files
 ------------------------
-``lineage`` supports `VCF <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3137218/>`_ files and
-genotype files from the following DTC DNA testing companies:
-
-- `23andMe <https://www.23andme.com>`_
-- `Ancestry <https://www.ancestry.com>`_
-- `Family Tree DNA <https://www.familytreedna.com>`_
-- `MyHeritage <https://www.myheritage.com>`_
+``lineage`` supports all genotype files supported by `snps <https://github.com/apriha/snps>`_.
 
 Dependencies
 ------------
