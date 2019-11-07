@@ -1,19 +1,19 @@
-lineage package
+lineage Package
 ===============
 
-Submodules
-----------
+Module
+------
 
-lineage\.ensembl module
------------------------
-
-.. automodule:: lineage.ensembl
+.. automodule:: lineage
     :members:
     :undoc-members:
     :show-inheritance:
 
+Submodules
+----------
+
 lineage\.individual module
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: lineage.individual
     :members:
@@ -21,7 +21,7 @@ lineage\.individual module
     :show-inheritance:
 
 lineage\.resources module
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: lineage.resources
     :members:
@@ -29,18 +29,9 @@ lineage\.resources module
     :show-inheritance:
 
 lineage\.visualization module
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: lineage.visualization
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: lineage
     :members:
     :undoc-members:
     :show-inheritance:

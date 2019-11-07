@@ -249,7 +249,7 @@ shared_genes_one_chrom_<name1>_<name2>_GRCh37.csv
 `````````````````````````````````````````````````
 If DNA is shared on one chromosome, this file details the genes shared between the two
 individuals on at least one chromosome; these genes are located in the shared DNA segments
-specified in `shared_dna_one_chrom_<name1>_<name2>.csv`_.
+specified in `shared_dna_one_chrom_<name1>_<name2>_GRCh37.csv`_.
 
 ===========  ============
 Column*      Description*
@@ -272,6 +272,6 @@ shared_genes_two_chroms_<name1>_<name2>_GRCh37.csv
 ``````````````````````````````````````````````````
 If DNA is shared on both chromosomes in a pair, this file details the genes shared between the two
 individuals on both chromosomes; these genes are located in the shared DNA segments specified in
-`shared_dna_two_chroms_<name1>_<name2>.csv`_.
+`shared_dna_two_chroms_<name1>_<name2>_GRCh37.csv`_.
 
-The file has the same columns as `shared_genes_one_chrom_<name1>_<name2>.csv`_.
+The file has the same columns as `shared_genes_one_chrom_<name1>_<name2>_GRCh37.csv`_.

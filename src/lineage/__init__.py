@@ -98,9 +98,9 @@ class Lineage:
 
         References
         ----------
-        ..[1] Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP-A Crowdsourced Web Resource
-          for Personal Genomics," PLOS ONE, 9(3): e89204,
-          https://doi.org/10.1371/journal.pone.0089204
+        1. Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP-A Crowdsourced Web Resource
+           for Personal Genomics," PLOS ONE, 9(3): e89204,
+           https://doi.org/10.1371/journal.pone.0089204
         """
         paths = self._resources.download_example_datasets()
 
@@ -132,12 +132,12 @@ class Lineage:
 
         References
         ----------
-        ..[1] David Pike, "Search for Discordant SNPs in Parent-Child
-          Raw Data Files," David Pike's Utilities,
-          http://www.math.mun.ca/~dapike/FF23utils/pair-discord.php
-        ..[2] David Pike, "Search for Discordant SNPs when given data
-          for child and both parents," David Pike's Utilities,
-          http://www.math.mun.ca/~dapike/FF23utils/trio-discord.php
+        1. David Pike, "Search for Discordant SNPs in Parent-Child
+           Raw Data Files," David Pike's Utilities,
+           http://www.math.mun.ca/~dapike/FF23utils/pair-discord.php
+        2. David Pike, "Search for Discordant SNPs when given data
+           for child and both parents," David Pike's Utilities,
+           http://www.math.mun.ca/~dapike/FF23utils/trio-discord.php
         """
         self._remap_snps_to_GRCh37([individual1, individual2, individual3])
 

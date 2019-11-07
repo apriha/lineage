@@ -2,13 +2,12 @@
 
 Notes
 -----
-Adapted from Ryan Dale's GitHub Gist for plotting chromosome features
-(see [1]_).
+Adapted from Ryan Dale's GitHub Gist for plotting chromosome features. [1]_
 
 References
 ----------
-..[1] Ryan Dale, GitHub Gist,
-  https://gist.github.com/daler/c98fc410282d7570efc3#file-ideograms-py
+.. [1] Ryan Dale, GitHub Gist,
+   https://gist.github.com/daler/c98fc410282d7570efc3#file-ideograms-py
 
 """
 
