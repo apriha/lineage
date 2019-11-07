@@ -47,12 +47,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
 
+import logging
 import tarfile
 import zlib
 
 from atomicwrites import atomic_write
 import pandas as pd
 from snps import Resources as SNPsResources
+
+logger = logging.getLogger(__name__)
 
 
 class Resources(SNPsResources):
@@ -221,7 +224,7 @@ class Resources(SNPsResources):
                 with atomic_write(gzip_path, mode="wb", overwrite=True) as f:
                     self._write_data_to_gzip(f, data)
         except Exception as err:
-            print(err)
+            logger.warning(err)
 
         return paths
 
@@ -289,7 +292,7 @@ class Resources(SNPsResources):
 
             return genetic_map
         except Exception as err:
-            print(err)
+            logger.warning(err)
             return {}
 
     @staticmethod
@@ -314,7 +317,7 @@ class Resources(SNPsResources):
             df["chrom"] = df["chrom"].str[3:]
             return df
         except Exception as err:
-            print(err)
+            logger.warning(err)
             return pd.DataFrame()
 
     @staticmethod
@@ -354,7 +357,7 @@ class Resources(SNPsResources):
             df["chrom"] = df["chrom"].str[3:]
             return df
         except Exception as err:
-            print(err)
+            logger.warning(err)
             return pd.DataFrame()
 
     @staticmethod
@@ -392,7 +395,7 @@ class Resources(SNPsResources):
             )
             return df
         except Exception as err:
-            print(err)
+            logger.warning(err)
             return pd.DataFrame()
 
     def _get_path_cytoBand_hg19(self):

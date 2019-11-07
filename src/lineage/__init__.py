@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
 from itertools import chain, combinations
+import logging
 import os
 
 import numpy as np
@@ -39,6 +40,8 @@ from lineage._version import get_versions
 
 __version__ = get_versions()["version"]
 del get_versions
+
+logger = logging.getLogger(__name__)
 
 
 class Lineage:
@@ -105,7 +108,7 @@ class Lineage:
         paths = self._resources.download_example_datasets()
 
         if "" in paths:
-            print("Example dataset(s) not currently available")
+            logger.warning("Example dataset(s) not currently available")
 
         return paths
 
@@ -311,7 +314,7 @@ class Lineage:
         self._remap_snps_to_GRCh37(individuals)
 
         if len(individuals) < 2:
-            print("find_shared_dna requires two or more individuals...")
+            logger.warning("find_shared_dna requires two or more individuals...")
             return self._find_shared_dna_return_helper(
                 one_chrom_shared_dna,
                 two_chrom_shared_dna,
