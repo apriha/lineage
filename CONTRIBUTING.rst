@@ -55,13 +55,17 @@ To set up ``lineage`` for local development:
 
     pipenv run pytest --cov=lineage tests
 
-6. Commit your changes and push your branch to GitHub::
+6. Check code formatting::
+
+    black --check --diff .
+
+7. Commit your changes and push your branch to GitHub::
 
     git add .
     git commit -m "Your detailed description of your changes."
     git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request through the GitHub website.
+8. Submit a pull request through the GitHub website.
 
 Pull request guidelines
 ```````````````````````
