@@ -62,7 +62,14 @@ Import ``Lineage`` and instantiate a ``Lineage`` object:
 
 Download Example Data
 `````````````````````
-Let's download some example data from `openSNP <https://opensnp.org>`_:
+First, let's setup logging to get some helpful output:
+
+>>> import logging, sys
+>>> logger = logging.getLogger()
+>>> logger.setLevel(logging.DEBUG)
+>>> logger.addHandler(logging.StreamHandler(sys.stdout))
+
+Now we're ready to download some example data from `openSNP <https://opensnp.org>`_:
 
 >>> paths = l.download_example_datasets()
 Downloading resources/662.23andme.304.txt.gz
