@@ -167,7 +167,7 @@ def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, b
 
     ax.set_title(title, fontsize=14, fontweight="bold")
     plt.xlabel("Build " + str(build) + " Chromosome Position", fontsize=10)
-    logger.debug("Saving {}".format(os.path.relpath(path)))
+    logger.info("Saving {}".format(os.path.relpath(path)))
     plt.tight_layout()
 
     with atomic_write(path, mode="wb", overwrite=True) as f:

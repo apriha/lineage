@@ -60,7 +60,7 @@ First, let's setup logging to get some helpful output:
 
 >>> import logging, sys
 >>> logger = logging.getLogger()
->>> logger.setLevel(logging.DEBUG)
+>>> logger.setLevel(logging.INFO)
 >>> logger.addHandler(logging.StreamHandler(sys.stdout))
 
 Now we're ready to download some example data from `openSNP <https://opensnp.org>`_:
