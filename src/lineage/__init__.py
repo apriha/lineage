@@ -761,12 +761,16 @@ class Lineage:
             }
 
             # ensure discrepant SNPs are in shared DNA segments
-            for discrepant_snp in discrepant_snps.copy():
+            for discrepant_snp in discrepant_snps:
                 if d["start"] <= df.loc[discrepant_snp].pos <= d["end"]:
-                    discrepant_snps = discrepant_snps.drop(discrepant_snp)
                     discrepant_snps_passed = discrepant_snps_passed.append(
                         df.loc[[discrepant_snp]].index
                     )
+
+            # remove found discrepant SNPs from search on next iteration
+            discrepant_snps = discrepant_snps.drop(
+                discrepant_snps_passed, errors="ignore"
+            )
 
             shared_dna.append(d)
             counter += 1
