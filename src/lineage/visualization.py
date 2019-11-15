@@ -2,13 +2,12 @@
 
 Notes
 -----
-Adapted from Ryan Dale's GitHub Gist for plotting chromosome features
-(see [1]_).
+Adapted from Ryan Dale's GitHub Gist for plotting chromosome features. [1]_
 
 References
 ----------
-..[1] Ryan Dale, GitHub Gist,
-  https://gist.github.com/daler/c98fc410282d7570efc3#file-ideograms-py
+.. [1] Ryan Dale, GitHub Gist,
+   https://gist.github.com/daler/c98fc410282d7570efc3#file-ideograms-py
 
 """
 
@@ -54,6 +53,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
+import logging
 import os
 
 from atomicwrites import atomic_write
@@ -65,6 +65,8 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 from matplotlib.collections import BrokenBarHCollection
 from matplotlib import patches
+
+logger = logging.getLogger(__name__)
 
 
 def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, build):
@@ -165,7 +167,7 @@ def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, b
 
     ax.set_title(title, fontsize=14, fontweight="bold")
     plt.xlabel("Build " + str(build) + " Chromosome Position", fontsize=10)
-    print("Saving " + os.path.relpath(path))
+    logger.info("Saving {}".format(os.path.relpath(path)))
     plt.tight_layout()
 
     with atomic_write(path, mode="wb", overwrite=True) as f:

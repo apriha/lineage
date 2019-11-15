@@ -6,6 +6,9 @@ verify_ssl = true
 [dev-packages]
 pytest = "*"
 pytest-cov = "*"
+sphinx = "*"
+sphinx-rtd-theme = "*"
+black = "==19.10b0"
 
 [packages]
 lineage = {editable = true,path = "."}

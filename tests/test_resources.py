@@ -60,19 +60,3 @@ class TestResources(BaseLineageTestCase):
                 return
 
         assert True
-
-    def test__load_genetic_map_None(self):
-        result = self.resource._load_genetic_map(None)
-        assert not result
-
-    def test__load_cytoBand_None(self):
-        result = self.resource._load_cytoBand(None)
-        assert result.empty
-
-    def test__load_knownGene_None(self):
-        result = self.resource._load_knownGene(None)
-        assert result.empty
-
-    def test__load_kgXref_None(self):
-        result = self.resource._load_kgXref(None)
-        assert result.empty

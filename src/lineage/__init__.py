@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
 from itertools import chain, combinations
+import logging
 import os
 
 import numpy as np
@@ -39,6 +40,8 @@ from lineage._version import get_versions
 
 __version__ = get_versions()["version"]
 del get_versions
+
+logger = logging.getLogger(__name__)
 
 
 class Lineage:
@@ -98,14 +101,14 @@ class Lineage:
 
         References
         ----------
-        ..[1] Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP-A Crowdsourced Web Resource
-          for Personal Genomics," PLOS ONE, 9(3): e89204,
-          https://doi.org/10.1371/journal.pone.0089204
+        1. Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP-A Crowdsourced Web Resource
+           for Personal Genomics," PLOS ONE, 9(3): e89204,
+           https://doi.org/10.1371/journal.pone.0089204
         """
         paths = self._resources.download_example_datasets()
 
         if "" in paths:
-            print("Example dataset(s) not currently available")
+            logger.warning("Example dataset(s) not currently available")
 
         return paths
 
@@ -132,12 +135,12 @@ class Lineage:
 
         References
         ----------
-        ..[1] David Pike, "Search for Discordant SNPs in Parent-Child
-          Raw Data Files," David Pike's Utilities,
-          http://www.math.mun.ca/~dapike/FF23utils/pair-discord.php
-        ..[2] David Pike, "Search for Discordant SNPs when given data
-          for child and both parents," David Pike's Utilities,
-          http://www.math.mun.ca/~dapike/FF23utils/trio-discord.php
+        1. David Pike, "Search for Discordant SNPs in Parent-Child
+           Raw Data Files," David Pike's Utilities,
+           http://www.math.mun.ca/~dapike/FF23utils/pair-discord.php
+        2. David Pike, "Search for Discordant SNPs when given data
+           for child and both parents," David Pike's Utilities,
+           http://www.math.mun.ca/~dapike/FF23utils/trio-discord.php
         """
         self._remap_snps_to_GRCh37([individual1, individual2, individual3])
 
@@ -311,7 +314,7 @@ class Lineage:
         self._remap_snps_to_GRCh37(individuals)
 
         if len(individuals) < 2:
-            print("find_shared_dna requires two or more individuals...")
+            logger.warning("find_shared_dna requires two or more individuals...")
             return self._find_shared_dna_return_helper(
                 one_chrom_shared_dna,
                 two_chrom_shared_dna,
@@ -758,12 +761,16 @@ class Lineage:
             }
 
             # ensure discrepant SNPs are in shared DNA segments
-            for discrepant_snp in discrepant_snps.copy():
+            for discrepant_snp in discrepant_snps:
                 if d["start"] <= df.loc[discrepant_snp].pos <= d["end"]:
-                    discrepant_snps = discrepant_snps.drop(discrepant_snp)
                     discrepant_snps_passed = discrepant_snps_passed.append(
                         df.loc[[discrepant_snp]].index
                     )
+
+            # remove found discrepant SNPs from search on next iteration
+            discrepant_snps = discrepant_snps.drop(
+                discrepant_snps_passed, errors="ignore"
+            )
 
             shared_dna.append(d)
             counter += 1

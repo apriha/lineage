@@ -17,7 +17,8 @@ Documentation improvements
 --------------------------
 
 ``lineage`` could always use more documentation, whether as part of the official ``lineage``
-docs, in docstrings, or even on the web in blog posts, articles, and such.
+docs, in docstrings, or even on the web in blog posts, articles, and such. See below for
+info on how to generate documentation.
 
 Feature requests and feedback
 -----------------------------
@@ -54,13 +55,17 @@ To set up ``lineage`` for local development:
 
     pipenv run pytest --cov=lineage tests
 
-6. Commit your changes and push your branch to GitHub::
+6. Check code formatting::
+
+    pipenv run black --check --diff .
+
+7. Commit your changes and push your branch to GitHub::
 
     git add .
     git commit -m "Your detailed description of your changes."
     git push origin name-of-your-bugfix-or-feature
 
-7. Submit a pull request through the GitHub website.
+8. Submit a pull request through the GitHub website.
 
 Pull request guidelines
 ```````````````````````
@@ -73,3 +78,12 @@ For merging, you should:
 1. Ensure tests pass.
 2. Update documentation when there's new API, functionality, etc.
 3. Add yourself to ``CONTRIBUTORS.rst``.
+
+Documentation
+-------------
+After the development environment has been setup, documentation can be generated via the
+following command::
+
+    pipenv run sphinx-build -T -E -D language=en docs docs/_build
+
+Then, the documentation can be viewed by opening ``docs/_build/index.html`` in a browser.

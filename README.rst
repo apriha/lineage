@@ -17,13 +17,7 @@ Capabilities
 
 Supported Genotype Files
 ------------------------
-``lineage`` supports `VCF <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3137218/>`_ files and
-genotype files from the following DTC DNA testing companies:
-
-- `23andMe <https://www.23andme.com>`_
-- `Ancestry <https://www.ancestry.com>`_
-- `Family Tree DNA <https://www.familytreedna.com>`_
-- `MyHeritage <https://www.myheritage.com>`_
+``lineage`` supports all genotype files supported by `snps <https://github.com/apriha/snps>`_.
 
 Dependencies
 ------------
@@ -62,7 +56,14 @@ Import ``Lineage`` and instantiate a ``Lineage`` object:
 
 Download Example Data
 `````````````````````
-Let's download some example data from `openSNP <https://opensnp.org>`_:
+First, let's setup logging to get some helpful output:
+
+>>> import logging, sys
+>>> logger = logging.getLogger()
+>>> logger.setLevel(logging.INFO)
+>>> logger.addHandler(logging.StreamHandler(sys.stdout))
+
+Now we're ready to download some example data from `openSNP <https://opensnp.org>`_:
 
 >>> paths = l.download_example_datasets()
 Downloading resources/662.23andme.304.txt.gz
