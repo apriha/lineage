@@ -205,26 +205,23 @@ class Resources(SNPsResources):
             )
         )
 
-        try:
-            for gzip_path in paths[-2:]:
-                # https://stackoverflow.com/q/4928560
-                # https://stackoverflow.com/a/37042747
-                with open(gzip_path, "rb") as f:
-                    decompressor = zlib.decompressobj(31)
+        for gzip_path in paths[-2:]:
+            # https://stackoverflow.com/q/4928560
+            # https://stackoverflow.com/a/37042747
+            with open(gzip_path, "rb") as f:
+                decompressor = zlib.decompressobj(31)
 
-                    # decompress data from first concatenated gzip file
-                    data = decompressor.decompress(f.read())
+                # decompress data from first concatenated gzip file
+                data = decompressor.decompress(f.read())
 
-                    if len(decompressor.unused_data) > 0:
-                        # decompress data from second concatenated gzip file, if any
-                        additional_data = zlib.decompress(decompressor.unused_data, 31)
-                        data += additional_data[33:]  # skip over second header
+                if len(decompressor.unused_data) > 0:
+                    # decompress data from second concatenated gzip file, if any
+                    additional_data = zlib.decompress(decompressor.unused_data, 31)
+                    data += additional_data[33:]  # skip over second header
 
-                # recompress data
-                with atomic_write(gzip_path, mode="wb", overwrite=True) as f:
-                    self._write_data_to_gzip(f, data)
-        except Exception as err:
-            logger.warning(err)
+            # recompress data
+            with atomic_write(gzip_path, mode="wb", overwrite=True) as f:
+                self._write_data_to_gzip(f, data)
 
         return paths
 
@@ -257,43 +254,39 @@ class Resources(SNPsResources):
         Returns
         -------
         genetic_map : dict
-            dict of pandas.DataFrame genetic maps if loading was successful, else {}
+            dict of pandas.DataFrame genetic maps
 
         Notes
         -----
         Keys of returned dict are chromosomes and values are the corresponding genetic map.
         """
-        try:
-            genetic_map = {}
+        genetic_map = {}
 
-            with tarfile.open(filename, "r") as tar:
-                # http://stackoverflow.com/a/2018576
-                for member in tar.getmembers():
-                    if "genetic_map" in member.name:
-                        df = pd.read_csv(tar.extractfile(member), sep="\t")
-                        df = df.rename(
-                            columns={
-                                "Position(bp)": "pos",
-                                "Rate(cM/Mb)": "rate",
-                                "Map(cM)": "map",
-                            }
-                        )
-                        del df["Chromosome"]
-                        start_pos = member.name.index("chr") + 3
-                        end_pos = member.name.index(".")
-                        genetic_map[member.name[start_pos:end_pos]] = df
+        with tarfile.open(filename, "r") as tar:
+            # http://stackoverflow.com/a/2018576
+            for member in tar.getmembers():
+                if "genetic_map" in member.name:
+                    df = pd.read_csv(tar.extractfile(member), sep="\t")
+                    df = df.rename(
+                        columns={
+                            "Position(bp)": "pos",
+                            "Rate(cM/Mb)": "rate",
+                            "Map(cM)": "map",
+                        }
+                    )
+                    del df["Chromosome"]
+                    start_pos = member.name.index("chr") + 3
+                    end_pos = member.name.index(".")
+                    genetic_map[member.name[start_pos:end_pos]] = df
 
-            # X chrom consists of X PAR regions and X non-PAR region
-            genetic_map["X"] = pd.concat(
-                [genetic_map["X_par1"], genetic_map["X"], genetic_map["X_par2"]]
-            )
-            del genetic_map["X_par1"]
-            del genetic_map["X_par2"]
+        # X chrom consists of X PAR regions and X non-PAR region
+        genetic_map["X"] = pd.concat(
+            [genetic_map["X_par1"], genetic_map["X"], genetic_map["X_par2"]]
+        )
+        del genetic_map["X_par1"]
+        del genetic_map["X_par2"]
 
-            return genetic_map
-        except Exception as err:
-            logger.warning(err)
-            return {}
+        return genetic_map
 
     @staticmethod
     def _load_cytoBand(filename):
@@ -307,18 +300,14 @@ class Resources(SNPsResources):
         Returns
         -------
         df : pandas.DataFrame
-            cytoBand table if loading was successful, else empty DataFrame
+            cytoBand table
         """
-        try:
-            # adapted from chromosome plotting code (see [1]_)
-            df = pd.read_csv(
-                filename, names=["chrom", "start", "end", "name", "gie_stain"], sep="\t"
-            )
-            df["chrom"] = df["chrom"].str[3:]
-            return df
-        except Exception as err:
-            logger.warning(err)
-            return pd.DataFrame()
+        # adapted from chromosome plotting code (see [1]_)
+        df = pd.read_csv(
+            filename, names=["chrom", "start", "end", "name", "gie_stain"], sep="\t"
+        )
+        df["chrom"] = df["chrom"].str[3:]
+        return df
 
     @staticmethod
     def _load_knownGene(filename):
@@ -332,33 +321,29 @@ class Resources(SNPsResources):
         Returns
         -------
         df : pandas.DataFrame
-            knownGene table if loading was successful, else empty DataFrame
+            knownGene table
         """
-        try:
-            df = pd.read_csv(
-                filename,
-                names=[
-                    "name",
-                    "chrom",
-                    "strand",
-                    "txStart",
-                    "txEnd",
-                    "cdsStart",
-                    "cdsEnd",
-                    "exonCount",
-                    "exonStarts",
-                    "exonEnds",
-                    "proteinID",
-                    "alignID",
-                ],
-                index_col=0,
-                sep="\t",
-            )
-            df["chrom"] = df["chrom"].str[3:]
-            return df
-        except Exception as err:
-            logger.warning(err)
-            return pd.DataFrame()
+        df = pd.read_csv(
+            filename,
+            names=[
+                "name",
+                "chrom",
+                "strand",
+                "txStart",
+                "txEnd",
+                "cdsStart",
+                "cdsEnd",
+                "exonCount",
+                "exonStarts",
+                "exonEnds",
+                "proteinID",
+                "alignID",
+            ],
+            index_col=0,
+            sep="\t",
+        )
+        df["chrom"] = df["chrom"].str[3:]
+        return df
 
     @staticmethod
     def _load_kgXref(filename):
@@ -372,31 +357,27 @@ class Resources(SNPsResources):
         Returns
         -------
         df : pandas.DataFrame
-            kgXref table if loading was successful, else empty DataFrame
+            kgXref table
         """
-        try:
-            df = pd.read_csv(
-                filename,
-                names=[
-                    "kgID",
-                    "mRNA",
-                    "spID",
-                    "spDisplayID",
-                    "geneSymbol",
-                    "refseq",
-                    "protAcc",
-                    "description",
-                    "rfamAcc",
-                    "tRnaName",
-                ],
-                index_col=0,
-                sep="\t",
-                dtype=object,
-            )
-            return df
-        except Exception as err:
-            logger.warning(err)
-            return pd.DataFrame()
+        df = pd.read_csv(
+            filename,
+            names=[
+                "kgID",
+                "mRNA",
+                "spID",
+                "spDisplayID",
+                "geneSymbol",
+                "refseq",
+                "protAcc",
+                "description",
+                "rfamAcc",
+                "tRnaName",
+            ],
+            index_col=0,
+            sep="\t",
+            dtype=object,
+        )
+        return df
 
     def _get_path_cytoBand_hg19(self):
         """ Get local path to cytoBand file for hg19 / GRCh37 from UCSC, downloading if necessary.
