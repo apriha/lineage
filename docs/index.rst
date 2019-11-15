@@ -16,6 +16,9 @@
 
    README <readme>
    output_files
+   changelog
+   contributing
+   contributors
    lineage
 
 Indices and tables
