@@ -57,7 +57,7 @@ To set up ``lineage`` for local development:
 
 6. Check code formatting::
 
-    black --check --diff .
+    pipenv run black --check --diff .
 
 7. Commit your changes and push your branch to GitHub::
 
@@ -84,6 +84,6 @@ Documentation
 After the development environment has been setup, documentation can be generated via the
 following command::
 
-    sphinx-build -T -E -D language=en docs docs/_build
+    pipenv run sphinx-build -T -E -D language=en docs docs/_build
 
 Then, the documentation can be viewed by opening ``docs/_build/index.html`` in a browser.
