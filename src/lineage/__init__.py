@@ -329,9 +329,9 @@ class Lineage:
         df = individuals[0].snps
         df = df.rename(columns={"genotype": cols[0]})
 
-        for i, individual in enumerate(individuals[1:]):
+        for i, ind in enumerate(individuals[1:]):
             # join SNPs for all individuals
-            df = df.join(individual.snps["genotype"], how="inner")
+            df = df.join(ind.snps["genotype"], how="inner")
             df = df.rename(columns={"genotype": cols[i + 1]})
 
         one_x_chrom = self._is_one_individual_male(individuals)
@@ -597,8 +597,8 @@ class Lineage:
         return shared_genes
 
     def _is_one_individual_male(self, individuals):
-        for individual in individuals:
-            if individual.sex == "Male":
+        for ind in individuals:
+            if ind.sex == "Male":
                 return True
         return False
 
@@ -777,11 +777,11 @@ class Lineage:
         return {"shared_dna": shared_dna, "discrepant_snps": discrepant_snps_passed}
 
     def _remap_snps_to_GRCh37(self, individuals):
-        for i in individuals:
-            if i is None:
+        for ind in individuals:
+            if ind is None:
                 continue
 
-            i.remap_snps(37)
+            ind.remap_snps(37)
 
     def _get_csv_header(self):
         return (
