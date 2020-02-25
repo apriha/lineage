@@ -20,7 +20,7 @@ script:
   # versions will be periodically integration tested with the resource servers
   - set -e
   - NUM_JOBS=4
-  - SELECTED_JOB=$(($(date +%V) % $NUM_JOBS))  # identify a job based on week of the year
+  - SELECTED_JOB=$((10#$(date +%V) % $NUM_JOBS))  # identify a job based on week of the year
   - DOWNLOADS_ENABLED=false
   - |
     if [[ $TRAVIS_PULL_REQUEST != "false" ]]; then
