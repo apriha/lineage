@@ -53,7 +53,7 @@ import zlib
 
 from atomicwrites import atomic_write
 import pandas as pd
-from snps import Resources as SNPsResources
+from snps.resources import Resources as SNPsResources
 
 logger = logging.getLogger(__name__)
 
