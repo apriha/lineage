@@ -56,7 +56,7 @@ jobs:
     - stage: check formatting
       python: 3.6
       before_install:
-        - pip install black
+        - pip install black==19.10b0
       script:
         - black --check --diff .
     - stage: test
