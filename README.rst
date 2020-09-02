@@ -283,8 +283,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 .. https://github.com/rtfd/readthedocs.org/blob/master/docs/badges.rst
-.. |build| image:: https://travis-ci.org/apriha/lineage.svg?branch=master
-   :target: https://travis-ci.org/apriha/lineage
+.. |build| image:: https://travis-ci.com/apriha/lineage.svg?branch=master
+   :target: https://travis-ci.com/apriha/lineage
 .. |codecov| image:: https://codecov.io/gh/apriha/lineage/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/apriha/lineage
 .. |docs| image:: https://readthedocs.org/projects/lineage/badge/?version=latest
