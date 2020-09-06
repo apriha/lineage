@@ -21,7 +21,7 @@ Supported Genotype Files
 
 Dependencies
 ------------
-``lineage`` requires `Python <https://www.python.org>`_ 3.5+ and the following Python packages:
+``lineage`` requires `Python <https://www.python.org>`_ 3.6.1+ and the following Python packages:
 
 - `numpy <http://www.numpy.org>`_
 - `pandas <http://pandas.pydata.org>`_
