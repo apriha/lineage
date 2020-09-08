@@ -49,9 +49,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
 import tarfile
-import zlib
 
-from atomicwrites import atomic_write
 import pandas as pd
 from snps.resources import Resources as SNPsResources
 
@@ -152,7 +150,7 @@ class Resources(SNPsResources):
 
         Returns
         -------
-        paths : list of str or empty str
+        list of str or empty str
             paths to example datasets
 
         References
@@ -161,69 +159,36 @@ class Resources(SNPsResources):
            for Personal Genomics," PLOS ONE, 9(3): e89204,
            https://doi.org/10.1371/journal.pone.0089204
         """
-        paths = []
-        paths.append(
+        return [
             self._download_file(
                 "https://opensnp.org/data/662.23andme.304",
                 "662.23andme.304.txt.gz",
                 compress=True,
-            )
-        )
-        paths.append(
+            ),
             self._download_file(
                 "https://opensnp.org/data/662.23andme.340",
                 "662.23andme.340.txt.gz",
                 compress=True,
-            )
-        )
-        paths.append(
+            ),
             self._download_file(
                 "https://opensnp.org/data/662.ftdna-illumina.341",
                 "662.ftdna-illumina.341.csv.gz",
                 compress=True,
-            )
-        )
-        paths.append(
+            ),
             self._download_file(
                 "https://opensnp.org/data/663.23andme.305",
                 "663.23andme.305.txt.gz",
                 compress=True,
-            )
-        )
-
-        # these two files consist of concatenated gzip files and therefore need special handling
-        paths.append(
+            ),
             self._download_file(
                 "https://opensnp.org/data/4583.ftdna-illumina.3482",
                 "4583.ftdna-illumina.3482.csv.gz",
-            )
-        )
-        paths.append(
+            ),
             self._download_file(
                 "https://opensnp.org/data/4584.ftdna-illumina.3483",
                 "4584.ftdna-illumina.3483.csv.gz",
-            )
-        )
-
-        for gzip_path in paths[-2:]:
-            # https://stackoverflow.com/q/4928560
-            # https://stackoverflow.com/a/37042747
-            with open(gzip_path, "rb") as f:
-                decompressor = zlib.decompressobj(31)
-
-                # decompress data from first concatenated gzip file
-                data = decompressor.decompress(f.read())
-
-                if len(decompressor.unused_data) > 0:
-                    # decompress data from second concatenated gzip file, if any
-                    additional_data = zlib.decompress(decompressor.unused_data, 31)
-                    data += additional_data[33:]  # skip over second header
-
-            # recompress data
-            with atomic_write(gzip_path, mode="wb", overwrite=True) as f:
-                self._write_data_to_gzip(f, data)
-
-        return paths
+            ),
+        ]
 
     def get_all_resources(self):
         """ Get / download all resources (except reference sequences) used throughout `lineage`.
