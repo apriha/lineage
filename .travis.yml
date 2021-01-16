@@ -19,7 +19,7 @@ script:
   # note that the master branch is tested weekly via `cron`, so this ensures all Python
   # versions will be periodically integration tested with the resource servers
   - set -e
-  - NUM_JOBS=3
+  - NUM_JOBS=4
   - SELECTED_JOB=$((10#$(date +%V) % $NUM_JOBS))  # identify a job based on week of the year
   - DOWNLOADS_ENABLED=false
   - |
@@ -66,6 +66,8 @@ jobs:
       env: JOB_ID=1
     - python: 3.8
       env: JOB_ID=2
+    - python: 3.9
+      env: JOB_ID=3
     - stage: deploy
       python: 3.6
       script: skip
