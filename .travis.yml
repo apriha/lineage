@@ -8,7 +8,7 @@
 language: python
 
 before_install:
-  - pip install --upgrade pip setuptools wheel
+  - pip install --upgrade pip setuptools wheel importlib-metadata
   - pip install pytest-cov codecov awscli
 
 install:
