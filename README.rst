@@ -66,7 +66,6 @@ First, let's setup logging to get some helpful output:
 Now we're ready to download some example data from `openSNP <https://opensnp.org>`_:
 
 >>> paths = l.download_example_datasets()
-Downloading resources/662.23andme.304.txt.gz
 Downloading resources/662.23andme.340.txt.gz
 Downloading resources/662.ftdna-illumina.341.csv.gz
 Downloading resources/663.23andme.305.txt.gz

@@ -168,11 +168,6 @@ class Resources(SNPsResources):
         """
         return [
             self._download_file(
-                "https://opensnp.org/data/662.23andme.304",
-                "662.23andme.304.txt.gz",
-                compress=True,
-            ),
-            self._download_file(
                 "https://opensnp.org/data/662.23andme.340",
                 "662.23andme.340.txt.gz",
                 compress=True,
