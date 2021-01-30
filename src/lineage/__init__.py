@@ -74,26 +74,34 @@ class Lineage:
         processes : int
             processes to launch if multiprocessing
         """
-        self._output_dir = os.path.abspath(output_dir)
+        self._output_dir = output_dir
+        self._resources_dir = resources_dir
         self._resources = Resources(resources_dir=resources_dir)
         self._parallelizer = Parallelizer(parallelize=parallelize, processes=processes)
 
-    def create_individual(self, name, raw_data=None, **kwargs):
+    def create_individual(self, name, raw_data=(), **kwargs):
         """ Initialize an individual in the context of the `lineage` framework.
 
         Parameters
         ----------
         name : str
             name of the individual
-        raw_data : list or str
-            path(s) to file(s) with raw genotype data
+        raw_data : str, bytes, ``SNPs`` (or list or tuple thereof)
+            path(s) to file(s), bytes, or ``SNPs`` object(s) with raw genotype data
+        **kwargs
+            parameters to ``snps.SNPs`` and/or ``snps.SNPs.merge``
 
         Returns
         -------
         Individual
             ``Individual`` initialized in the context of the `lineage` framework
         """
-        return Individual(name, raw_data, self._output_dir, **kwargs)
+        if "output_dir" not in kwargs:
+            kwargs["output_dir"] = self._output_dir
+        if "resources_dir" not in kwargs:
+            kwargs["resources_dir"] = self._resources_dir
+
+        return Individual(name, raw_data, **kwargs)
 
     def download_example_datasets(self):
         """ Download example datasets from `openSNP <https://opensnp.org>`_.
@@ -788,7 +796,7 @@ class Lineage:
             if ind is None:
                 continue
 
-            ind.remap_snps(37)
+            ind.remap(37)
 
     def _get_csv_header(self):
         return (

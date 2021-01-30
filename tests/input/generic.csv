@@ -1,0 +1,9 @@
+rsid,chromosome,position,genotype
+rs1,1,101,AA
+rs2,1,102,CC
+rs3,1,103,GG
+rs4,1,104,TT
+rs5,1,105,--
+rs6,1,106,GC
+rs7,1,107,TC
+rs8,1,108,AT

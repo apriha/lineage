@@ -80,69 +80,47 @@ Load Raw Data
 Create an ``Individual`` in the context of the ``lineage`` framework to interact with the
 ``User662`` dataset:
 
->>> user662 = l.create_individual('User662', 'resources/662.ftdna-illumina.341.csv.gz')
-Loading resources/662.ftdna-illumina.341.csv.gz
-
-Here we created ``user662`` with the name ``User662`` and loaded a raw data file.
-
-Remap SNPs
-``````````
-Oops! The data we just loaded is Build 36, but we want Build 37 since the other files in the
-datasets are Build 37... Let's remap the SNPs:
-
->>> user662.build
-36
->>> chromosomes_remapped, chromosomes_not_remapped = user662.remap_snps(37)
+>>> user662 = l.create_individual('User662', ['resources/662.23andme.340.txt.gz', 'resources/662.ftdna-illumina.341.csv.gz'])
+Loading SNPs('resources/662.23andme.340.txt.gz')
+Merging SNPs('resources/662.ftdna-illumina.341.csv.gz')
+SNPs('resources/662.ftdna-illumina.341.csv.gz') has Build 36; remapping to Build 37
 Downloading resources/NCBI36_GRCh37.tar.gz
+27 SNP positions were discrepant; keeping original positions
+151 SNP genotypes were discrepant; marking those as null
+
+Here we created ``user662`` with the name ``User662``. In the process, we merged two raw data
+files for this individual. Specifically:
+
+  - ``662.23andme.340.txt.gz`` was loaded.
+  - Then, ``662.ftdna-illumina.341.csv.gz`` was merged. In the process, it was found to have
+    Build 36. So, it was automatically remapped to Build 37 (downloading the remapping data in
+    the process) to match the build of the SNPs already loaded. After this merge, 27 SNP
+    positions and 151 SNP genotypes were found to be discrepant.
+
+``user662`` is represented by an ``Individual`` object, which inherits from ``snps.SNPs``.
+Therefore, all of the `properties and methods <https://snps.readthedocs.io/en/latest/snps.html>`_
+available to a ``SNPs`` object are available here; for example:
+
+>>> len(user662.discrepant_merge_genotypes)
+151
 >>> user662.build
 37
+>>> user662.build_detected
+True
 >>> user662.assembly
 'GRCh37'
-
-SNPs can be re-mapped between Build 36 (``NCBI36``), Build 37 (``GRCh37``), and Build 38
-(``GRCh38``).
-
-Merge Raw Data Files
-````````````````````
-The dataset for ``User662`` consists of three raw data files from two different DNA testing
-companies. Let's load the remaining two files.
-
-As the data gets added, it's compared to the existing data, and SNP position and genotype
-discrepancies are identified. (The discrepancy thresholds can be tuned via parameters.)
-
->>> user662.snp_count
-708092
->>> user662.load_snps(['resources/662.23andme.304.txt.gz', 'resources/662.23andme.340.txt.gz'],
-...                   discrepant_genotypes_threshold=300)
-Loading resources/662.23andme.304.txt.gz
-3 SNP positions were discrepant; keeping original positions
-8 SNP genotypes were discrepant; marking those as null
-Loading resources/662.23andme.340.txt.gz
-27 SNP positions were discrepant; keeping original positions
-156 SNP genotypes were discrepant; marking those as null
->>> len(user662.discrepant_positions)
-30
->>> user662.snp_count
+>>> user662.count
 1006960
 
-Save SNPs
-`````````
-Ok, so far we've remapped the SNPs to the same build and merged the SNPs from three files,
-identifying discrepancies along the way. Let's save the merged dataset consisting of over 1M+
-SNPs to a CSV file:
-
->>> saved_snps = user662.save_snps()
-Saving output/User662_GRCh37.csv
-
-All `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are saved to the output
-directory.
+As such, SNPs can be saved, remapped, merged, etc. See the
+`snps <https://github.com/apriha/snps>`_ package for further examples.
 
 Compare Individuals
 ```````````````````
 Let's create another ``Individual`` for the ``User663`` dataset:
 
 >>> user663 = l.create_individual('User663', 'resources/663.23andme.305.txt.gz')
-Loading resources/663.23andme.305.txt.gz
+Loading SNPs('resources/663.23andme.305.txt.gz')
 
 Now we can perform some analysis between the ``User662`` and ``User663`` datasets.
 
@@ -153,6 +131,9 @@ inheritance):
 
 >>> discordant_snps = l.find_discordant_snps(user662, user663, save_output=True)
 Saving output/discordant_snps_User662_User663_GRCh37.csv
+
+All `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are saved to
+the output directory (a parameter to ``Lineage``).
 
 This method also returns a ``pandas.DataFrame``, and it can be inspected interactively at
 the prompt, although the same output is available in the CSV file.
@@ -226,10 +207,10 @@ For this example, let's create two more ``Individuals`` for the ``User4583`` and
 datasets:
 
 >>> user4583 = l.create_individual('User4583', 'resources/4583.ftdna-illumina.3482.csv.gz')
-Loading resources/4583.ftdna-illumina.3482.csv.gz
+Loading SNPs('resources/4583.ftdna-illumina.3482.csv.gz')
 
 >>> user4584 = l.create_individual('User4584', 'resources/4584.ftdna-illumina.3483.csv.gz')
-Loading resources/4584.ftdna-illumina.3483.csv.gz
+Loading SNPs('resources/4584.ftdna-illumina.3483.csv.gz')
 
 Now let's find the shared genes:
 

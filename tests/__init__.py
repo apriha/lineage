@@ -29,6 +29,7 @@ from unittest import TestCase
 
 import numpy as np
 import pandas as pd
+from snps.io.reader import NORMALIZED_DTYPES
 
 from lineage import Lineage
 
@@ -130,5 +131,14 @@ class BaseLineageTestCase(TestCase):
             {"rsid": rsid, "chrom": chrom, "pos": pos, "genotype": genotype},
             columns=["rsid", "chrom", "pos", "genotype"],
         )
+        df = df.astype(NORMALIZED_DTYPES)
         df = df.set_index("rsid")
         return df
+
+    def generic_snps(self):
+        return self.create_snp_df(
+            rsid=["rs" + str(i) for i in range(1, 9)],
+            chrom=["1"] * 8,
+            pos=list(range(101, 109)),
+            genotype=["AA", "CC", "GG", "TT", np.nan, "GC", "TC", "AT"],
+        )
