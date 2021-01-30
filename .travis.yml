@@ -9,7 +9,7 @@ language: python
 
 before_install:
   - pip install --upgrade pip setuptools wheel importlib-metadata
-  - pip install pytest-cov codecov awscli
+  - pip install pytest-cov codecov awscli sphinx sphinx-rtd-theme
 
 install:
   - pip install .
@@ -39,6 +39,7 @@ script:
         rm resources.tar.gz
       fi
     fi
+  - sphinx-build -W --keep-going -T -E -D language=en docs docs/_build
   - pytest --cov=lineage tests
   - |
     if [[ $SELECTED_JOB == $JOB_ID ]]; then
