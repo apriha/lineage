@@ -1,8 +1,8 @@
 Contributing
 ============
 
-Contributions are welcome, and they are greatly appreciated! Every
-little bit helps, and credit will always be given.
+Contributions are welcome, and they are greatly appreciated! Every little bit helps, and credit
+will always be given.
 
 Bug reports
 -----------
@@ -17,8 +17,8 @@ Documentation improvements
 --------------------------
 
 ``lineage`` could always use more documentation, whether as part of the official ``lineage``
-docs, in docstrings, or even on the web in blog posts, articles, and such. See below for
-info on how to generate documentation.
+docs, in docstrings, or even on the web in blog posts, articles, and such. See below for info on
+how to generate documentation.
 
 Feature requests and feedback
 -----------------------------
@@ -36,34 +36,38 @@ Development
 
 To set up ``lineage`` for local development:
 
-1. Fork `lineage <https://github.com/apriha/lineage>`_
-   (look for the "Fork" button).
+1. Fork `lineage <https://github.com/apriha/lineage>`_ (look for the "Fork" button).
 2. Clone your fork locally::
 
-    git clone git@github.com:your_name_here/lineage.git
+    $ git clone git@github.com:your_name_here/lineage.git
 
-3. Create a branch for local development::
+3. Create a branch for local development from the ``develop`` branch::
 
-    git checkout -b name-of-your-bugfix-or-feature
+    $ cd lineage
+    $ git checkout develop
+    $ git checkout -b name-of-your-bugfix-or-feature develop
 
 4. Setup a development environment::
 
-    pip install pipenv
-    pipenv install --dev
+    $ pip install pipenv
+    $ pipenv install --dev
 
 5. When you're done making changes, run all the tests with::
 
-    pipenv run pytest --cov=lineage tests
+    $ pipenv run pytest --cov-report=html --cov=lineage tests
+
+   .. note:: After running the tests, a coverage report can be viewed by opening
+             ``htmlcov/index.html`` in a browser.
 
 6. Check code formatting::
 
-    pipenv run black --check --diff .
+    $ pipenv run black --check --diff .
 
 7. Commit your changes and push your branch to GitHub::
 
-    git add .
-    git commit -m "Your detailed description of your changes."
-    git push origin name-of-your-bugfix-or-feature
+    $ git add .
+    $ git commit -m "Your detailed description of your changes."
+    $ git push origin name-of-your-bugfix-or-feature
 
 8. Submit a pull request through the GitHub website.
 
@@ -77,13 +81,13 @@ For merging, you should:
 
 1. Ensure tests pass.
 2. Update documentation when there's new API, functionality, etc.
-3. Add yourself to ``CONTRIBUTORS.rst``.
+3. Add yourself to ``CONTRIBUTORS.rst`` if you'd like.
 
 Documentation
 -------------
 After the development environment has been setup, documentation can be generated via the
 following command::
 
-    pipenv run sphinx-build -T -E -D language=en docs docs/_build
+    $ pipenv run sphinx-build -T -E -D language=en docs docs/_build
 
 Then, the documentation can be viewed by opening ``docs/_build/index.html`` in a browser.
