@@ -49,22 +49,25 @@ genotype_<name3>  Genotype of third individual
 
 Find Shared DNA
 ---------------
-Shared DNA between two individuals can be identified with
+Shared DNA between two or more individuals can be identified with
 :meth:`~lineage.Lineage.find_shared_dna`. One PNG file and up to two CSV files are output when
 ``save_output=True``.
 
 In the filenames below, ``name1`` is the name of the first
 :class:`~lineage.individual.Individual` and ``name2`` is the name of the second
-:class:`~lineage.individual.Individual`.
+:class:`~lineage.individual.Individual`. (If more individuals are compared, all
+:class:`~lineage.individual.Individual` names will be included in the filenames and plot titles
+using the same conventions.)
 
-Note that shared DNA will not be shown on the Y chromosome since the Y chromosome does not
-recombine; therefore, genetic maps do not have recombination rates for the Y chromosome.
+.. note:: Genetic maps do not have recombination rates for the Y chromosome since the Y
+          chromosome does not recombine. Therefore, shared DNA will not be shown on the Y
+          chromosome.
 
 shared_dna_<name1>_<name2>.png
 ``````````````````````````````
-The plot that illustrates shared DNA (i.e., no shared DNA, shared DNA on one chromosome, and
-shared DNA on both chromosomes). The centromere for each chromosome is also detailed. Two examples
-of this plot are shown below.
+This plot illustrates shared DNA (i.e., no shared DNA, shared DNA on one chromosome, and shared
+DNA on both chromosomes). The centromere for each chromosome is also detailed. Two examples of
+this plot are shown below.
 
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663.png
 
@@ -114,20 +117,22 @@ snps     Number of SNPs in matching DNA segment on each chromosome
 
 Find Shared Genes
 -----------------
-Shared genes (with the *same genetic variations*) between two individuals can be identified with
-:meth:`~lineage.Lineage.find_shared_dna`, with the parameter ``shared_genes=True``.
+Shared genes (with the *same genetic variations*) between two or more individuals can be
+identified with :meth:`~lineage.Lineage.find_shared_dna`, with the parameter ``shared_genes=True``.
 In addition to the outputs produced by `Find Shared DNA`_, up to two additional CSV files are
 output that detail the shared genes when ``save_output=True``.
 
 In the filenames below, ``name1`` is the name of the first
 :class:`~lineage.individual.Individual` and ``name2`` is the name of the second
-:class:`~lineage.individual.Individual`.
+:class:`~lineage.individual.Individual`. (If more individuals are compared, all
+:class:`~lineage.individual.Individual` names will be included in the filenames using the same
+convention.)
 
 shared_genes_one_chrom_<name1>_<name2>_GRCh37.csv
 `````````````````````````````````````````````````
-If DNA is shared on one chromosome, this file details the genes shared between the two
-individuals on at least one chromosome; these genes are located in the shared DNA segments
-specified in `shared_dna_one_chrom_<name1>_<name2>_GRCh37.csv`_.
+If DNA is shared on one chromosome, this file details the genes shared between the individuals
+on at least one chromosome; these genes are located in the shared DNA segments specified in
+`shared_dna_one_chrom_<name1>_<name2>_GRCh37.csv`_.
 
 ===========  ============
 Column*      Description*
@@ -148,7 +153,7 @@ description  Description
 
 shared_genes_two_chroms_<name1>_<name2>_GRCh37.csv
 ``````````````````````````````````````````````````
-If DNA is shared on both chromosomes in a pair, this file details the genes shared between the two
+If DNA is shared on both chromosomes in a pair, this file details the genes shared between the
 individuals on both chromosomes; these genes are located in the shared DNA segments specified in
 `shared_dna_two_chroms_<name1>_<name2>_GRCh37.csv`_.
 
