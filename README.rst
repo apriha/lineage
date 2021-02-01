@@ -19,24 +19,6 @@ Supported Genotype Files
 ------------------------
 ``lineage`` supports all genotype files supported by `snps <https://github.com/apriha/snps>`_.
 
-Dependencies
-------------
-``lineage`` requires `Python <https://www.python.org>`_ 3.6.1+ and the following Python packages:
-
-- `numpy <http://www.numpy.org>`_
-- `pandas <http://pandas.pydata.org>`_
-- `matplotlib <http://matplotlib.org>`_
-- `atomicwrites <https://github.com/untitaker/python-atomicwrites>`_
-- `snps <https://github.com/apriha/snps>`_
-
-On Linux systems, the following system-level installs may also be required::
-
-    $ sudo apt-get install python3-tk
-    $ sudo apt-get install gfortran
-    $ sudo apt-get install python-dev
-    $ sudo apt-get install python-devel
-    $ sudo apt-get install python3.X-dev # (where X == Python minor version)
-
 Installation
 ------------
 ``lineage`` is `available <https://pypi.org/project/lineage/>`_ on the
@@ -44,6 +26,18 @@ Installation
 Python dependencies) via ``pip``::
 
     $ pip install lineage
+
+Also see the `installation documentation <https://lineage.readthedocs.io/en/latest/installation.html>`_.
+
+Dependencies
+------------
+``lineage`` requires `Python <https://www.python.org>`_ 3.6.1+ and the following Python packages:
+
+- `numpy <https://numpy.org>`_
+- `pandas <https://pandas.pydata.org>`_
+- `matplotlib <https://matplotlib.org>`_
+- `atomicwrites <https://github.com/untitaker/python-atomicwrites>`_
+- `snps <https://github.com/apriha/snps>`_
 
 Examples
 --------
@@ -90,11 +84,11 @@ Downloading resources/NCBI36_GRCh37.tar.gz
 Here we created ``user662`` with the name ``User662``. In the process, we merged two raw data
 files for this individual. Specifically:
 
-  - ``662.23andme.340.txt.gz`` was loaded.
-  - Then, ``662.ftdna-illumina.341.csv.gz`` was merged. In the process, it was found to have
-    Build 36. So, it was automatically remapped to Build 37 (downloading the remapping data in
-    the process) to match the build of the SNPs already loaded. After this merge, 27 SNP
-    positions and 151 SNP genotypes were found to be discrepant.
+- ``662.23andme.340.txt.gz`` was loaded.
+- Then, ``662.ftdna-illumina.341.csv.gz`` was merged. In the process, it was found to have Build
+  36. So, it was automatically remapped to Build 37 (downloading the remapping data in the
+  process) to match the build of the SNPs already loaded. After this merge, 27 SNP positions and
+  151 SNP genotypes were found to be discrepant.
 
 ``user662`` is represented by an ``Individual`` object, which inherits from ``snps.SNPs``.
 Therefore, all of the `properties and methods <https://snps.readthedocs.io/en/latest/snps.html>`_

@@ -16,6 +16,7 @@
 
    README <readme>
    output_files
+   installation
    changelog
    contributing
    contributors
