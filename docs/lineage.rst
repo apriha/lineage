@@ -1,35 +1,33 @@
-lineage Package
-===============
+Code Documentation
+==================
 
-Module
-------
+lineage
+-------
 
 .. automodule:: lineage
     :members:
     :undoc-members:
     :show-inheritance:
 
-Submodules
-----------
 
-lineage\.individual module
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+lineage.individual
+------------------
 
 .. automodule:: lineage.individual
     :members:
     :undoc-members:
     :show-inheritance:
 
-lineage\.resources module
-~~~~~~~~~~~~~~~~~~~~~~~~~
+lineage.resources
+-----------------
 
 .. automodule:: lineage.resources
     :members:
     :undoc-members:
     :show-inheritance:
 
-lineage\.visualization module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lineage.visualization
+---------------------
 
 .. automodule:: lineage.visualization
     :members:
