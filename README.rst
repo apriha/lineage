@@ -1,6 +1,6 @@
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/lineage_banner.png
 
-|build| |codecov| |docs| |pypi| |python| |downloads| |license| |black|
+|ci| |codecov| |docs| |pypi| |python| |downloads| |license| |black|
 
 lineage
 =======
@@ -240,8 +240,8 @@ Thanks to Whit Athey, Ryan Dale, Binh Bui, Jeff Gill, Gopal Vashishtha,
 `CS50 <https://cs50.harvard.edu>`_, and `openSNP <https://opensnp.org>`_.
 
 .. https://github.com/rtfd/readthedocs.org/blob/master/docs/badges.rst
-.. |build| image:: https://travis-ci.com/apriha/lineage.svg?branch=master
-   :target: https://travis-ci.com/apriha/lineage
+.. |ci| image:: https://github.com/apriha/lineage/actions/workflows/ci.yml/badge.svg?branch=master
+   :target: https://github.com/apriha/lineage/actions/workflows/ci.yml
 .. |codecov| image:: https://codecov.io/gh/apriha/lineage/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/apriha/lineage
 .. |docs| image:: https://readthedocs.org/projects/lineage/badge/?version=latest

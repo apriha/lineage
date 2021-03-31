@@ -10,7 +10,7 @@ include LICENSES-3RD-PARTY.txt
 include README.rst
 include versioneer.py
 
-exclude .git* .travis*
+exclude .git*
 
 prune docs/images
 prune docs/_build
