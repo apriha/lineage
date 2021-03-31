@@ -74,6 +74,9 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Set default for downloads
+      shell: bash
+      run: echo "DOWNLOADS_ENABLED=false" >> $GITHUB_ENV
     - name: Determine if downloads are enabled for this job
       # for testing, limit downloads from the resource servers to only the selected job for
       # PRs and the master branch; note that the master branch is tested weekly via `cron`,
@@ -85,7 +88,6 @@ jobs:
       if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/master' }}
       shell: bash
       run: |
-        echo "DOWNLOADS_ENABLED=false" >> $GITHUB_ENV
         SELECTED_JOB=$((10#$(date +%V) % $NUM_JOBS))
         if [[ $SELECTED_JOB == $JOB_ID ]]; then
           # set environment variable to download resources for selected job
