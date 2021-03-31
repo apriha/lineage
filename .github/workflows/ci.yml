@@ -1,0 +1,131 @@
+# https://docs.github.com/en/actions
+# https://github.com/codecov/example-python
+# https://stackoverflow.com/a/3237883
+# https://stackoverflow.com/a/5688592
+# https://stackoverflow.com/a/6270803
+# https://github.com/actions/virtual-environments/issues/1341
+
+name: CI
+
+on:
+  schedule:
+    - cron: '37 3 * * 0'
+  push:
+    branches: '**'
+  pull_request:
+    branches: '**'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+    - name: Install Black
+      run: |
+        pip install black==19.10b0
+    - name: Lint with Black
+      run: |
+        black --check --diff .
+
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+    - name: Install Sphinx
+      run: |
+        pip install sphinx sphinx-rtd-theme
+        pip install .
+    - name: Build docs with Sphinx
+      run: |
+        sphinx-build -W --keep-going -T -E -D language=en docs docs/_build
+
+  test:
+    needs: [lint, build-docs]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: 3.6
+            job_id: 0
+          - os: ubuntu-latest
+            python-version: 3.7
+            job_id: 1
+          - os: ubuntu-latest
+            python-version: 3.8
+            job_id: 2
+          - os: ubuntu-latest
+            python-version: 3.9
+            job_id: 3
+          - os: macos-latest
+            python-version: 3.9
+            job_id: 4
+          - os: windows-latest
+            python-version: 3.9
+            job_id: 5
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Set default for downloads
+      shell: bash
+      run: echo "DOWNLOADS_ENABLED=false" >> $GITHUB_ENV
+    - name: Determine if downloads are enabled for this job
+      # for testing, limit downloads from the resource servers to only the selected job for
+      # PRs and the master branch; note that the master branch is tested weekly via `cron`,
+      # so this ensures all Python versions will be periodically integration tested with the
+      # resource servers
+      env:
+        NUM_JOBS: 6
+        JOB_ID: ${{ matrix.job_id }}
+      if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/master' }}
+      shell: bash
+      run: |
+        SELECTED_JOB=$((10#$(date +%V) % $NUM_JOBS))
+        if [[ $SELECTED_JOB == $JOB_ID ]]; then
+          # set environment variable to download resources for selected job
+          echo "DOWNLOADS_ENABLED=true" >> $GITHUB_ENV
+        fi
+    - name: Install dependencies
+      shell: bash
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        pip install pytest-cov awscli
+        pip install .
+        if [[ $DOWNLOADS_ENABLED == "false" ]]; then
+          # use cached resources on Amazon S3
+          aws s3 cp s3://lineage-resources/resources.tar.gz resources.tar.gz
+          if [[ -f resources.tar.gz ]]; then
+            tar -xzf resources.tar.gz
+            rm resources.tar.gz
+          fi
+        fi
+    - name: Ensure Python and source code are on same drive (Windows)
+      if: ${{ matrix.os == 'windows-latest' }}
+      shell: cmd
+      run: |
+        mkdir C:\a
+        xcopy D:\a C:\a /s /e
+    - name: Test with pytest (Ubuntu & macOS)
+      if: ${{ matrix.os != 'windows-latest' }}
+      run: |
+        pytest --cov=lineage tests
+    - name: Test with pytest (Windows)
+      if: ${{ matrix.os == 'windows-latest' }}
+      working-directory: C:\a\lineage\lineage
+      run: |
+        pytest --cov=lineage tests
+    - name: Upload coverage to Codecov (Ubuntu & macOS)
+      if: ${{ matrix.os != 'windows-latest' }}
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
