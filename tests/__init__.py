@@ -142,3 +142,16 @@ class BaseLineageTestCase(TestCase):
             pos=list(range(101, 109)),
             genotype=["AA", "CC", "GG", "TT", np.nan, "GC", "TC", "AT"],
         )
+
+    @property
+    def downloads_enabled(self):
+        """ Property indicating if downloads are enabled.
+
+        Only download from external resources when an environment variable named
+        "DOWNLOADS_ENABLED" is set to "true".
+
+        Returns
+        -------
+        bool
+        """
+        return True if os.getenv("DOWNLOADS_ENABLED") == "true" else False
