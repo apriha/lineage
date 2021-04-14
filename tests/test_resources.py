@@ -42,7 +42,8 @@ class TestResources(BaseLineageTestCase):
         self.del_output_dir_helper()
 
     def _reset_resource(self):
-        self.resource._genetic_map_HapMapII_GRCh37 = {}
+        self.resource._genetic_map = {}
+        self.resource._genetic_map_name = ""
         self.resource._cytoBand_hg19 = pd.DataFrame()
         self.resource._knownGene_hg19 = pd.DataFrame()
         self.resource._kgXref_hg19 = pd.DataFrame()
@@ -64,7 +65,6 @@ class TestResources(BaseLineageTestCase):
                 self.resource._resources_dir = "resources"
 
     def _generate_test_genetic_map_HapMapII_GRCh37_resource(self):
-
         filenames = [f"genetic_map_GRCh37_chr{chrom}.txt" for chrom in range(1, 23)]
         filenames.extend(
             [
@@ -114,6 +114,62 @@ class TestResources(BaseLineageTestCase):
         # get already loaded resource
         genetic_map_HapMapII_GRCh37 = self.resource.get_genetic_map_HapMapII_GRCh37()
         assert len(genetic_map_HapMapII_GRCh37) == 23
+
+        # get already loaded resource
+        genetic_map = self.resource.get_genetic_map("HapMap2")
+        assert len(genetic_map) == 23
+
+    def _generate_test_genetic_map_1000G_GRCh37_resource(self):
+        filenames = [f"CEU-{chrom}-final.txt.gz" for chrom in range(1, 23)]
+
+        # create tar in memory
+        tar_file = io.BytesIO()
+        with tarfile.open(fileobj=tar_file, mode="w") as out_tar:
+            for filename in filenames:
+                s = "Position(bp)\tRate(cM/Mb)\tMap(cM)\tFiltered\n"
+                s += f"   0\t0.0\t0.0\t0\n"
+
+                # add file to tar; https://stackoverflow.com/a/40392022
+                data = gzip.compress(s.encode())
+                file = io.BytesIO(data)
+                tar_info = tarfile.TarInfo(name=filename)
+                tar_info.size = len(data)
+                out_tar.addfile(tar_info, fileobj=file)
+
+        mock = mock_open(read_data=tar_file.getvalue())
+        with patch("urllib.request.urlopen", mock):
+            self.resource._get_path_genetic_map_1000G_GRCh37("CEU")
+
+    def test_get_genetic_map_1000G_GRCh37(self):
+        def f():
+            # mock download of test data
+            self._generate_test_genetic_map_1000G_GRCh37_resource()
+            return self.resource.get_genetic_map_1000G_GRCh37("CEU")
+
+        genetic_map = (
+            self.resource.get_genetic_map_1000G_GRCh37("CEU")
+            if self.downloads_enabled
+            else f()
+        )
+
+        assert len(genetic_map) == 22
+
+        # get already loaded resource
+        genetic_map = self.resource.get_genetic_map_1000G_GRCh37("CEU")
+        assert len(genetic_map) == 22
+
+        # get already loaded resource
+        genetic_map = self.resource.get_genetic_map("CEU")
+        assert len(genetic_map) == 22
+
+    def test_invalid_genetic_map(self):
+        # https://stackoverflow.com/a/46767037
+        with self.assertLogs() as log:
+            genetic_map = self.resource.get_genetic_map("test")
+            self.assertEqual(len(log.output), 1)
+            self.assertEqual(len(log.records), 1)
+            self.assertIn("Invalid genetic map", log.output[0])
+            self.assertEqual(len(genetic_map), 0)
 
     def _generate_test_cytoBand_hg19_resource(self):
         s = f"s\t0\t0\ts\ts\n" * 862

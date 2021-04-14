@@ -280,12 +280,13 @@ class Lineage:
         snp_threshold=1100,
         shared_genes=False,
         save_output=True,
+        genetic_map="HapMap2",
     ):
         """ Find the shared DNA between individuals.
 
-        Computes the genetic distance in centiMorgans (cMs) between SNPs using the HapMap Phase II
-        GRCh37 genetic map. Applies thresholds to determine the shared DNA. Plots shared DNA.
-        Optionally determines shared genes (i.e., genes that are transcribed from the shared DNA).
+        Computes the genetic distance in centiMorgans (cMs) between SNPs using the specified genetic
+        map. Applies thresholds to determine the shared DNA. Plots shared DNA. Optionally determines
+        shared genes (i.e., genes transcribed from the shared DNA).
 
         All output is saved to the output directory as `CSV` or `PNG` files.
 
@@ -300,6 +301,16 @@ class Lineage:
             determine shared genes
         save_output : bool
             specifies whether to save output files in the output directory
+        genetic_map : {'HapMap2', 'ACB', 'ASW', 'CDX', 'CEU', 'CHB', 'CHS', 'CLM', 'FIN', 'GBR', 'GIH', 'IBS', 'JPT', 'KHV', 'LWK', 'MKK', 'MXL', 'PEL', 'PUR', 'TSI', 'YRI'}
+            genetic map to use for computation of shared DNA; `HapMap2` corresponds to the HapMap
+            Phase II genetic map from the
+            `International HapMap Project <https://www.genome.gov/10001688/international-hapmap-project/>`_
+            and all others correspond to the
+            `population-specific <https://www.internationalgenome.org/faq/which-populations-are-part-your-study/>`_
+            genetic maps generated from the
+            `1000 Genomes Project <https://www.internationalgenome.org>`_ phased OMNI data.
+            Note that shared DNA is not computed on the X chromosome with the 1000 Genomes
+            Project genetic maps since the X chromosome is not included in these genetic maps.
 
         Returns
         -------
@@ -339,6 +350,18 @@ class Lineage:
                 two_chrom_discrepant_snps,
             )
 
+        genetic_map_dfs = self._resources.get_genetic_map(genetic_map)
+
+        if len(genetic_map_dfs) == 0:
+            return self._find_shared_dna_return_helper(
+                one_chrom_shared_dna,
+                two_chrom_shared_dna,
+                one_chrom_shared_genes,
+                two_chrom_shared_genes,
+                one_chrom_discrepant_snps,
+                two_chrom_discrepant_snps,
+            )
+
         cols = ["genotype{}".format(str(i)) for i in range(len(individuals))]
 
         df = individuals[0].snps
@@ -351,19 +374,17 @@ class Lineage:
 
         one_x_chrom = self._is_one_individual_male(individuals)
 
-        genetic_map = self._resources.get_genetic_map_HapMapII_GRCh37()
-
         tasks = []
 
         chroms_to_drop = []
         for chrom in df["chrom"].unique():
-            if chrom not in genetic_map.keys():
+            if chrom not in genetic_map_dfs.keys():
                 chroms_to_drop.append(chrom)
                 continue
 
             tasks.append(
                 {
-                    "genetic_map": genetic_map[chrom],
+                    "genetic_map": genetic_map_dfs[chrom],
                     # get positions for the current chromosome
                     "snps": pd.DataFrame(df.loc[(df["chrom"] == chrom)]["pos"]),
                 }
@@ -433,6 +454,7 @@ class Lineage:
                 two_chrom_shared_dna,
                 one_chrom_shared_genes,
                 two_chrom_shared_genes,
+                genetic_map,
             )
 
         return self._find_shared_dna_return_helper(
@@ -479,6 +501,7 @@ class Lineage:
         two_chrom_shared_dna,
         one_chrom_shared_genes,
         two_chrom_shared_genes,
+        genetic_map,
     ):
         cytobands = self._resources.get_cytoBand_hg19()
 
@@ -498,14 +521,17 @@ class Lineage:
                 two_chrom_shared_dna,
                 cytobands,
                 os.path.join(
-                    self._output_dir, "shared_dna_{}.png".format(individuals_filename)
+                    self._output_dir,
+                    f"shared_dna_{individuals_filename}_{genetic_map}.png",
                 ),
-                "{} shared DNA".format(individuals_plot_title),
+                f"{individuals_plot_title} shared DNA",
                 37,
             )
 
         if len(one_chrom_shared_dna) > 0:
-            file = "shared_dna_one_chrom_{}_GRCh37.csv".format(individuals_filename)
+            file = (
+                f"shared_dna_one_chrom_{individuals_filename}_GRCh37_{genetic_map}.csv"
+            )
             save_df_as_csv(
                 one_chrom_shared_dna,
                 self._output_dir,
@@ -516,7 +542,9 @@ class Lineage:
             )
 
         if len(two_chrom_shared_dna) > 0:
-            file = "shared_dna_two_chroms_{}_GRCh37.csv".format(individuals_filename)
+            file = (
+                f"shared_dna_two_chroms_{individuals_filename}_GRCh37_{genetic_map}.csv"
+            )
             save_df_as_csv(
                 two_chrom_shared_dna,
                 self._output_dir,
@@ -527,7 +555,7 @@ class Lineage:
             )
 
         if len(one_chrom_shared_genes) > 0:
-            file = "shared_genes_one_chrom_{}_GRCh37.csv".format(individuals_filename)
+            file = f"shared_genes_one_chrom_{individuals_filename}_GRCh37_{genetic_map}.csv"
             save_df_as_csv(
                 one_chrom_shared_genes,
                 self._output_dir,
@@ -537,7 +565,7 @@ class Lineage:
             )
 
         if len(two_chrom_shared_genes) > 0:
-            file = "shared_genes_two_chroms_{}_GRCh37.csv".format(individuals_filename)
+            file = f"shared_genes_two_chroms_{individuals_filename}_GRCh37_{genetic_map}.csv"
             save_df_as_csv(
                 two_chrom_shared_genes,
                 self._output_dir,

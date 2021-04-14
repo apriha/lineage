@@ -76,10 +76,60 @@ class Resources(SNPsResources):
         """
         super().__init__(resources_dir=resources_dir)
 
-        self._genetic_map_HapMapII_GRCh37 = {}
+        self._genetic_map = {}
+        self._genetic_map_name = ""
         self._cytoBand_hg19 = pd.DataFrame()
         self._knownGene_hg19 = pd.DataFrame()
         self._kgXref_hg19 = pd.DataFrame()
+
+    def get_genetic_map(self, genetic_map):
+        """ Get specified genetic map.
+
+        Parameters
+        ----------
+        genetic_map : {'HapMap2', 'ACB', 'ASW', 'CDX', 'CEU', 'CHB', 'CHS', 'CLM', 'FIN', 'GBR', 'GIH', 'IBS', 'JPT', 'KHV', 'LWK', 'MKK', 'MXL', 'PEL', 'PUR', 'TSI', 'YRI'}
+            `HapMap2` corresponds to the HapMap Phase II genetic map from the
+            `International HapMap Project <https://www.genome.gov/10001688/international-hapmap-project/>`_
+            and all others correspond to the
+            `population-specific <https://www.internationalgenome.org/faq/which-populations-are-part-your-study/>`_
+            genetic maps generated from the
+            `1000 Genomes Project <https://www.internationalgenome.org>`_ phased OMNI data.
+
+        Returns
+        -------
+        dict
+            dict of pandas.DataFrame genetic maps if loading was successful, else {}
+        """
+        if genetic_map not in [
+            "HapMap2",
+            "ACB",
+            "ASW",
+            "CDX",
+            "CEU",
+            "CHB",
+            "CHS",
+            "CLM",
+            "FIN",
+            "GBR",
+            "GIH",
+            "IBS",
+            "JPT",
+            "KHV",
+            "LWK",
+            "MKK",
+            "MXL",
+            "PEL",
+            "PUR",
+            "TSI",
+            "YRI",
+        ]:
+            logger.warning("Invalid genetic map")
+            return {}
+
+        if genetic_map == "HapMap2":
+            return self.get_genetic_map_HapMapII_GRCh37()
+        else:
+            return self.get_genetic_map_1000G_GRCh37(genetic_map)
 
     def get_genetic_map_HapMapII_GRCh37(self):
         """ Get International HapMap Consortium HapMap Phase II genetic map for Build 37.
@@ -98,12 +148,67 @@ class Resources(SNPsResources):
            paper (Nature, 18th Sept 2007). The conversion from b35 to GRCh37 was achieved using
            the UCSC liftOver tool. Adam Auton, 08/12/2010"
         """
-        if not self._genetic_map_HapMapII_GRCh37:
-            self._genetic_map_HapMapII_GRCh37 = self._load_genetic_map(
+        if self._genetic_map_name != "HapMap2":
+            self._genetic_map = self._load_genetic_map_HapMapII_GRCh37(
                 self._get_path_genetic_map_HapMapII_GRCh37()
             )
+            self._genetic_map_name = "HapMap2"
 
-        return self._genetic_map_HapMapII_GRCh37
+        return self._genetic_map
+
+    def get_genetic_map_1000G_GRCh37(self, pop):
+        """ Get population-specific 1000 Genomes Project genetic map.
+
+        Notes
+        -----
+        From `README_omni_recombination_20130507 <ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130507_omni_recombination_rates/README_omni_recombination_20130507>`_:
+
+            Genetic maps generated from the 1000G phased OMNI data.
+
+            [Build 37] OMNI haplotypes were obtained from the Phase 1 dataset
+            (`/vol1/ftp/phase1/analysis_results/supporting/omni_haplotypes/ <ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase1/analysis_results/supporting/omni_haplotypes/>`_).
+
+            Genetic maps were generated for each population separately using LDhat
+            (http://ldhat.sourceforge.net/). Haplotypes were split into 2000 SNP windows
+            with an overlap of 200 SNPs between each window. The recombination rate was
+            estimated for each window independently, using a block penalty of 5 for a
+            total of 22.5 million iterations with a sample being taken from the MCMC
+            chain every 15,000 iterations. The first 7.5 million iterations were
+            discarded as burn in. Once rates were estimated, windows were merged by
+            splicing the estimates at the mid-point of the overlapping regions.
+
+            LDhat estimates the population genetic recombination rate, rho = 4Ner. In
+            order to convert to per-generation rates (measured in cM/Mb), the LDhat
+            rates were compared to pedigree-based rates from Kong et al. (2010).
+            Specifically, rates were binned at the 5Mb scale, and a linear regression
+            performed between the two datasets. The gradient of this line gives an
+            estimate of 4Ne, allowing the population based rates to be converted to
+            per-generation rates.
+
+            Adam Auton (adam.auton@einstein.yu.edu)
+            May 7th, 2013
+
+        Returns
+        -------
+        dict
+            dict of pandas.DataFrame population-specific 1000 Genomes Project genetic maps if
+            loading was successful, else {}
+
+        References
+        ----------
+        1. Adam Auton (adam.auton@einstein.yu.edu), May 7th, 2013
+        2. The 1000 Genomes Project Consortium., Corresponding authors., Auton, A. et al. A
+           global reference for human genetic variation. Nature 526, 68–74 (2015).
+           https://doi.org/10.1038/nature15393
+        3. https://github.com/joepickrell/1000-genomes-genetic-maps
+        """
+        if self._genetic_map_name != pop:
+            self._genetic_map = self._load_genetic_map_1000G_GRCh37(
+                self._get_path_genetic_map_1000G_GRCh37(pop)
+            )
+            self._genetic_map_name = pop
+
+        return self._genetic_map
 
     def get_cytoBand_hg19(self):
         """ Get UCSC cytoBand table for Build 37.
@@ -210,8 +315,8 @@ class Resources(SNPsResources):
         return resources
 
     @staticmethod
-    def _load_genetic_map(filename):
-        """ Load genetic map (e.g. HapMapII).
+    def _load_genetic_map_HapMapII_GRCh37(filename):
+        """ Load HapMapII genetic map.
 
         Parameters
         ----------
@@ -229,7 +334,7 @@ class Resources(SNPsResources):
         """
         genetic_map = {}
 
-        with tarfile.open(filename, "r") as tar:
+        with tarfile.open(filename, "r:gz") as tar:
             # http://stackoverflow.com/a/2018576
             for member in tar.getmembers():
                 if "genetic_map" in member.name:
@@ -252,6 +357,47 @@ class Resources(SNPsResources):
         )
         del genetic_map["X_par1"]
         del genetic_map["X_par2"]
+
+        return genetic_map
+
+    @staticmethod
+    def _load_genetic_map_1000G_GRCh37(filename):
+        """ Load 1000 Genomes Project genetic map.
+
+        Parameters
+        ----------
+        filename : str
+            path to archive with compressed genetic map data
+
+        Returns
+        -------
+        genetic_map : dict
+            dict of pandas.DataFrame genetic maps
+
+        Notes
+        -----
+        Keys of returned dict are chromosomes and values are the corresponding genetic map.
+        """
+        genetic_map = {}
+
+        with tarfile.open(filename, "r") as tar:
+            # http://stackoverflow.com/a/2018576
+            for member in tar.getmembers():
+                df = pd.read_csv(
+                    tar.extractfile(member),
+                    compression="gzip",
+                    sep="\s+",
+                    usecols=["Position(bp)", "Rate(cM/Mb)", "Map(cM)"],
+                )
+                df = df.rename(
+                    columns={
+                        "Position(bp)": "pos",
+                        "Rate(cM/Mb)": "rate",
+                        "Map(cM)": "map",
+                    }
+                )
+                chrom = member.name.split("-")[1]
+                genetic_map[chrom] = df
 
         return genetic_map
 
@@ -372,6 +518,21 @@ class Resources(SNPsResources):
             "ftp://ftp.ncbi.nlm.nih.gov/hapmap/recombination/2011-01_phaseII_B37/"
             "genetic_map_HapMapII_GRCh37.tar.gz",
             "genetic_map_HapMapII_GRCh37.tar.gz",
+        )
+
+    def _get_path_genetic_map_1000G_GRCh37(self, pop):
+        """ Get local path to population-specific 1000 Genomes Project genetic map,
+        downloading if necessary.
+
+        Returns
+        -------
+        str
+            path to {pop}_omni_recombination_20130507.tar
+        """
+        filename = f"{pop}_omni_recombination_20130507.tar"
+        return self._download_file(
+            f"ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20130507_omni_recombination_rates/{filename}",
+            filename,
         )
 
     def _get_path_knownGene_hg19(self):
