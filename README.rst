@@ -9,9 +9,9 @@ lineage
 
 Capabilities
 ------------
-- Compute centiMorgans (cMs) of shared DNA between individuals using the HapMap Phase II genetic map
+- Find shared DNA and genes between individuals
+- Compute centiMorgans (cMs) of shared DNA using a variety of genetic maps (e.g., HapMap Phase II, 1000 Genomes Project)
 - Plot shared DNA between individuals
-- Determine genes shared between individuals (i.e., genes transcribed from shared DNA segments)
 - Find discordant SNPs between child and parent(s)
 - Read, write, merge, and remaps SNPs for an individual via the  `snps <https://github.com/apriha/snps>`_ package
 
@@ -139,11 +139,12 @@ Not counting mtDNA SNPs, there are 37 discordant SNPs between these two datasets
 Find Shared DNA
 '''''''''''''''
 ``lineage`` uses the probabilistic recombination rates throughout the human genome from the
-`International HapMap Project <https://www.genome.gov/10001688/international-hapmap-project/>`_ to
-compute the shared DNA (in centiMorgans) between two individuals. Additionally, ``lineage``
-denotes when the shared DNA is shared on either one or both chromosomes in a pair. For example,
-when siblings share a segment of DNA on both chromosomes, they inherited the same DNA from their
-mother and father for that segment.
+`International HapMap Project <https://www.genome.gov/10001688/international-hapmap-project/>`_
+and the `1000 Genomes Project <https://www.internationalgenome.org>`_ to compute the shared DNA
+(in centiMorgans) between two individuals. Additionally, ``lineage`` denotes when the shared DNA
+is shared on either one or both chromosomes in a pair. For example, when siblings share a segment
+of DNA on both chromosomes, they inherited the same DNA from their mother and father for that
+segment.
 
 With that background, let's find the shared DNA between the ``User662`` and ``User663`` datasets,
 calculating the centiMorgans of shared DNA and plotting the results:
@@ -151,8 +152,8 @@ calculating the centiMorgans of shared DNA and plotting the results:
 >>> results = l.find_shared_dna([user662, user663], cM_threshold=0.75, snp_threshold=1100)
 Downloading resources/genetic_map_HapMapII_GRCh37.tar.gz
 Downloading resources/cytoBand_hg19.txt.gz
-Saving output/shared_dna_User662_User663.png
-Saving output/shared_dna_one_chrom_User662_User663_GRCh37.csv
+Saving output/shared_dna_User662_User663_HapMap2.png
+Saving output/shared_dna_one_chrom_User662_User663_GRCh37_HapMap2.csv
 
 Notice that the centiMorgan and SNP thresholds for each DNA segment can be tuned. Additionally,
 notice that two files were downloaded to facilitate the analysis and plotting - future analyses
@@ -177,11 +178,11 @@ created; these files are detailed in the documentation and their generation can 
 ``save_output=False`` argument. In this example, the output files consist of a CSV file that
 details the shared segments of DNA on one chromosome and a plot that illustrates the shared DNA:
 
-.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663.png
+.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663_HapMap2.png
 
 Find Shared Genes
 '''''''''''''''''
-The `Central Dogma of Molecular Biology <https://www.nature.com/nature/focus/crick/pdf/crick227.pdf>`_
+The `Central Dogma of Molecular Biology <https://en.wikipedia.org/wiki/Central_dogma_of_molecular_biology>`_
 states that genetic information flows from DNA to mRNA to proteins: DNA is transcribed into
 mRNA, and mRNA is translated into a protein. It's more complicated than this (it's biology
 after all), but generally, one mRNA produces one protein, and the mRNA / protein is considered a
@@ -205,20 +206,26 @@ Loading SNPs('resources/4583.ftdna-illumina.3482.csv.gz')
 >>> user4584 = l.create_individual('User4584', 'resources/4584.ftdna-illumina.3483.csv.gz')
 Loading SNPs('resources/4584.ftdna-illumina.3483.csv.gz')
 
-Now let's find the shared genes:
+Now let's find the shared genes, specifying a
+`population-specific <https://www.internationalgenome.org/faq/which-populations-are-part-your-study/>`_
+1000 Genomes Project genetic map (e.g., as predicted by `ezancestry <https://github.com/arvkevi/ezancestry>`_!):
 
->>> results = l.find_shared_dna([user4583, user4584], shared_genes=True)
+>>> results = l.find_shared_dna([user4583, user4584], shared_genes=True, genetic_map="CEU")
+Downloading resources/CEU_omni_recombination_20130507.tar
 Downloading resources/knownGene_hg19.txt.gz
 Downloading resources/kgXref_hg19.txt.gz
-Saving output/shared_dna_User4583_User4584.png
-Saving output/shared_dna_one_chrom_User4583_User4584_GRCh37.csv
-Saving output/shared_dna_two_chroms_User4583_User4584_GRCh37.csv
-Saving output/shared_genes_one_chrom_User4583_User4584_GRCh37.csv
-Saving output/shared_genes_two_chroms_User4583_User4584_GRCh37.csv
+Saving output/shared_dna_User4583_User4584_CEU.png
+Saving output/shared_dna_one_chrom_User4583_User4584_GRCh37_CEU.csv
+Saving output/shared_dna_two_chroms_User4583_User4584_GRCh37_CEU.csv
+Saving output/shared_genes_one_chrom_User4583_User4584_GRCh37_CEU.csv
+Saving output/shared_genes_two_chroms_User4583_User4584_GRCh37_CEU.csv
 
 The plot that illustrates the shared DNA is shown below. Note that in addition to outputting the
 shared DNA segments on either one or both chromosomes, the shared genes on either one or both
 chromosomes are also output.
+
+.. note:: Shared DNA is not computed on the X chromosome with the 1000 Genomes Project genetic
+          maps since the X chromosome is not included in these genetic maps.
 
 In this example, there are 15,976 shared genes on both chromosomes transcribed from 36 segments
 of shared DNA:
@@ -228,7 +235,7 @@ of shared DNA:
 >>> len(results['two_chrom_shared_dna'])
 36
 
-.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User4583_User4584.png
+.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User4583_User4584_CEU.png
 
 Documentation
 -------------

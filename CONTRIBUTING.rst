@@ -56,6 +56,12 @@ To set up ``lineage`` for local development:
 
     $ pipenv run pytest --cov-report=html --cov=lineage tests
 
+   .. note:: Downloads during tests are disabled by default. To enable downloads, set
+             the environment variable ``DOWNLOADS_ENABLED=true``.
+
+   .. note:: If you receive errors when running the tests, you may need to specify the temporary
+             directory with an environment variable, e.g., ``TMPDIR="/path/to/tmp/dir"``.
+
    .. note:: After running the tests, a coverage report can be viewed by opening
              ``htmlcov/index.html`` in a browser.
 
