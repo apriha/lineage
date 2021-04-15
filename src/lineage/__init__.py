@@ -290,6 +290,36 @@ class Lineage:
 
         All output is saved to the output directory as `CSV` or `PNG` files.
 
+        Notes
+        -----
+        The code is commented throughout to help describe the algorithm and its operation.
+
+        To summarize, the algorithm first computes the genetic distance in cMs between SNPs
+        common to all individuals using the specified genetic map.
+
+        Then, individuals are compared for whether they share one or two alleles for each SNP in
+        common; in this manner, where all individuals share one chromosome, for example, there
+        will be several SNPs in a row where at least one allele is shared between individuals for
+        each SNP. The ``cM_threshold`` is then applied to each of these "matching segments" to
+        determine whether the segment could be a potential shared DNA segment (i.e., whether each
+        segment has a cM value greater than the threshold).
+
+        The matching segments that passed the ``cM_threshold`` are then checked to see if they
+        are adjacent to another matching segment, and if so, the segments are stitched together,
+        and the single SNP separating the segments is flagged as potentially discrepant. (This
+        means that multiple smaller matching segments passing the ``cM_threshold`` could be
+        stitched, identifying the SNP between each segment as discrepant.)
+
+        Next, the ``snp_threshold`` is applied to each segment to ensure there are enough SNPs in
+        the segment and the segment is not only a few SNPs in a region with a high recombination
+        rate; for each segment that passes this test, we have a segment of shared DNA, and the
+        total cMs for this segment are computed.
+
+        Finally, discrepant SNPs are checked to ensure that only SNPs internal to a shared DNA
+        segment are reported as discrepant (i.e., don't report a discrepant SNP if it was part of a
+        segment that didn't pass the ``snp_threshold``). Currently, no action other than reporting
+        is taken on discrepant SNPs.
+
         Parameters
         ----------
         individuals : iterable of Individuals
@@ -330,6 +360,7 @@ class Lineage:
             two_chrom_discrepant_snps (pandas.Index)
                 discrepant SNPs discovered while finding shared DNA on two chromosomes
         """
+        # initialize all objects to be returned to be empty to start
         one_chrom_shared_dna = pd.DataFrame()
         two_chrom_shared_dna = pd.DataFrame()
         one_chrom_shared_genes = pd.DataFrame()
@@ -337,8 +368,10 @@ class Lineage:
         one_chrom_discrepant_snps = pd.Index([])
         two_chrom_discrepant_snps = pd.Index([])
 
+        # ensure that all individuals have SNPs that are mapped relative to Build 37
         self._remap_snps_to_GRCh37(individuals)
 
+        # return if there aren't enough individuals to compare
         if len(individuals) < 2:
             logger.warning("find_shared_dna requires two or more individuals...")
             return self._find_shared_dna_return_helper(
@@ -350,6 +383,7 @@ class Lineage:
                 two_chrom_discrepant_snps,
             )
 
+        # load the specified genetic map (one genetic map for each chromosome)
         genetic_map_dfs = self._resources.get_genetic_map(genetic_map)
 
         if len(genetic_map_dfs) == 0:
@@ -362,26 +396,34 @@ class Lineage:
                 two_chrom_discrepant_snps,
             )
 
-        cols = ["genotype{}".format(str(i)) for i in range(len(individuals))]
+        # generate a list of dynamically named columns for each individual's genotype
+        # (e.g., genotype0, genotype1, etc).
+        cols = [f"genotype{str(i)}" for i in range(len(individuals))]
 
+        # set the reference SNPs to compare to be that of the first individual
         df = individuals[0].snps
         df = df.rename(columns={"genotype": cols[0]})
 
+        # build-up a dataframe of SNPs that are common to all individuals
         for i, ind in enumerate(individuals[1:]):
             # join SNPs for all individuals
             df = df.join(ind.snps["genotype"], how="inner")
             df = df.rename(columns={"genotype": cols[i + 1]})
 
+        # set a flag for if one individuals is male (i.e., only one chromosome match on the X
+        # chromosome is possible in the non-PAR region)
         one_x_chrom = self._is_one_individual_male(individuals)
 
+        # create tasks to compute the genetic distances (cMs) between each SNP on each chromosome
         tasks = []
-
         chroms_to_drop = []
         for chrom in df["chrom"].unique():
             if chrom not in genetic_map_dfs.keys():
                 chroms_to_drop.append(chrom)
                 continue
 
+            # each task requires the genetic map for the chromosome and the positions of all SNPs
+            # in common on that chromosome
             tasks.append(
                 {
                     "genetic_map": genetic_map_dfs[chrom],
@@ -390,19 +432,24 @@ class Lineage:
                 }
             )
 
-        # drop chromosomes without genetic distance data
+        # drop chromosomes without genetic distance data (e.g., chroms MT, PAR, etc.)
         for chrom in chroms_to_drop:
             df = df.drop(df.loc[df["chrom"] == chrom].index)
 
-        # determine the genetic distance between each SNP using the HapMap Phase II genetic map
+        # determine the genetic distance between each SNP using the specified genetic map
         snp_distances = map(self._compute_snp_distances, tasks)
         snp_distances = pd.concat(snp_distances)
+
+        # extract the column "cM_from_prev_snp" from the result and add that to the dataframe
+        # of SNPs common to all individuals; now we have the genetic distance between each SNP
         df["cM_from_prev_snp"] = snp_distances["cM_from_prev_snp"]
 
+        # now we apply a mask for whether all individuals match on one or two chromosomes...
+        # first, set all rows for these columns to True
         df["one_chrom_match"] = True
         df["two_chrom_match"] = True
-
-        # determine where individuals share an allele on one chromosome
+        # determine where individuals share an allele on one chromosome (i.e., set to False when
+        # at least one allele doesn't match for all individuals)
         for genotype1, genotype2 in combinations(cols, 2):
             df.loc[
                 ~df[genotype1].isnull()
@@ -414,7 +461,8 @@ class Lineage:
                 "one_chrom_match",
             ] = False
 
-        # determine where individuals share alleles on both chromosomes
+        # determine where individuals share alleles on two chromosomes (i.e., set to False when
+        # two alleles don't match for all individuals)
         for genotype1, genotype2 in combinations(cols, 2):
             df.loc[
                 ~df[genotype1].isnull()
@@ -430,12 +478,14 @@ class Lineage:
         # genotype columns are no longer required for calculation
         df = df.drop(cols, axis=1)
 
+        # find shared DNA on one chrom
         one_chrom_shared_dna, one_chrom_discrepant_snps = self._find_shared_dna_helper(
             df[["chrom", "pos", "cM_from_prev_snp", "one_chrom_match"]],
             cM_threshold,
             snp_threshold,
             one_x_chrom,
         )
+        # find shared DNA on two chroms
         two_chrom_shared_dna, two_chrom_discrepant_snps = self._find_shared_dna_helper(
             df[["chrom", "pos", "cM_from_prev_snp", "two_chrom_match"]],
             cM_threshold,
@@ -646,7 +696,7 @@ class Lineage:
         return False
 
     def _compute_snp_distances(self, task):
-        """ Compute genetic distance between SNPs.
+        """ Compute genetic distance in cMs between SNPs.
 
         Parameters
         ----------
@@ -732,8 +782,8 @@ class Lineage:
                 "two_chrom_match",
             ] = False
 
-        # get consecutive strings of trues
-        # http://stackoverflow.com/a/17151327
+        # get consecutive strings of Trues, for where there's a one or two chrom match between
+        # individuals, depending on the task; http://stackoverflow.com/a/17151327
         a = df.loc[(df["chrom"] == chrom)][match_col].values
         a = np.r_[a, False]
         a_rshifted = np.roll(a, 1)
@@ -744,8 +794,10 @@ class Lineage:
         a_ends = np.nonzero(ends)[0]
         a_ends = np.reshape(a_ends, (len(a_ends), 1))
 
+        # get the matching segments
         matches = np.hstack((a_starts, a_ends))
 
+        # compute total cMs for each matching segment
         c = np.r_[0, df.loc[(df["chrom"] == chrom)]["cM_from_prev_snp"].cumsum()][
             matches
         ]

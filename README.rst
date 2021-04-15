@@ -117,8 +117,8 @@ Loading SNPs('resources/663.23andme.305.txt.gz')
 
 Now we can perform some analysis between the ``User662`` and ``User663`` datasets.
 
-Find Discordant SNPs
-''''''''''''''''''''
+`Find Discordant SNPs <https://lineage.readthedocs.io/en/latest/lineage.html#lineage.Lineage.find_discordant_snps>`_
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 First, let's find discordant SNPs (i.e., SNP data that is not consistent with Mendelian
 inheritance):
 
@@ -136,8 +136,8 @@ the prompt, although the same output is available in the CSV file.
 
 Not counting mtDNA SNPs, there are 37 discordant SNPs between these two datasets.
 
-Find Shared DNA
-'''''''''''''''
+`Find Shared DNA <https://lineage.readthedocs.io/en/latest/lineage.html#lineage.Lineage.find_shared_dna>`_
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ``lineage`` uses the probabilistic recombination rates throughout the human genome from the
 `International HapMap Project <https://www.genome.gov/10001688/international-hapmap-project/>`_
 and the `1000 Genomes Project <https://www.internationalgenome.org>`_ to compute the shared DNA
@@ -180,8 +180,8 @@ details the shared segments of DNA on one chromosome and a plot that illustrates
 
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663_HapMap2.png
 
-Find Shared Genes
-'''''''''''''''''
+`Find Shared Genes <https://lineage.readthedocs.io/en/latest/lineage.html#lineage.Lineage.find_shared_dna>`_
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 The `Central Dogma of Molecular Biology <https://en.wikipedia.org/wiki/Central_dogma_of_molecular_biology>`_
 states that genetic information flows from DNA to mRNA to proteins: DNA is transcribed into
 mRNA, and mRNA is translated into a protein. It's more complicated than this (it's biology
