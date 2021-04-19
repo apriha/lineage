@@ -38,9 +38,6 @@ from tests import BaseLineageTestCase
 
 
 class TestResources(BaseLineageTestCase):
-    def setUp(self):
-        self.del_output_dir_helper()
-
     def _reset_resource(self):
         self.resource._genetic_map = {}
         self.resource._genetic_map_name = ""

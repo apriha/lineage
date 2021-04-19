@@ -37,15 +37,6 @@ from lineage import Lineage
 class BaseLineageTestCase(TestCase):
     def setUp(self):
         self.l = Lineage()
-        self.del_output_dir_helper()
-
-    def tearDown(self):
-        self.del_output_dir_helper()
-
-    @staticmethod
-    def del_output_dir_helper():
-        if os.path.exists("output"):
-            shutil.rmtree("output")
 
     def simulate_snps(
         self,
