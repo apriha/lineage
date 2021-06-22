@@ -13,7 +13,7 @@ Capabilities
 - Compute centiMorgans (cMs) of shared DNA using a variety of genetic maps (e.g., HapMap Phase II, 1000 Genomes Project)
 - Plot shared DNA between individuals
 - Find discordant SNPs between child and parent(s)
-- Read, write, merge, and remaps SNPs for an individual via the  `snps <https://github.com/apriha/snps>`_ package
+- Read, write, merge, and remap SNPs for an individual via the `snps <https://github.com/apriha/snps>`_ package
 
 Supported Genotype Files
 ------------------------
