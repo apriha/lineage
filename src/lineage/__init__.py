@@ -410,7 +410,7 @@ class Lineage:
             df = df.join(ind.snps["genotype"], how="inner")
             df = df.rename(columns={"genotype": cols[i + 1]})
 
-        # set a flag for if one individuals is male (i.e., only one chromosome match on the X
+        # set a flag for if one individual is male (i.e., only one chromosome match on the X
         # chromosome is possible in the non-PAR region)
         one_x_chrom = self._is_one_individual_male(individuals)
 

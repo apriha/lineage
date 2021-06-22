@@ -13,7 +13,7 @@ Capabilities
 - Compute centiMorgans (cMs) of shared DNA using a variety of genetic maps (e.g., HapMap Phase II, 1000 Genomes Project)
 - Plot shared DNA between individuals
 - Find discordant SNPs between child and parent(s)
-- Read, write, merge, and remaps SNPs for an individual via the  `snps <https://github.com/apriha/snps>`_ package
+- Read, write, merge, and remap SNPs for an individual via the `snps <https://github.com/apriha/snps>`_ package
 
 Supported Genotype Files
 ------------------------
@@ -27,7 +27,7 @@ Python dependencies) via ``pip``::
 
     $ pip install lineage
 
-Also see the `installation documentation <https://lineage.readthedocs.io/en/latest/installation.html>`_.
+Also see the `installation documentation <https://lineage.readthedocs.io/en/stable/installation.html>`_.
 
 Dependencies
 ------------
@@ -91,7 +91,7 @@ files for this individual. Specifically:
   151 SNP genotypes were found to be discrepant.
 
 ``user662`` is represented by an ``Individual`` object, which inherits from ``snps.SNPs``.
-Therefore, all of the `properties and methods <https://snps.readthedocs.io/en/latest/snps.html>`_
+Therefore, all of the `properties and methods <https://snps.readthedocs.io/en/stable/snps.html>`_
 available to a ``SNPs`` object are available here; for example:
 
 >>> len(user662.discrepant_merge_genotypes)
@@ -117,7 +117,7 @@ Loading SNPs('resources/663.23andme.305.txt.gz')
 
 Now we can perform some analysis between the ``User662`` and ``User663`` datasets.
 
-`Find Discordant SNPs <https://lineage.readthedocs.io/en/latest/lineage.html#lineage.Lineage.find_discordant_snps>`_
+`Find Discordant SNPs <https://lineage.readthedocs.io/en/stable/lineage.html#lineage.Lineage.find_discordant_snps>`_
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 First, let's find discordant SNPs (i.e., SNP data that is not consistent with Mendelian
 inheritance):
@@ -125,7 +125,7 @@ inheritance):
 >>> discordant_snps = l.find_discordant_snps(user662, user663, save_output=True)
 Saving output/discordant_snps_User662_User663_GRCh37.csv
 
-All `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are saved to
+All `output files <https://lineage.readthedocs.io/en/stable/output_files.html>`_ are saved to
 the output directory (a parameter to ``Lineage``).
 
 This method also returns a ``pandas.DataFrame``, and it can be inspected interactively at
@@ -136,7 +136,7 @@ the prompt, although the same output is available in the CSV file.
 
 Not counting mtDNA SNPs, there are 37 discordant SNPs between these two datasets.
 
-`Find Shared DNA <https://lineage.readthedocs.io/en/latest/lineage.html#lineage.Lineage.find_shared_dna>`_
+`Find Shared DNA <https://lineage.readthedocs.io/en/stable/lineage.html#lineage.Lineage.find_shared_dna>`_
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ``lineage`` uses the probabilistic recombination rates throughout the human genome from the
 `International HapMap Project <https://www.genome.gov/10001688/international-hapmap-project/>`_
@@ -173,14 +173,14 @@ In this example, there are 27 segments of shared DNA:
 >>> len(results['one_chrom_shared_dna'])
 27
 
-Also, `output files <https://lineage.readthedocs.io/en/latest/output_files.html>`_ are
+Also, `output files <https://lineage.readthedocs.io/en/stable/output_files.html>`_ are
 created; these files are detailed in the documentation and their generation can be disabled with a
 ``save_output=False`` argument. In this example, the output files consist of a CSV file that
 details the shared segments of DNA on one chromosome and a plot that illustrates the shared DNA:
 
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663_HapMap2.png
 
-`Find Shared Genes <https://lineage.readthedocs.io/en/latest/lineage.html#lineage.Lineage.find_shared_dna>`_
+`Find Shared Genes <https://lineage.readthedocs.io/en/stable/lineage.html#lineage.Lineage.find_shared_dna>`_
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 The `Central Dogma of Molecular Biology <https://en.wikipedia.org/wiki/Central_dogma_of_molecular_biology>`_
 states that genetic information flows from DNA to mRNA to proteins: DNA is transcribed into
@@ -251,7 +251,7 @@ Thanks to Whit Athey, Ryan Dale, Binh Bui, Jeff Gill, Gopal Vashishtha,
    :target: https://github.com/apriha/lineage/actions/workflows/ci.yml
 .. |codecov| image:: https://codecov.io/gh/apriha/lineage/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/apriha/lineage
-.. |docs| image:: https://readthedocs.org/projects/lineage/badge/?version=latest
+.. |docs| image:: https://readthedocs.org/projects/lineage/badge/?version=stable
    :target: https://lineage.readthedocs.io/
 .. |pypi| image:: https://img.shields.io/pypi/v/lineage.svg
    :target: https://pypi.python.org/pypi/lineage
