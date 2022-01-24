@@ -385,7 +385,7 @@ class Resources(SNPsResources):
                 df = pd.read_csv(
                     tar.extractfile(member),
                     compression="gzip",
-                    sep="\s+",
+                    sep=r"\s+",
                     usecols=["Position(bp)", "Rate(cM/Mb)", "Map(cM)"],
                 )
                 df = df.rename(
