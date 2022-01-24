@@ -64,10 +64,10 @@ logger = logging.getLogger(__name__)
 
 
 class Resources(SNPsResources):
-    """ Object used to manage resources required by `lineage`. """
+    """Object used to manage resources required by `lineage`."""
 
     def __init__(self, resources_dir="resources"):
-        """ Initialize a ``Resources`` object.
+        """Initialize a ``Resources`` object.
 
         Parameters
         ----------
@@ -83,7 +83,7 @@ class Resources(SNPsResources):
         self._kgXref_hg19 = pd.DataFrame()
 
     def get_genetic_map(self, genetic_map):
-        """ Get specified genetic map.
+        """Get specified genetic map.
 
         Parameters
         ----------
@@ -132,7 +132,7 @@ class Resources(SNPsResources):
             return self.get_genetic_map_1000G_GRCh37(genetic_map)
 
     def get_genetic_map_HapMapII_GRCh37(self):
-        """ Get International HapMap Consortium HapMap Phase II genetic map for Build 37.
+        """Get International HapMap Consortium HapMap Phase II genetic map for Build 37.
         [#InternationalHapMapConsortium]_ [#Auton2010]_
 
         Returns
@@ -158,7 +158,7 @@ class Resources(SNPsResources):
         return self._genetic_map
 
     def get_genetic_map_1000G_GRCh37(self, pop):
-        """ Get population-specific 1000 Genomes Project genetic map. [#Auton2013]_ [#Auton2015]_
+        """Get population-specific 1000 Genomes Project genetic map. [#Auton2013]_ [#Auton2015]_
 
         Notes
         -----
@@ -210,7 +210,7 @@ class Resources(SNPsResources):
         return self._genetic_map
 
     def get_cytoBand_hg19(self):
-        """ Get UCSC cytoBand table for Build 37.
+        """Get UCSC cytoBand table for Build 37.
 
         Returns
         -------
@@ -228,7 +228,7 @@ class Resources(SNPsResources):
         return self._cytoBand_hg19
 
     def get_knownGene_hg19(self):
-        """ Get UCSC knownGene table for Build 37.
+        """Get UCSC knownGene table for Build 37.
 
         Returns
         -------
@@ -241,7 +241,7 @@ class Resources(SNPsResources):
         return self._knownGene_hg19
 
     def get_kgXref_hg19(self):
-        """ Get UCSC kgXref table for Build 37.
+        """Get UCSC kgXref table for Build 37.
 
         Returns
         -------
@@ -254,7 +254,7 @@ class Resources(SNPsResources):
         return self._kgXref_hg19
 
     def download_example_datasets(self):
-        """ Download example datasets from `openSNP <https://opensnp.org>`_.
+        """Download example datasets from `openSNP <https://opensnp.org>`_.
 
         Per openSNP, "the data is donated into the public domain using `CC0 1.0
         <http://creativecommons.org/publicdomain/zero/1.0/>`_."
@@ -297,7 +297,7 @@ class Resources(SNPsResources):
         ]
 
     def get_all_resources(self):
-        """ Get / download all resources (except reference sequences) used throughout `lineage`.
+        """Get / download all resources (except reference sequences) used throughout `lineage`.
 
         Returns
         -------
@@ -315,7 +315,7 @@ class Resources(SNPsResources):
 
     @staticmethod
     def _load_genetic_map_HapMapII_GRCh37(filename):
-        """ Load HapMapII genetic map.
+        """Load HapMapII genetic map.
 
         Parameters
         ----------
@@ -361,7 +361,7 @@ class Resources(SNPsResources):
 
     @staticmethod
     def _load_genetic_map_1000G_GRCh37(filename):
-        """ Load 1000 Genomes Project genetic map.
+        """Load 1000 Genomes Project genetic map.
 
         Parameters
         ----------
@@ -402,7 +402,7 @@ class Resources(SNPsResources):
 
     @staticmethod
     def _load_cytoBand(filename):
-        """ Load UCSC cytoBand table.
+        """Load UCSC cytoBand table.
 
         Parameters
         ----------
@@ -423,7 +423,7 @@ class Resources(SNPsResources):
 
     @staticmethod
     def _load_knownGene(filename):
-        """ Load UCSC knownGene table.
+        """Load UCSC knownGene table.
 
         Parameters
         ----------
@@ -459,7 +459,7 @@ class Resources(SNPsResources):
 
     @staticmethod
     def _load_kgXref(filename):
-        """ Load UCSC kgXref table.
+        """Load UCSC kgXref table.
 
         Parameters
         ----------
@@ -492,7 +492,7 @@ class Resources(SNPsResources):
         return df
 
     def _get_path_cytoBand_hg19(self):
-        """ Get local path to cytoBand file for hg19 / GRCh37 from UCSC, downloading if necessary.
+        """Get local path to cytoBand file for hg19 / GRCh37 from UCSC, downloading if necessary.
 
         Returns
         -------
@@ -505,7 +505,7 @@ class Resources(SNPsResources):
         )
 
     def _get_path_genetic_map_HapMapII_GRCh37(self):
-        """ Get local path to HapMap Phase II genetic map for hg19 / GRCh37 (HapMapII),
+        """Get local path to HapMap Phase II genetic map for hg19 / GRCh37 (HapMapII),
         downloading if necessary.
 
         Returns
@@ -520,7 +520,7 @@ class Resources(SNPsResources):
         )
 
     def _get_path_genetic_map_1000G_GRCh37(self, pop):
-        """ Get local path to population-specific 1000 Genomes Project genetic map,
+        """Get local path to population-specific 1000 Genomes Project genetic map,
         downloading if necessary.
 
         Returns
@@ -535,7 +535,7 @@ class Resources(SNPsResources):
         )
 
     def _get_path_knownGene_hg19(self):
-        """ Get local path to knownGene file for hg19 / GRCh37 from UCSC, downloading if necessary.
+        """Get local path to knownGene file for hg19 / GRCh37 from UCSC, downloading if necessary.
 
         Returns
         -------
@@ -548,7 +548,7 @@ class Resources(SNPsResources):
         )
 
     def _get_path_kgXref_hg19(self):
-        """ Get local path to kgXref file for hg19 / GRCh37 from UCSC, downloading if necessary.
+        """Get local path to kgXref file for hg19 / GRCh37 from UCSC, downloading if necessary.
 
         Returns
         -------

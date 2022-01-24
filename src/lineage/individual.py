@@ -31,7 +31,7 @@ from snps.utils import clean_str
 
 
 class Individual(SNPs):
-    """ Object used to represent and interact with an individual.
+    """Object used to represent and interact with an individual.
 
     The ``Individual`` object maintains information about an individual. The object provides
     methods for loading an individual's genetic data (SNPs) and normalizing it for use with the
@@ -42,7 +42,7 @@ class Individual(SNPs):
     """
 
     def __init__(self, name, raw_data=(), **kwargs):
-        """ Initialize an ``Individual`` object.
+        """Initialize an ``Individual`` object.
 
         Parameters
         ----------
@@ -85,7 +85,7 @@ class Individual(SNPs):
 
     @property
     def name(self):
-        """ Get this ``Individual``'s name.
+        """Get this ``Individual``'s name.
 
         Returns
         -------
