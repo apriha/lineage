@@ -55,7 +55,13 @@ class TestLineage(BaseLineageTestCase):
         **kwargs,
     ):
         return {
-            chrom: pd.DataFrame({"pos": pos, "rate": rate, "map": map_cMs,}),
+            chrom: pd.DataFrame(
+                {
+                    "pos": pos,
+                    "rate": rate,
+                    "map": map_cMs,
+                }
+            ),
         }
 
     def _generate_test_cytoBand_hg19(self):
@@ -159,7 +165,8 @@ class TestLineage(BaseLineageTestCase):
             kg, kgXref = self._generate_test_gene_dfs(**kwargs)
 
             with patch(
-                genetic_map_patch, Mock(return_value=genetic_map),
+                genetic_map_patch,
+                Mock(return_value=genetic_map),
             ):
                 with patch(
                     "lineage.resources.Resources.get_cytoBand_hg19",
@@ -579,10 +586,14 @@ class TestLineage(BaseLineageTestCase):
             assert len(d["one_chrom_discrepant_snps"]) == 0
             assert len(d["two_chrom_discrepant_snps"]) == 0
             np.testing.assert_allclose(
-                d["one_chrom_shared_dna"].loc[1]["cMs"], 202.022891, rtol=1e-5,
+                d["one_chrom_shared_dna"].loc[1]["cMs"],
+                202.022891,
+                rtol=1e-5,
             )
             np.testing.assert_allclose(
-                d["two_chrom_shared_dna"].loc[1]["cMs"], 20.837792, rtol=1e-3,
+                d["two_chrom_shared_dna"].loc[1]["cMs"],
+                20.837792,
+                rtol=1e-3,
             )
             self._make_file_exist_assertions("ind1_ind2", output_dir=tmpdir)
 
@@ -617,10 +628,14 @@ class TestLineage(BaseLineageTestCase):
             assert len(d["one_chrom_discrepant_snps"]) == 0
             assert len(d["two_chrom_discrepant_snps"]) == 0
             np.testing.assert_allclose(
-                d["one_chrom_shared_dna"].loc[1]["cMs"], 202.022891, rtol=1e-5,
+                d["one_chrom_shared_dna"].loc[1]["cMs"],
+                202.022891,
+                rtol=1e-5,
             )
             np.testing.assert_allclose(
-                d["two_chrom_shared_dna"].loc[1]["cMs"], 202.022891, rtol=1e-5,
+                d["two_chrom_shared_dna"].loc[1]["cMs"],
+                202.022891,
+                rtol=1e-5,
             )
             self._make_file_exist_assertions("ind1_ind2", output_dir=tmpdir)
 

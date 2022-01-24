@@ -97,7 +97,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
@@ -115,6 +114,6 @@ setup(
     keywords="dna genes genetics genealogy snps chromosomes genotype "
     "bioinformatics ancestry",
     install_requires=["numpy", "pandas", "matplotlib", "atomicwrites", "snps"],
-    python_requires=">=3.6.1",
+    python_requires=">=3.7.1",
     platforms=["any"],
 )

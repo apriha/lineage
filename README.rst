@@ -31,7 +31,7 @@ Also see the `installation documentation <https://lineage.readthedocs.io/en/stab
 
 Dependencies
 ------------
-``lineage`` requires `Python <https://www.python.org>`_ 3.6.1+ and the following Python packages:
+``lineage`` requires `Python <https://www.python.org>`_ 3.7.1+ and the following Python packages:
 
 - `numpy <https://numpy.org>`_
 - `pandas <https://pandas.pydata.org>`_
@@ -74,9 +74,9 @@ Create an ``Individual`` in the context of the ``lineage`` framework to interact
 ``User662`` dataset:
 
 >>> user662 = l.create_individual('User662', ['resources/662.23andme.340.txt.gz', 'resources/662.ftdna-illumina.341.csv.gz'])
-Loading SNPs('resources/662.23andme.340.txt.gz')
-Merging SNPs('resources/662.ftdna-illumina.341.csv.gz')
-SNPs('resources/662.ftdna-illumina.341.csv.gz') has Build 36; remapping to Build 37
+Loading SNPs('662.23andme.340.txt.gz')
+Merging SNPs('662.ftdna-illumina.341.csv.gz')
+SNPs('662.ftdna-illumina.341.csv.gz') has Build 36; remapping to Build 37
 Downloading resources/NCBI36_GRCh37.tar.gz
 27 SNP positions were discrepant; keeping original positions
 151 SNP genotypes were discrepant; marking those as null
@@ -113,7 +113,7 @@ Compare Individuals
 Let's create another ``Individual`` for the ``User663`` dataset:
 
 >>> user663 = l.create_individual('User663', 'resources/663.23andme.305.txt.gz')
-Loading SNPs('resources/663.23andme.305.txt.gz')
+Loading SNPs('663.23andme.305.txt.gz')
 
 Now we can perform some analysis between the ``User662`` and ``User663`` datasets.
 
@@ -201,10 +201,10 @@ For this example, let's create two more ``Individuals`` for the ``User4583`` and
 datasets:
 
 >>> user4583 = l.create_individual('User4583', 'resources/4583.ftdna-illumina.3482.csv.gz')
-Loading SNPs('resources/4583.ftdna-illumina.3482.csv.gz')
+Loading SNPs('4583.ftdna-illumina.3482.csv.gz')
 
 >>> user4584 = l.create_individual('User4584', 'resources/4584.ftdna-illumina.3483.csv.gz')
-Loading SNPs('resources/4584.ftdna-illumina.3483.csv.gz')
+Loading SNPs('4584.ftdna-illumina.3483.csv.gz')
 
 Now let's find the shared genes, specifying a
 `population-specific <https://www.internationalgenome.org/faq/which-populations-are-part-your-study/>`_

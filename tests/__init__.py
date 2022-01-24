@@ -136,7 +136,7 @@ class BaseLineageTestCase(TestCase):
 
     @property
     def downloads_enabled(self):
-        """ Property indicating if downloads are enabled.
+        """Property indicating if downloads are enabled.
 
         Only download from external resources when an environment variable named
         "DOWNLOADS_ENABLED" is set to "true".

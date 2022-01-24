@@ -77,7 +77,7 @@ logger = logging.getLogger(__name__)
 
 
 def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, build):
-    """ Plots chromosomes with designated markers.
+    """Plots chromosomes with designated markers.
 
     Parameters
     ----------
@@ -218,7 +218,7 @@ def _chromosome_collections(df, y_positions, height, **kwargs):
 
 
 def _patch_chromosomal_features(cytobands, one_chrom_match, two_chrom_match):
-    """ Highlight positions for each chromosome segment / feature.
+    """Highlight positions for each chromosome segment / feature.
 
     Parameters
     ----------

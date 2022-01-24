@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 
 class Lineage:
-    """ Object used to interact with the `lineage` framework. """
+    """Object used to interact with the `lineage` framework."""
 
     def __init__(
         self,
@@ -61,7 +61,7 @@ class Lineage:
         parallelize=False,
         processes=os.cpu_count(),
     ):
-        """ Initialize a ``Lineage`` object.
+        """Initialize a ``Lineage`` object.
 
         Parameters
         ----------
@@ -80,7 +80,7 @@ class Lineage:
         self._parallelizer = Parallelizer(parallelize=parallelize, processes=processes)
 
     def create_individual(self, name, raw_data=(), **kwargs):
-        """ Initialize an individual in the context of the `lineage` framework.
+        """Initialize an individual in the context of the `lineage` framework.
 
         Parameters
         ----------
@@ -104,7 +104,7 @@ class Lineage:
         return Individual(name, raw_data, **kwargs)
 
     def download_example_datasets(self):
-        """ Download example datasets from `openSNP <https://opensnp.org>`_.
+        """Download example datasets from `openSNP <https://opensnp.org>`_.
 
         Per openSNP, "the data is donated into the public domain using `CC0 1.0
         <http://creativecommons.org/publicdomain/zero/1.0/>`_."
@@ -130,7 +130,7 @@ class Lineage:
     def find_discordant_snps(
         self, individual1, individual2, individual3=None, save_output=False
     ):
-        """ Find discordant SNPs between two or three individuals.
+        """Find discordant SNPs between two or three individuals.
 
         Parameters
         ----------
@@ -282,7 +282,7 @@ class Lineage:
         save_output=True,
         genetic_map="HapMap2",
     ):
-        """ Find the shared DNA between individuals.
+        """Find the shared DNA between individuals.
 
         Computes the genetic distance in centiMorgans (cMs) between SNPs using the specified genetic
         map. Applies thresholds to determine the shared DNA. Plots shared DNA. Optionally determines
@@ -696,7 +696,7 @@ class Lineage:
         return False
 
     def _compute_snp_distances(self, task):
-        """ Compute genetic distance in cMs between SNPs.
+        """Compute genetic distance in cMs between SNPs.
 
         Parameters
         ----------
