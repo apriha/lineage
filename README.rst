@@ -31,7 +31,7 @@ Also see the `installation documentation <https://lineage.readthedocs.io/en/stab
 
 Dependencies
 ------------
-``lineage`` requires `Python <https://www.python.org>`_ 3.6.1+ and the following Python packages:
+``lineage`` requires `Python <https://www.python.org>`_ 3.7.1+ and the following Python packages:
 
 - `numpy <https://numpy.org>`_
 - `pandas <https://pandas.pydata.org>`_
