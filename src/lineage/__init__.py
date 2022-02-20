@@ -500,6 +500,8 @@ class Lineage:
         if save_output:
             self._find_shared_dna_output_helper(
                 individuals,
+                cM_threshold,
+                snp_threshold,
                 one_chrom_shared_dna,
                 two_chrom_shared_dna,
                 one_chrom_shared_genes,
@@ -547,12 +549,24 @@ class Lineage:
     def _find_shared_dna_output_helper(
         self,
         individuals,
+        cM_threshold,
+        snp_threshold,
         one_chrom_shared_dna,
         two_chrom_shared_dna,
         one_chrom_shared_genes,
         two_chrom_shared_genes,
         genetic_map,
     ):
+        def output_csv(df, file, float_format="%.2f"):
+            save_df_as_csv(
+                df,
+                self._output_dir,
+                file,
+                comment=self._get_csv_header(),
+                prepend_info=False,
+                float_format=float_format,
+            )
+
         cytobands = self._resources.get_cytoBand_hg19()
 
         individuals_filename = ""
@@ -565,6 +579,11 @@ class Lineage:
         individuals_filename = individuals_filename[:-1]
         individuals_plot_title = individuals_plot_title[:-3]
 
+        cM = "{:.2f}".format(cM_threshold).replace(".", "p")
+        filename_details = (
+            f"{individuals_filename}_{cM}cM_{snp_threshold}snps_GRCh37_{genetic_map}"
+        )
+
         if create_dir(self._output_dir):
             plot_chromosomes(
                 one_chrom_shared_dna,
@@ -572,56 +591,36 @@ class Lineage:
                 cytobands,
                 os.path.join(
                     self._output_dir,
-                    f"shared_dna_{individuals_filename}_{genetic_map}.png",
+                    f"shared_dna_{filename_details}.png",
                 ),
                 f"{individuals_plot_title} shared DNA",
                 37,
             )
 
         if len(one_chrom_shared_dna) > 0:
-            file = (
-                f"shared_dna_one_chrom_{individuals_filename}_GRCh37_{genetic_map}.csv"
-            )
-            save_df_as_csv(
+            output_csv(
                 one_chrom_shared_dna,
-                self._output_dir,
-                file,
-                comment=self._get_csv_header(),
-                prepend_info=False,
-                float_format="%.2f",
+                f"shared_dna_one_chrom_{filename_details}.csv",
             )
 
         if len(two_chrom_shared_dna) > 0:
-            file = (
-                f"shared_dna_two_chroms_{individuals_filename}_GRCh37_{genetic_map}.csv"
-            )
-            save_df_as_csv(
+            output_csv(
                 two_chrom_shared_dna,
-                self._output_dir,
-                file,
-                comment=self._get_csv_header(),
-                prepend_info=False,
-                float_format="%.2f",
+                f"shared_dna_two_chroms_{filename_details}.csv",
             )
 
         if len(one_chrom_shared_genes) > 0:
-            file = f"shared_genes_one_chrom_{individuals_filename}_GRCh37_{genetic_map}.csv"
-            save_df_as_csv(
+            output_csv(
                 one_chrom_shared_genes,
-                self._output_dir,
-                file,
-                comment=self._get_csv_header(),
-                prepend_info=False,
+                f"shared_genes_one_chrom_{filename_details}.csv",
+                None,
             )
 
         if len(two_chrom_shared_genes) > 0:
-            file = f"shared_genes_two_chroms_{individuals_filename}_GRCh37_{genetic_map}.csv"
-            save_df_as_csv(
+            output_csv(
                 two_chrom_shared_genes,
-                self._output_dir,
-                file,
-                comment=self._get_csv_header(),
-                prepend_info=False,
+                f"shared_genes_two_chroms_{filename_details}.csv",
+                None,
             )
 
     def _find_shared_dna_return_helper(

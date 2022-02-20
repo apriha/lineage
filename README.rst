@@ -152,8 +152,8 @@ calculating the centiMorgans of shared DNA and plotting the results:
 >>> results = l.find_shared_dna([user662, user663], cM_threshold=0.75, snp_threshold=1100)
 Downloading resources/genetic_map_HapMapII_GRCh37.tar.gz
 Downloading resources/cytoBand_hg19.txt.gz
-Saving output/shared_dna_User662_User663_HapMap2.png
-Saving output/shared_dna_one_chrom_User662_User663_GRCh37_HapMap2.csv
+Saving output/shared_dna_User662_User663_0p75cM_1100snps_GRCh37_HapMap2.png
+Saving output/shared_dna_one_chrom_User662_User663_0p75cM_1100snps_GRCh37_HapMap2.csv
 
 Notice that the centiMorgan and SNP thresholds for each DNA segment can be tuned. Additionally,
 notice that two files were downloaded to facilitate the analysis and plotting - future analyses
@@ -178,7 +178,7 @@ created; these files are detailed in the documentation and their generation can 
 ``save_output=False`` argument. In this example, the output files consist of a CSV file that
 details the shared segments of DNA on one chromosome and a plot that illustrates the shared DNA:
 
-.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663_HapMap2.png
+.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663_0p75cM_1100snps_GRCh37_HapMap2.png
 
 `Find Shared Genes <https://lineage.readthedocs.io/en/stable/lineage.html#lineage.Lineage.find_shared_dna>`_
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -214,11 +214,11 @@ Now let's find the shared genes, specifying a
 Downloading resources/CEU_omni_recombination_20130507.tar
 Downloading resources/knownGene_hg19.txt.gz
 Downloading resources/kgXref_hg19.txt.gz
-Saving output/shared_dna_User4583_User4584_CEU.png
-Saving output/shared_dna_one_chrom_User4583_User4584_GRCh37_CEU.csv
-Saving output/shared_dna_two_chroms_User4583_User4584_GRCh37_CEU.csv
-Saving output/shared_genes_one_chrom_User4583_User4584_GRCh37_CEU.csv
-Saving output/shared_genes_two_chroms_User4583_User4584_GRCh37_CEU.csv
+Saving output/shared_dna_User4583_User4584_0p75cM_1100snps_GRCh37_CEU.png
+Saving output/shared_dna_one_chrom_User4583_User4584_0p75cM_1100snps_GRCh37_CEU.csv
+Saving output/shared_dna_two_chroms_User4583_User4584_0p75cM_1100snps_GRCh37_CEU.csv
+Saving output/shared_genes_one_chrom_User4583_User4584_0p75cM_1100snps_GRCh37_CEU.csv
+Saving output/shared_genes_two_chroms_User4583_User4584_0p75cM_1100snps_GRCh37_CEU.csv
 
 The plot that illustrates the shared DNA is shown below. Note that in addition to outputting the
 shared DNA segments on either one or both chromosomes, the shared genes on either one or both
@@ -235,7 +235,7 @@ of shared DNA:
 >>> len(results['two_chrom_shared_dna'])
 36
 
-.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User4583_User4584_CEU.png
+.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User4583_User4584_0p75cM_1100snps_GRCh37_CEU.png
 
 Documentation
 -------------
