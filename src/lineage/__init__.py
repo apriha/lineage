@@ -712,7 +712,7 @@ class Lineage:
         temp = task["snps"]
 
         # merge genetic map for this chrom
-        temp = temp.append(genetic_map, ignore_index=False, sort=True)
+        temp = pd.concat([temp, genetic_map], ignore_index=False, sort=True)
 
         # sort based on pos
         temp = temp.sort_values("pos")
