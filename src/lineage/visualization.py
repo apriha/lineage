@@ -235,6 +235,23 @@ def _patch_chromosomal_features(cytobands, one_chrom_match, two_chrom_match):
         the start and stop positions of particular features on each
         chromosome
     """
+
+    def concat(df, chrom, start, end, gie_stain):
+        return pd.concat(
+            [
+                df,
+                pd.DataFrame(
+                    {
+                        "chrom": [chrom],
+                        "start": [start],
+                        "end": [end],
+                        "gie_stain": [gie_stain],
+                    }
+                ),
+            ],
+            ignore_index=True,
+        )
+
     chromosomes = cytobands["chrom"].unique()
 
     df = pd.DataFrame()
@@ -253,52 +270,20 @@ def _patch_chromosomal_features(cytobands, one_chrom_match, two_chrom_match):
         ]
 
         # background of chromosome
-        df = df.append(
-            {
-                "chrom": chromosome,
-                "start": 0,
-                "end": chromosome_length,
-                "gie_stain": "gneg",
-            },
-            ignore_index=True,
-        )
+        df = concat(df, chromosome, 0, chromosome_length, "gneg")
 
         # add markers for shared DNA on one chromosome
         for marker in one_chrom_match_markers.itertuples():
-            df = df.append(
-                {
-                    "chrom": chromosome,
-                    "start": marker.start,
-                    "end": marker.end,
-                    "gie_stain": "one_chrom",
-                },
-                ignore_index=True,
-            )
+            df = concat(df, chromosome, marker.start, marker.end, "one_chrom")
 
         # add markers for shared DNA on both chromosomes
         for marker in two_chrom_match_markers.itertuples():
-            df = df.append(
-                {
-                    "chrom": chromosome,
-                    "start": marker.start,
-                    "end": marker.end,
-                    "gie_stain": "two_chrom",
-                },
-                ignore_index=True,
-            )
+            df = concat(df, chromosome, marker.start, marker.end, "two_chrom")
 
         # add centromeres
         for item in cytobands.loc[
             (cytobands["chrom"] == chromosome) & (cytobands["gie_stain"] == "acen")
         ].itertuples():
-            df = df.append(
-                {
-                    "chrom": chromosome,
-                    "start": item.start,
-                    "end": item.end,
-                    "gie_stain": "centromere",
-                },
-                ignore_index=True,
-            )
+            df = concat(df, chromosome, item.start, item.end, "centromere")
 
     return df

@@ -53,30 +53,37 @@ Shared DNA between two or more individuals can be identified with
 :meth:`~lineage.Lineage.find_shared_dna`. One PNG file and up to two CSV files are output when
 ``save_output=True``.
 
-In the filenames below, ``name1`` is the name of the first
-:class:`~lineage.individual.Individual` and ``name2`` is the name of the second
-:class:`~lineage.individual.Individual`. (If more individuals are compared, all
-:class:`~lineage.individual.Individual` names will be included in the filenames and plot titles
-using the same conventions.) Additionally, ``genetic_map`` corresponds to the genetic map used
-in the calculations of shared DNA, specified as a parameter to :meth:`~lineage.Lineage.find_shared_dna`.
+In the filenames below,
+
+- ``name1`` is the name of the first :class:`~lineage.individual.Individual`
+- ``name2`` is the name of the second :class:`~lineage.individual.Individual`
+- ``cM_threshold`` corresponds to the same named parameter of
+  :meth:`~lineage.Lineage.find_shared_dna`; "." is replaced by "p" with precision of 2, e.g., "0p75"
+- ``snp_threshold`` corresponds to the same named parameter of
+  :meth:`~lineage.Lineage.find_shared_dna`
+- ``genetic_map`` corresponds to the same named parameter of
+  :meth:`~lineage.Lineage.find_shared_dna`.
+
+.. note:: If more than two individuals are compared, all :class:`~lineage.individual.Individual`
+          names will be included in the filenames and plot titles using the same conventions.
 
 .. note:: Genetic maps do not have recombination rates for the Y chromosome since the Y
           chromosome does not recombine. Therefore, shared DNA will not be shown on the Y
           chromosome.
 
-shared_dna_<name1>_<name2>_<genetic_map>.png
-````````````````````````````````````````````
+shared_dna_<name1>_<name2>_<cM_threshold>cM_<snp_threshold>snps_GRCh37_<genetic_map>.png
+````````````````````````````````````````````````````````````````````````````````````````
 This plot illustrates shared DNA (i.e., no shared DNA, shared DNA on one chromosome, and shared
 DNA on both chromosomes). The centromere for each chromosome is also detailed. Two examples of
 this plot are shown below.
 
-.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663_HapMap2.png
+.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663_0p75cM_1100snps_GRCh37_HapMap2.png
 
 In the above plot, note that the two individuals only share DNA on one chromosome. In this plot,
 the larger regions where "No shared DNA" is indicated are due to SNPs not being available in
 those regions (i.e., SNPs were not tested in those regions).
 
-.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User4583_User4584_CEU.png
+.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User4583_User4584_0p75cM_1100snps_GRCh37_CEU.png
 
 In the above plot, the areas where "No shared DNA" is indicated are the regions where SNPs were
 not tested or where DNA is not shared. The areas where "One chromosome shared" is indicated are
@@ -86,8 +93,8 @@ shared" is indicated are regions where the individuals share DNA on both chromos
 Note that the regions where DNA is shared on both chromosomes is a subset of the regions where
 one chromosome is shared.
 
-shared_dna_one_chrom_<name1>_<name2>_GRCh37_<genetic_map>.csv
-`````````````````````````````````````````````````````````````
+shared_dna_one_chrom_<name1>_<name2>_<cM_threshold>cM_<snp_threshold>snps_GRCh37_<genetic_map>.csv
+``````````````````````````````````````````````````````````````````````````````````````````````````
 If DNA is shared on one chromosome, a CSV file details the shared segments of DNA.
 
 =======  ===========
@@ -101,8 +108,8 @@ cMs      CentiMorgans of matching DNA segment
 snps     Number of SNPs in matching DNA segment
 =======  ===========
 
-shared_dna_two_chroms_<name1>_<name2>_GRCh37_<genetic_map>.csv
-``````````````````````````````````````````````````````````````
+shared_dna_two_chroms_<name1>_<name2>_<cM_threshold>cM_<snp_threshold>snps_GRCh37_<genetic_map>.csv
+```````````````````````````````````````````````````````````````````````````````````````````````````
 If DNA is shared on two chromosomes, a CSV file details the shared segments of DNA.
 
 =======  ===========
@@ -129,11 +136,11 @@ In the filenames below, ``name1`` is the name of the first
 :class:`~lineage.individual.Individual` names will be included in the filenames using the same
 convention.)
 
-shared_genes_one_chrom_<name1>_<name2>_GRCh37_<genetic_map>.csv
-```````````````````````````````````````````````````````````````
+shared_genes_one_chrom_<name1>_<name2>_<cM_threshold>cM_<snp_threshold>snps_GRCh37_<genetic_map>.csv
+````````````````````````````````````````````````````````````````````````````````````````````````````
 If DNA is shared on one chromosome, this file details the genes shared between the individuals
 on at least one chromosome; these genes are located in the shared DNA segments specified in
-`shared_dna_one_chrom_<name1>_<name2>_GRCh37_<genetic_map>.csv`_.
+`shared_dna_one_chrom_<name1>_<name2>_<cM_threshold>cM_<snp_threshold>snps_GRCh37_<genetic_map>.csv`_.
 
 ===========  ============
 Column*      Description*
@@ -152,10 +159,10 @@ description  Description
 \* `UCSC Genome Browser <http://genome.ucsc.edu>`_ /
 `UCSC Table Browser <http://genome.ucsc.edu/cgi-bin/hgTables>`_
 
-shared_genes_two_chroms_<name1>_<name2>_GRCh37_<genetic_map>.csv
-````````````````````````````````````````````````````````````````
+shared_genes_two_chroms_<name1>_<name2>_<cM_threshold>cM_<snp_threshold>snps_GRCh37_<genetic_map>.csv
+`````````````````````````````````````````````````````````````````````````````````````````````````````
 If DNA is shared on both chromosomes in a pair, this file details the genes shared between the
 individuals on both chromosomes; these genes are located in the shared DNA segments specified in
-`shared_dna_two_chroms_<name1>_<name2>_GRCh37_<genetic_map>.csv`_.
+`shared_dna_two_chroms_<name1>_<name2>_<cM_threshold>cM_<snp_threshold>snps_GRCh37_<genetic_map>.csv`_.
 
-The file has the same columns as `shared_genes_one_chrom_<name1>_<name2>_GRCh37_<genetic_map>.csv`_.
+The file has the same columns as `shared_genes_one_chrom_<name1>_<name2>_<cM_threshold>cM_<snp_threshold>snps_GRCh37_<genetic_map>.csv`_.

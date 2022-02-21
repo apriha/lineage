@@ -195,20 +195,13 @@ class TestLineage(BaseLineageTestCase):
     def _make_file_exist_assertions(
         self, inds, exist="all", genetic_map="HapMap2", output_dir="output"
     ):
+        filename_details = f"{inds}_0p75cM_1100snps_GRCh37_{genetic_map}"
         files = [
-            os.path.join(
-                output_dir, f"shared_dna_one_chrom_{inds}_GRCh37_{genetic_map}.csv"
-            ),
-            os.path.join(
-                output_dir, f"shared_dna_two_chroms_{inds}_GRCh37_{genetic_map}.csv"
-            ),
-            os.path.join(
-                output_dir, f"shared_genes_one_chrom_{inds}_GRCh37_{genetic_map}.csv"
-            ),
-            os.path.join(
-                output_dir, f"shared_genes_two_chroms_{inds}_GRCh37_{genetic_map}.csv"
-            ),
-            os.path.join(output_dir, f"shared_dna_{inds}_{genetic_map}.png"),
+            os.path.join(output_dir, f"shared_dna_one_chrom_{filename_details}.csv"),
+            os.path.join(output_dir, f"shared_dna_two_chroms_{filename_details}.csv"),
+            os.path.join(output_dir, f"shared_genes_one_chrom_{filename_details}.csv"),
+            os.path.join(output_dir, f"shared_genes_two_chroms_{filename_details}.csv"),
+            os.path.join(output_dir, f"shared_dna_{filename_details}.png"),
         ]
 
         if exist == "all":
