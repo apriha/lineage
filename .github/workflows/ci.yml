@@ -48,22 +48,22 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python-version: 3.7
+            python-version: '3.7'
             job_id: 0
           - os: ubuntu-latest
-            python-version: 3.8
+            python-version: '3.8'
             job_id: 1
           - os: ubuntu-latest
-            python-version: 3.9
+            python-version: '3.9'
             job_id: 2
           - os: ubuntu-latest
-            python-version: 3.10
+            python-version: '3.10'
             job_id: 3
           - os: macos-latest
-            python-version: 3.10
+            python-version: '3.10'
             job_id: 4
           - os: windows-latest
-            python-version: 3.10
+            python-version: '3.10'
             job_id: 5
 
     steps:
