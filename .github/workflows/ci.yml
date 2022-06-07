@@ -48,20 +48,23 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            python-version: 3.7
+            python-version: '3.7'
             job_id: 0
           - os: ubuntu-latest
-            python-version: 3.8
+            python-version: '3.8'
             job_id: 1
           - os: ubuntu-latest
-            python-version: 3.9
+            python-version: '3.9'
             job_id: 2
-          - os: macos-latest
-            python-version: 3.9
+          - os: ubuntu-latest
+            python-version: '3.10'
             job_id: 3
-          - os: windows-latest
-            python-version: 3.9
+          - os: macos-latest
+            python-version: '3.10'
             job_id: 4
+          - os: windows-latest
+            python-version: '3.10'
+            job_id: 5
 
     steps:
     - uses: actions/checkout@v2
@@ -78,7 +81,7 @@ jobs:
       # so this ensures all Python versions will be periodically integration tested with the
       # resource servers
       env:
-        NUM_JOBS: 5
+        NUM_JOBS: 6
         JOB_ID: ${{ matrix.job_id }}
       if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/master' }}
       shell: bash
