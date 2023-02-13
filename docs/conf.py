@@ -190,6 +190,7 @@ texinfo_documents = [
     )
 ]
 
+
 # document __init__ methods
 # https://stackoverflow.com/a/5599712
 def skip(app, what, name, obj, would_skip, options):
