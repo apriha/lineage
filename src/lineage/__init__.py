@@ -632,7 +632,6 @@ class Lineage:
         one_chrom_discrepant_snps,
         two_chrom_discrepant_snps,
     ):
-
         return {
             "one_chrom_shared_dna": one_chrom_shared_dna,
             "two_chrom_shared_dna": two_chrom_shared_dna,
