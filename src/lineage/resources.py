@@ -305,9 +305,9 @@ class Resources(SNPsResources):
             dict of resources
         """
         resources = {}
-        resources[
-            "genetic_map_HapMapII_GRCh37"
-        ] = self.get_genetic_map_HapMapII_GRCh37()
+        resources["genetic_map_HapMapII_GRCh37"] = (
+            self.get_genetic_map_HapMapII_GRCh37()
+        )
         resources["cytoBand_hg19"] = self.get_cytoBand_hg19()
         resources["knownGene_hg19"] = self.get_knownGene_hg19()
         resources["kgXref_hg19"] = self.get_kgXref_hg19()
