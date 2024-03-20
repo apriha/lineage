@@ -19,8 +19,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
     - name: Install Black
       run: |
         pip install black
@@ -31,8 +33,10 @@ jobs:
   build-docs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
     - name: Install Sphinx
       run: |
         pip install -r docs/requirements.txt
@@ -46,33 +50,25 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
         include:
-          - os: ubuntu-latest
-            python-version: '3.7'
-            job_id: 0
-          - os: ubuntu-latest
-            python-version: '3.8'
-            job_id: 1
-          - os: ubuntu-latest
-            python-version: '3.9'
-            job_id: 2
-          - os: ubuntu-latest
-            python-version: '3.10'
-            job_id: 3
           - os: macos-latest
-            python-version: '3.10'
-            job_id: 4
+            python-version: '3.12'
           - os: windows-latest
-            python-version: '3.10'
-            job_id: 5
+            python-version: '3.12'
+
+    env:
+      JOB_ID: ${{ strategy.job-index }}
+      NUM_JOBS: ${{ strategy.job-total }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
         persist-credentials: false
     - name: Setup Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Determine if downloads are enabled for this job
@@ -80,9 +76,6 @@ jobs:
       # PRs and the master branch; note that the master branch is tested weekly via `cron`,
       # so this ensures all Python versions will be periodically integration tested with the
       # resource servers
-      env:
-        NUM_JOBS: 6
-        JOB_ID: ${{ matrix.job_id }}
       if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/master' }}
       shell: bash
       run: |
@@ -110,6 +103,7 @@ jobs:
       working-directory: C:\a\lineage\lineage
       run: |
         pytest --cov=lineage tests
-    - name: Upload coverage to Codecov (Ubuntu & macOS)
-      if: ${{ matrix.os != 'windows-latest' }}
-      uses: codecov/codecov-action@v3
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4.1.0
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
