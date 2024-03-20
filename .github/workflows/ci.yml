@@ -11,12 +11,22 @@ on:
   schedule:
     - cron: '37 3 * * 0'
   push:
-    branches: '**'
+    branches:
+      - '**'
   pull_request:
-    branches: '**'
+    branches:
+      - '**'
 
 jobs:
+  enable-workflow:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' || (github.event_name == 'schedule' && github.repository == 'apriha/lineage') }}
+    steps:
+      - name: Enable workflow based on preconditions
+        run: echo "Workflow enabled."
+
   lint:
+    needs: [enable-workflow]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -31,6 +41,7 @@ jobs:
         black --check --diff .
 
   build-docs:
+    needs: [enable-workflow]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -103,7 +114,8 @@ jobs:
       working-directory: C:\a\lineage\lineage
       run: |
         pytest --cov=lineage tests
-    - name: Upload coverage to Codecov
+    - name: Upload coverage to Codecov (Ubuntu & macOS)
+      if: ${{ matrix.os != 'windows-latest' }}
       uses: codecov/codecov-action@v4.1.0
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
