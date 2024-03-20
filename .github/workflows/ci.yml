@@ -11,9 +11,11 @@ on:
   schedule:
     - cron: '37 3 * * 0'
   push:
-    branches: '**'
+    branches:
+      - '**'
   pull_request:
-    branches: '**'
+    branches:
+      - '**'
 
 jobs:
   enable-workflow:
