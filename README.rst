@@ -31,7 +31,7 @@ Also see the `installation documentation <https://lineage.readthedocs.io/en/stab
 
 Dependencies
 ------------
-``lineage`` requires `Python <https://www.python.org>`_ 3.7.1+ and the following Python packages:
+``lineage`` requires `Python <https://www.python.org>`_ 3.8+ and the following Python packages:
 
 - `numpy <https://numpy.org>`_
 - `pandas <https://pandas.pydata.org>`_
@@ -245,6 +245,9 @@ Acknowledgements
 ----------------
 Thanks to Whit Athey, Ryan Dale, Binh Bui, Jeff Gill, Gopal Vashishtha,
 `CS50 <https://cs50.harvard.edu>`_, and `openSNP <https://opensnp.org>`_.
+
+``lineage`` incorporates code and concepts generated with the assistance of
+`OpenAI's <https://openai.com>`_ `ChatGPT <https://chat.openai.com>`_ (GPT-3.5). ✨
 
 .. https://github.com/rtfd/readthedocs.org/blob/master/docs/badges.rst
 .. |ci| image:: https://github.com/apriha/lineage/actions/workflows/ci.yml/badge.svg?branch=master
