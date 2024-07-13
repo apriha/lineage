@@ -70,7 +70,6 @@ import matplotlib
 
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
-from matplotlib.collections import BrokenBarHCollection
 from matplotlib import patches
 
 logger = logging.getLogger(__name__)
@@ -139,7 +138,8 @@ def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, b
 
     # Now all we have to do is call our function for the chromosome data...
     for collection in _chromosome_collections(df, chrom_ybase, chrom_height):
-        ax.add_collection(collection)
+        xranges, yrange, colors = collection
+        ax.broken_barh(xranges, yrange, facecolors=colors)
 
     # Axes tweaking
     ax.set_yticks([chrom_centers[i] for i in chromosome_list])
@@ -184,8 +184,8 @@ def plot_chromosomes(one_chrom_match, two_chrom_match, cytobands, path, title, b
 def _chromosome_collections(df, y_positions, height, **kwargs):
     """
 
-    Yields BrokenBarHCollection of features that can be added to an Axes
-    object.
+    Yields data for features that can be added to an Axes
+    object using ax.broken_barh.
 
     Parameters
     ----------
@@ -195,13 +195,12 @@ def _chromosome_collections(df, y_positions, height, **kwargs):
         column 'width', it will be calculated from start/end.
 
     y_positions : dict
-        Keys are chromosomes, values are y-value at which to anchor the
-        BrokenBarHCollection
+        Keys are chromosomes, values are y-value at which to anchor the bars
 
     height : float
-        Height of each BrokenBarHCollection
+        Height of each bar
 
-    Additional kwargs are passed to BrokenBarHCollection
+    Additional kwargs are passed to ax.broken_barh
     """
     del_width = False
     if "width" not in df.columns:
@@ -210,9 +209,8 @@ def _chromosome_collections(df, y_positions, height, **kwargs):
     for chrom, group in df.groupby("chrom"):
         yrange = (y_positions["chr" + chrom], height)
         xranges = group[["start", "width"]].values
-        yield BrokenBarHCollection(
-            xranges, yrange, facecolors=group["colors"], **kwargs
-        )
+        colors = group["colors"].values
+        yield xranges, yrange, colors
     if del_width:
         del df["width"]
 

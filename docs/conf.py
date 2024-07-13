@@ -19,6 +19,7 @@
 #
 import os
 import sys
+from unittest.mock import MagicMock
 
 # http://docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
 autodoc_mock_imports = [
@@ -30,6 +31,17 @@ autodoc_mock_imports = [
 ]
 
 sys.path.insert(0, os.path.abspath("../"))
+
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+# Apply the mock for each module
+for mod_name in autodoc_mock_imports:
+    sys.modules[mod_name] = Mock()
 
 import lineage
 
