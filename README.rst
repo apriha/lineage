@@ -227,11 +227,11 @@ chromosomes are also output.
 .. note:: Shared DNA is not computed on the X chromosome with the 1000 Genomes Project genetic
           maps since the X chromosome is not included in these genetic maps.
 
-In this example, there are 51,740 shared genes/transcripts on both chromosomes transcribed from 36 segments
+In this example, there are 77,776 shared genes/transcripts on both chromosomes transcribed from 36 segments
 of shared DNA:
 
 >>> len(results['two_chrom_shared_genes'])
-51740
+77776
 >>> len(results['two_chrom_shared_dna'])
 36
 

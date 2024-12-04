@@ -191,7 +191,7 @@ class TestResources(BaseLineageTestCase):
         assert len(cytoBand_hg19) == 862
 
     def _generate_test_knownGene_hg19_resource(self):
-        s = "s\ts\ts\t0\t0\t0\t0\t0\ts\ts\ts\ts\n" * 254535
+        s = "s\ts\ts\t0\t0\t0\t0\t0\ts\ts\ts\ts\n" * 381974
 
         mock = mock_open(read_data=gzip.compress(s.encode()))
         with patch("urllib.request.urlopen", mock):
@@ -207,14 +207,14 @@ class TestResources(BaseLineageTestCase):
             self.resource.get_knownGene_hg19() if self.downloads_enabled else f()
         )
 
-        assert len(knownGene_hg19) == 254535
+        assert len(knownGene_hg19) == 381974
 
         # get already loaded resource
         knownGene_hg19 = self.resource.get_knownGene_hg19()
-        assert len(knownGene_hg19) == 254535
+        assert len(knownGene_hg19) == 381974
 
     def _generate_test_kgXref_hg19_resource(self):
-        s = "s\ts\ts\ts\ts\ts\ts\ts\n" * 254491
+        s = "s\ts\ts\ts\ts\ts\ts\ts\n" * 381930
 
         mock = mock_open(read_data=gzip.compress(s.encode()))
         with patch("urllib.request.urlopen", mock):
@@ -228,11 +228,11 @@ class TestResources(BaseLineageTestCase):
 
         kgXref_hg19 = self.resource.get_kgXref_hg19() if self.downloads_enabled else f()
 
-        assert len(kgXref_hg19) == 254491
+        assert len(kgXref_hg19) == 381930
 
         # get already loaded resource
         kgXref_hg19 = self.resource.get_kgXref_hg19()
-        assert len(kgXref_hg19) == 254491
+        assert len(kgXref_hg19) == 381930
 
     def test_get_all_resources(self):
         def f():
