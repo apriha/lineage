@@ -309,15 +309,14 @@ https://img.shields.io/travis/com/python-versioneer/python-versioneer.svg
 
 import configparser
 import errno
+import functools
 import json
 import os
 import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Callable, cast, Dict, List, Optional, Tuple, Union
-from typing import NoReturn
-import functools
+from typing import Any, Callable, Dict, List, NoReturn, Optional, Tuple, Union, cast
 
 have_tomllib = True
 if sys.version_info >= (3, 11):

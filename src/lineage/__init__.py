@@ -5,9 +5,9 @@ tools for genetic genealogy and the analysis of consumer DNA test results
 """
 
 import datetime
-from itertools import chain, combinations
 import logging
 import os
+from itertools import chain, combinations
 
 import numpy as np
 import pandas as pd

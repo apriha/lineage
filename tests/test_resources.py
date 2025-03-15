@@ -28,8 +28,8 @@ import io
 import os
 import tarfile
 import tempfile
-from unittest.mock import mock_open, patch
 import warnings
+from unittest.mock import mock_open, patch
 
 import pandas as pd
 

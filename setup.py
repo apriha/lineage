@@ -29,14 +29,9 @@ https://github.com/pypa/sampleproject
 # To use a consistent encoding
 from codecs import open
 from glob import glob
-from os.path import abspath
-from os.path import basename
-from os.path import dirname
-from os.path import join
-from os.path import splitext
+from os.path import abspath, basename, dirname, join, splitext
 
-from setuptools import find_packages
-from setuptools import setup
+from setuptools import find_packages, setup
 
 import versioneer
 

@@ -36,12 +36,12 @@ References
 import logging
 import os
 
-from atomicwrites import atomic_write
-import pandas as pd
-import numpy as np
 import matplotlib
-from matplotlib import pyplot as plt
+import numpy as np
+import pandas as pd
+from atomicwrites import atomic_write
 from matplotlib import patches
+from matplotlib import pyplot as plt
 
 matplotlib.use("Agg")
 

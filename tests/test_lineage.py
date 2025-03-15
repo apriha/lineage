@@ -25,8 +25,8 @@ SOFTWARE.
 
 import os
 import tempfile
-from unittest.mock import Mock, mock_open, patch
 import warnings
+from unittest.mock import Mock, mock_open, patch
 
 import numpy as np
 import pandas as pd
