@@ -8,7 +8,7 @@ pytest = "*"
 pytest-cov = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
-black = "*"
+ruff = "*"
 
 [packages]
 lineage = {editable = true,path = "."}

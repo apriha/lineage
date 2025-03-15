@@ -1,6 +1,6 @@
 .. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/lineage_banner.png
 
-|ci| |codecov| |docs| |pypi| |python| |downloads| |license| |black|
+|ci| |codecov| |docs| |pypi| |python| |downloads| |license| |ruff|
 
 lineage
 =======
@@ -264,5 +264,6 @@ Thanks to Whit Athey, Ryan Dale, Binh Bui, Jeff Gill, Gopal Vashishtha,
    :target: https://pepy.tech/project/lineage
 .. |license| image:: https://img.shields.io/pypi/l/lineage.svg
    :target: https://github.com/apriha/lineage/blob/master/LICENSE.txt
-.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-   :target: https://github.com/psf/black
+.. |ruff| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+   :target: https://github.com/astral-sh/ruff
+   :alt: Ruff
