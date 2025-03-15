@@ -239,7 +239,7 @@ class TestLineage(BaseLineageTestCase):
 
     def test_find_discordant_snps(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
             df = pd.read_csv(
                 "tests/input/discordant_snps.csv",
                 skiprows=1,
@@ -249,12 +249,12 @@ class TestLineage(BaseLineageTestCase):
                 dtype={"chrom": object, "pos": np.int64},
             )
 
-            ind1 = self.get_discordant_snps(l.create_individual("ind1"), df)
-            ind2 = self.get_discordant_snps(l.create_individual("ind2"), df)
-            ind3 = self.get_discordant_snps(l.create_individual("ind3"), df)
+            ind1 = self.get_discordant_snps(ln.create_individual("ind1"), df)
+            ind2 = self.get_discordant_snps(ln.create_individual("ind2"), df)
+            ind3 = self.get_discordant_snps(ln.create_individual("ind3"), df)
 
-            df_ind1_ind2 = l.find_discordant_snps(ind1, ind2, save_output=True)
-            df_ind1_ind2_ind3 = l.find_discordant_snps(
+            df_ind1_ind2 = ln.find_discordant_snps(ind1, ind2, save_output=True)
+            df_ind1_ind2_ind3 = ln.find_discordant_snps(
                 ind1, ind2, ind3, save_output=True
             )
 
@@ -336,11 +336,11 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_one_ind(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
-            ind1 = self.simulate_snps(l.create_individual("ind1"))
+            ind1 = self.simulate_snps(ln.create_individual("ind1"))
 
-            d = l.find_shared_dna([ind1], shared_genes=True)
+            d = ln.find_shared_dna([ind1], shared_genes=True)
 
             assert len(d["one_chrom_shared_dna"]) == 0
             assert len(d["two_chrom_shared_dna"]) == 0
@@ -355,12 +355,12 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_invalid_genetic_map(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
-            ind1 = self.simulate_snps(l.create_individual("ind1"))
-            ind2 = self.simulate_snps(l.create_individual("ind2"))
+            ind1 = self.simulate_snps(ln.create_individual("ind1"))
+            ind2 = self.simulate_snps(ln.create_individual("ind2"))
 
-            d = l.find_shared_dna([ind1, ind2], genetic_map="test")
+            d = ln.find_shared_dna([ind1, ind2], genetic_map="test")
 
             assert len(d["one_chrom_shared_dna"]) == 0
             assert len(d["two_chrom_shared_dna"]) == 0
@@ -377,12 +377,12 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_two_chrom_shared(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
-            ind1 = self.simulate_snps(l.create_individual("ind1"))
-            ind2 = self.simulate_snps(l.create_individual("ind2"))
+            ind1 = self.simulate_snps(ln.create_individual("ind1"))
+            ind2 = self.simulate_snps(ln.create_individual("ind2"))
 
-            d = l.find_shared_dna(
+            d = ln.find_shared_dna(
                 [ind1, ind2], shared_genes=True, genetic_map="HapMap2"
             )
 
@@ -407,12 +407,12 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_two_chrom_shared_1000G(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
-            ind1 = self.simulate_snps(l.create_individual("ind1"), pos_max=43800002)
-            ind2 = self.simulate_snps(l.create_individual("ind2"), pos_max=43800002)
+            ind1 = self.simulate_snps(ln.create_individual("ind1"), pos_max=43800002)
+            ind2 = self.simulate_snps(ln.create_individual("ind2"), pos_max=43800002)
 
-            d = l.find_shared_dna([ind1, ind2], shared_genes=True, genetic_map="CEU")
+            d = ln.find_shared_dna([ind1, ind2], shared_genes=True, genetic_map="CEU")
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 1
@@ -437,13 +437,13 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_two_chrom_shared_three_ind(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
-            ind1 = self.simulate_snps(l.create_individual("ind1"))
-            ind2 = self.simulate_snps(l.create_individual("ind2"))
-            ind3 = self.simulate_snps(l.create_individual("ind3"))
+            ind1 = self.simulate_snps(ln.create_individual("ind1"))
+            ind2 = self.simulate_snps(ln.create_individual("ind2"))
+            ind3 = self.simulate_snps(ln.create_individual("ind3"))
 
-            d = l.find_shared_dna([ind1, ind2, ind3], shared_genes=True)
+            d = ln.find_shared_dna([ind1, ind2, ind3], shared_genes=True)
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 1
@@ -466,12 +466,12 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_two_chrom_shared_no_output(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
-            ind1 = self.simulate_snps(l.create_individual("ind1"))
-            ind2 = self.simulate_snps(l.create_individual("ind2"))
+            ind1 = self.simulate_snps(ln.create_individual("ind1"))
+            ind2 = self.simulate_snps(ln.create_individual("ind2"))
 
-            d = l.find_shared_dna([ind1, ind2], shared_genes=True, save_output=False)
+            d = ln.find_shared_dna([ind1, ind2], shared_genes=True, save_output=False)
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 1
@@ -494,14 +494,14 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_one_chrom_shared(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
-            ind1 = self.simulate_snps(l.create_individual("ind1"))
+            ind1 = self.simulate_snps(ln.create_individual("ind1"))
             ind2 = self.simulate_snps(
-                l.create_individual("ind2"), complement_genotype_one_chrom=True
+                ln.create_individual("ind2"), complement_genotype_one_chrom=True
             )
 
-            d = l.find_shared_dna([ind1, ind2], shared_genes=True)
+            d = ln.find_shared_dna([ind1, ind2], shared_genes=True)
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 0
@@ -523,15 +523,15 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_one_chrom_shared_three_ind(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
-            ind1 = self.simulate_snps(l.create_individual("ind1"))
+            ind1 = self.simulate_snps(ln.create_individual("ind1"))
             ind2 = self.simulate_snps(
-                l.create_individual("ind2"), complement_genotype_one_chrom=True
+                ln.create_individual("ind2"), complement_genotype_one_chrom=True
             )
-            ind3 = self.simulate_snps(l.create_individual("ind3"))
+            ind3 = self.simulate_snps(ln.create_individual("ind3"))
 
-            d = l.find_shared_dna([ind1, ind2, ind3], shared_genes=True)
+            d = ln.find_shared_dna([ind1, ind2, ind3], shared_genes=True)
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 0
@@ -553,24 +553,24 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_X_chrom_two_individuals_male(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
             ind1 = self.simulate_snps(
-                l.create_individual("ind1"),
+                ln.create_individual("ind1"),
                 chrom="X",
                 pos_max=155270560,
                 pos_step=1000,
                 genotype="AA",
             )
             ind2 = self.simulate_snps(
-                l.create_individual("ind2"),
+                ln.create_individual("ind2"),
                 chrom="X",
                 pos_max=155270560,
                 pos_step=1000,
                 genotype="AA",
             )
 
-            d = l.find_shared_dna([ind1, ind2], shared_genes=True)
+            d = ln.find_shared_dna([ind1, ind2], shared_genes=True)
 
             assert len(d["one_chrom_shared_dna"]) == 1  # PAR1, non-PAR, PAR2
             assert len(d["two_chrom_shared_dna"]) == 1  # PAR1
@@ -597,22 +597,22 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_X_chrom_two_individuals_female(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
             ind1 = self.simulate_snps(
-                l.create_individual("ind1"),
+                ln.create_individual("ind1"),
                 chrom="X",
                 pos_max=155270560,
                 genotype="AC",
             )
             ind2 = self.simulate_snps(
-                l.create_individual("ind2"),
+                ln.create_individual("ind2"),
                 chrom="X",
                 pos_max=155270560,
                 genotype="AC",
             )
 
-            d = l.find_shared_dna([ind1, ind2], shared_genes=True)
+            d = ln.find_shared_dna([ind1, ind2], shared_genes=True)
 
             assert len(d["one_chrom_shared_dna"]) == 1  # PAR1, non-PAR, PAR2
             assert len(d["two_chrom_shared_dna"]) == 1  # PAR1, non-PAR, PAR2
@@ -639,17 +639,17 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_two_chrom_shared_discrepant_snps(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
             # simulate discrepant SNPs so that stitching of adjacent shared DNA segments is performed
-            ind1 = self.simulate_snps(l.create_individual("ind1"))
+            ind1 = self.simulate_snps(ln.create_individual("ind1"))
             ind2 = self.simulate_snps(
-                l.create_individual("ind2"),
+                ln.create_individual("ind2"),
                 complement_genotype_one_chrom=True,
                 complement_snp_step=5000,
             )
 
-            d = l.find_shared_dna([ind1, ind2], shared_genes=True)
+            d = ln.find_shared_dna([ind1, ind2], shared_genes=True)
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 1
@@ -670,14 +670,14 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_no_shared_dna(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
-            ind1 = self.simulate_snps(l.create_individual("ind1"))
+            ind1 = self.simulate_snps(ln.create_individual("ind1"))
             ind2 = self.simulate_snps(
-                l.create_individual("ind2"), complement_genotype_two_chroms=True
+                ln.create_individual("ind2"), complement_genotype_two_chroms=True
             )
 
-            d = l.find_shared_dna([ind1, ind2], shared_genes=True)
+            d = ln.find_shared_dna([ind1, ind2], shared_genes=True)
 
             assert len(d["one_chrom_shared_dna"]) == 0
             assert len(d["two_chrom_shared_dna"]) == 0
@@ -696,15 +696,15 @@ class TestLineage(BaseLineageTestCase):
 
     def _test_find_shared_dna_no_shared_dna_three_ind(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            l = Lineage(output_dir=tmpdir)
+            ln = Lineage(output_dir=tmpdir)
 
-            ind1 = self.simulate_snps(l.create_individual("ind1"))
+            ind1 = self.simulate_snps(ln.create_individual("ind1"))
             ind2 = self.simulate_snps(
-                l.create_individual("ind2"), complement_genotype_two_chroms=True
+                ln.create_individual("ind2"), complement_genotype_two_chroms=True
             )
-            ind3 = self.simulate_snps(l.create_individual("ind3"))
+            ind3 = self.simulate_snps(ln.create_individual("ind3"))
 
-            d = l.find_shared_dna([ind1, ind2, ind3], shared_genes=True)
+            d = ln.find_shared_dna([ind1, ind2, ind3], shared_genes=True)
 
             assert len(d["one_chrom_shared_dna"]) == 0
             assert len(d["two_chrom_shared_dna"]) == 0

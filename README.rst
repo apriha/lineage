@@ -249,6 +249,10 @@ Thanks to Whit Athey, Ryan Dale, Binh Bui, Jeff Gill, Gopal Vashishtha,
 ``lineage`` incorporates code and concepts generated with the assistance of
 `OpenAI's <https://openai.com>`_ `ChatGPT <https://chatgpt.com>`_ . ✨
 
+License
+-------
+``lineage`` is licensed under the `MIT License <https://github.com/apriha/lineage/blob/master/LICENSE.txt>`_.
+
 .. https://github.com/rtfd/readthedocs.org/blob/master/docs/badges.rst
 .. |ci| image:: https://github.com/apriha/lineage/actions/workflows/ci.yml/badge.svg?branch=master
    :target: https://github.com/apriha/lineage/actions/workflows/ci.yml

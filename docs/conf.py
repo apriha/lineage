@@ -21,6 +21,8 @@ import os
 import sys
 from unittest.mock import MagicMock
 
+import lineage
+
 # http://docs.readthedocs.io/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
 autodoc_mock_imports = [
     "numpy",
@@ -42,8 +44,6 @@ class Mock(MagicMock):
 # Apply the mock for each module
 for mod_name in autodoc_mock_imports:
     sys.modules[mod_name] = Mock()
-
-import lineage
 
 # https://samnicholls.net/2016/06/15/how-to-sphinx-readthedocs/
 
