@@ -1,4 +1,4 @@
-""" Class for representing individuals within the `lineage` framework. """
+"""Class for representing individuals within the `lineage` framework."""
 
 import inspect
 

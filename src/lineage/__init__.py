@@ -1,4 +1,4 @@
-""" lineage
+"""lineage
 
 tools for genetic genealogy and the analysis of consumer DNA test results
 

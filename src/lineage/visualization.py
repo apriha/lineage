@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-""" Chromosome plotting functions.
+"""Chromosome plotting functions.
 
 Notes
 -----
@@ -32,7 +32,6 @@ References
    https://gist.github.com/daler/c98fc410282d7570efc3#file-ideograms-py
 
 """
-
 
 import logging
 import os
