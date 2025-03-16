@@ -65,9 +65,10 @@ To set up ``lineage`` for local development:
    .. note:: After running the tests, a coverage report can be viewed by opening
              ``htmlcov/index.html`` in a browser.
 
-6. Check code formatting::
+6. Perform code linting and formatting::
 
-    $ pipenv run black --check --diff .
+    $ pipenv run ruff check --fix
+    $ pipenv run ruff format
 
 7. Commit your changes and push your branch to GitHub::
 

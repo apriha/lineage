@@ -25,7 +25,7 @@ jobs:
       - name: Enable workflow based on preconditions
         run: echo "Workflow enabled."
 
-  lint:
+  lint-format:
     needs: [enable-workflow]
     runs-on: ubuntu-latest
     steps:
@@ -33,12 +33,15 @@ jobs:
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
-    - name: Install Black
+    - name: Install Ruff
       run: |
-        pip install black
-    - name: Lint with Black
+        pip install ruff
+    - name: Lint with Ruff
       run: |
-        black --check --diff .
+        ruff check
+    - name: Format with Ruff
+      run: |
+        ruff format --check
 
   build-docs:
     needs: [enable-workflow]
@@ -57,7 +60,7 @@ jobs:
         sphinx-build -W --keep-going -T -E -D language=en docs docs/_build
 
   test:
-    needs: [lint, build-docs]
+    needs: [lint-format, build-docs]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

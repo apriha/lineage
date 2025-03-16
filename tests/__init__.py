@@ -24,7 +24,6 @@ SOFTWARE.
 """
 
 import os
-import shutil
 from unittest import TestCase
 
 import numpy as np

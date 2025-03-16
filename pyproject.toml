@@ -1,3 +1,7 @@
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta:__legacy__"
+
+# https://github.com/astral-sh/ruff/issues/465#issuecomment-1783684428
+[tool.ruff.lint]
+extend-select = ["I"]

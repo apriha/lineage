@@ -28,8 +28,8 @@ import io
 import os
 import tarfile
 import tempfile
-from unittest.mock import mock_open, patch
 import warnings
+from unittest.mock import mock_open, patch
 
 import pandas as pd
 
@@ -124,7 +124,7 @@ class TestResources(BaseLineageTestCase):
         with tarfile.open(fileobj=tar_file, mode="w") as out_tar:
             for filename in filenames:
                 s = "Position(bp)\tRate(cM/Mb)\tMap(cM)\tFiltered\n"
-                s += f"   0\t0.0\t0.0\t0\n"
+                s += "   0\t0.0\t0.0\t0\n"
 
                 # add file to tar; https://stackoverflow.com/a/40392022
                 data = gzip.compress(s.encode())
@@ -169,7 +169,7 @@ class TestResources(BaseLineageTestCase):
             self.assertEqual(len(genetic_map), 0)
 
     def _generate_test_cytoBand_hg19_resource(self):
-        s = f"s\t0\t0\ts\ts\n" * 862
+        s = "s\t0\t0\ts\ts\n" * 862
         mock = mock_open(read_data=gzip.compress(s.encode()))
         with patch("urllib.request.urlopen", mock):
             self.resource._get_path_cytoBand_hg19()
