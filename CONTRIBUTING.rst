@@ -41,11 +41,11 @@ To set up ``lineage`` for local development:
 
     $ git clone git@github.com:your_name_here/lineage.git
 
-3. Create a branch for local development from the ``develop`` branch::
+3. Create a branch for local development from the ``main`` branch::
 
     $ cd lineage
-    $ git checkout develop
-    $ git checkout -b name-of-your-bugfix-or-feature develop
+    $ git checkout main
+    $ git checkout -b name-of-your-bugfix-or-feature
 
 4. Setup a development environment::
 
