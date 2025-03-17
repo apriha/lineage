@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/lineage_banner.png
+.. image:: https://raw.githubusercontent.com/apriha/lineage/main/docs/images/lineage_banner.png
 
 `lineage`
 =========

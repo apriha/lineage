@@ -1,4 +1,4 @@
-.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/lineage_banner.png
+.. image:: https://raw.githubusercontent.com/apriha/lineage/main/docs/images/lineage_banner.png
 
 |ci| |codecov| |docs| |pypi| |python| |downloads| |license| |ruff|
 
@@ -178,7 +178,7 @@ created; these files are detailed in the documentation and their generation can 
 ``save_output=False`` argument. In this example, the output files consist of a CSV file that
 details the shared segments of DNA on one chromosome and a plot that illustrates the shared DNA:
 
-.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663_0p75cM_1100snps_GRCh37_HapMap2.png
+.. image:: https://raw.githubusercontent.com/apriha/lineage/main/docs/images/shared_dna_User662_User663_0p75cM_1100snps_GRCh37_HapMap2.png
 
 `Find Shared Genes <https://lineage.readthedocs.io/en/stable/lineage.html#lineage.Lineage.find_shared_dna>`_
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -235,7 +235,7 @@ of shared DNA:
 >>> len(results['two_chrom_shared_dna'])
 36
 
-.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User4583_User4584_0p75cM_1100snps_GRCh37_CEU.png
+.. image:: https://raw.githubusercontent.com/apriha/lineage/main/docs/images/shared_dna_User4583_User4584_0p75cM_1100snps_GRCh37_CEU.png
 
 Documentation
 -------------
@@ -251,12 +251,12 @@ Thanks to Whit Athey, Ryan Dale, Binh Bui, Jeff Gill, Gopal Vashishtha,
 
 License
 -------
-``lineage`` is licensed under the `MIT License <https://github.com/apriha/lineage/blob/master/LICENSE.txt>`_.
+``lineage`` is licensed under the `MIT License <https://github.com/apriha/lineage/blob/main/LICENSE.txt>`_.
 
 .. https://github.com/rtfd/readthedocs.org/blob/master/docs/badges.rst
-.. |ci| image:: https://github.com/apriha/lineage/actions/workflows/ci.yml/badge.svg?branch=master
+.. |ci| image:: https://github.com/apriha/lineage/actions/workflows/ci.yml/badge.svg?branch=main
    :target: https://github.com/apriha/lineage/actions/workflows/ci.yml
-.. |codecov| image:: https://codecov.io/gh/apriha/lineage/branch/master/graph/badge.svg
+.. |codecov| image:: https://codecov.io/gh/apriha/lineage/branch/main/graph/badge.svg
    :target: https://codecov.io/gh/apriha/lineage
 .. |docs| image:: https://readthedocs.org/projects/lineage/badge/?version=stable
    :target: https://lineage.readthedocs.io/
@@ -267,7 +267,7 @@ License
 .. |downloads| image:: https://pepy.tech/badge/lineage
    :target: https://pepy.tech/project/lineage
 .. |license| image:: https://img.shields.io/pypi/l/lineage.svg
-   :target: https://github.com/apriha/lineage/blob/master/LICENSE.txt
+   :target: https://github.com/apriha/lineage/blob/main/LICENSE.txt
 .. |ruff| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
    :target: https://github.com/astral-sh/ruff
    :alt: Ruff
