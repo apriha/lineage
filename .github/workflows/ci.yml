@@ -87,10 +87,10 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Determine if downloads are enabled for this job
       # for testing, limit downloads from the resource servers to only the selected job for
-      # PRs and the master branch; note that the master branch is tested weekly via `cron`,
+      # PRs and the main branch; note that the main branch is tested weekly via `cron`,
       # so this ensures all Python versions will be periodically integration tested with the
       # resource servers
-      if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/master' }}
+      if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/main' }}
       shell: bash
       run: |
         SELECTED_JOB=$((10#$(date +%V) % $NUM_JOBS))

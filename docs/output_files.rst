@@ -77,13 +77,13 @@ This plot illustrates shared DNA (i.e., no shared DNA, shared DNA on one chromos
 DNA on both chromosomes). The centromere for each chromosome is also detailed. Two examples of
 this plot are shown below.
 
-.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User662_User663_0p75cM_1100snps_GRCh37_HapMap2.png
+.. image:: https://raw.githubusercontent.com/apriha/lineage/main/docs/images/shared_dna_User662_User663_0p75cM_1100snps_GRCh37_HapMap2.png
 
 In the above plot, note that the two individuals only share DNA on one chromosome. In this plot,
 the larger regions where "No shared DNA" is indicated are due to SNPs not being available in
 those regions (i.e., SNPs were not tested in those regions).
 
-.. image:: https://raw.githubusercontent.com/apriha/lineage/master/docs/images/shared_dna_User4583_User4584_0p75cM_1100snps_GRCh37_CEU.png
+.. image:: https://raw.githubusercontent.com/apriha/lineage/main/docs/images/shared_dna_User4583_User4584_0p75cM_1100snps_GRCh37_CEU.png
 
 In the above plot, the areas where "No shared DNA" is indicated are the regions where SNPs were
 not tested or where DNA is not shared. The areas where "One chromosome shared" is indicated are
