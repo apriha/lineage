@@ -119,6 +119,6 @@ jobs:
         pytest --cov=lineage tests
     - name: Upload coverage to Codecov (Ubuntu & macOS)
       if: ${{ matrix.os != 'windows-latest' }}
-      uses: codecov/codecov-action@v4.1.0
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
