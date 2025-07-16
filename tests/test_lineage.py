@@ -33,6 +33,7 @@ import pandas as pd
 
 from lineage import Lineage
 from tests import BaseLineageTestCase
+from tests.test_config import SHARED_GENE_COUNTS
 
 
 class TestLineage(BaseLineageTestCase):
@@ -78,14 +79,15 @@ class TestLineage(BaseLineageTestCase):
     def _generate_test_gene_dfs(
         self,
         chrom="1",
-        len1=16267,
-        len2=18000,
+        test_case="default",
         txStart1=1000000,
         txEnd1=2000000,
         txStart2=111600000,
         txEnd2=111800000,
         **kwargs,
     ):
+        len1 = SHARED_GENE_COUNTS[test_case]["len1"]
+        len2 = SHARED_GENE_COUNTS[test_case].get("len2", len1)
         diff = len2 - len1
         txStart = [txStart1] * len1
         txStart.extend([txStart2] * diff)
@@ -133,8 +135,7 @@ class TestLineage(BaseLineageTestCase):
                 20.837792 + 180.837755,
                 20.837792 + 180.837755 + 0.347344,
             ),
-            len1=278,
-            len2=11432,
+            test_case="X_chrom_male",
             txStart1=2400000,
             txEnd1=2600000,
             txStart2=150000000,
@@ -148,10 +149,10 @@ class TestLineage(BaseLineageTestCase):
             pos=(1, 43800001),
             rate=(63.0402663602 / (43800001 / 1e6), 0),
             map_cMs=(0.0, 63.0402663602),
-            len1=8742,
+            test_case="1000G",
         )
 
-    def run_find_shared_dna_test(self, f, HapMap2=True, **kwargs):
+    def run_find_shared_dna_test(self, f, HapMap2=True, test_case="default", **kwargs):
         if self.downloads_enabled:
             f()
         else:
@@ -162,7 +163,7 @@ class TestLineage(BaseLineageTestCase):
             )
             genetic_map = self._generate_test_genetic_map(**kwargs)
             cytoband = self._generate_test_cytoBand_hg19()
-            kg, kgXref = self._generate_test_gene_dfs(**kwargs)
+            kg, kgXref = self._generate_test_gene_dfs(test_case=test_case, **kwargs)
 
             with patch(
                 genetic_map_patch,
@@ -388,8 +389,14 @@ class TestLineage(BaseLineageTestCase):
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 1
-            assert len(d["one_chrom_shared_genes"]) == 16267
-            assert len(d["two_chrom_shared_genes"]) == 16267
+            assert (
+                len(d["one_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["default"]["len1"]
+            )
+            assert (
+                len(d["two_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["default"]["len1"]
+            )
             assert len(d["one_chrom_discrepant_snps"]) == 0
             assert len(d["two_chrom_discrepant_snps"]) == 0
             np.testing.assert_allclose(
@@ -416,8 +423,12 @@ class TestLineage(BaseLineageTestCase):
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 1
-            assert len(d["one_chrom_shared_genes"]) == 8742
-            assert len(d["two_chrom_shared_genes"]) == 8742
+            assert (
+                len(d["one_chrom_shared_genes"]) == SHARED_GENE_COUNTS["1000G"]["len1"]
+            )
+            assert (
+                len(d["two_chrom_shared_genes"]) == SHARED_GENE_COUNTS["1000G"]["len1"]
+            )
             assert len(d["one_chrom_discrepant_snps"]) == 0
             assert len(d["two_chrom_discrepant_snps"]) == 0
             np.testing.assert_allclose(
@@ -447,8 +458,14 @@ class TestLineage(BaseLineageTestCase):
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 1
-            assert len(d["one_chrom_shared_genes"]) == 16267
-            assert len(d["two_chrom_shared_genes"]) == 16267
+            assert (
+                len(d["one_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["default"]["len1"]
+            )
+            assert (
+                len(d["two_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["default"]["len1"]
+            )
             assert len(d["one_chrom_discrepant_snps"]) == 0
             assert len(d["two_chrom_discrepant_snps"]) == 0
             np.testing.assert_allclose(
@@ -475,8 +492,14 @@ class TestLineage(BaseLineageTestCase):
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 1
-            assert len(d["one_chrom_shared_genes"]) == 16267
-            assert len(d["two_chrom_shared_genes"]) == 16267
+            assert (
+                len(d["one_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["default"]["len1"]
+            )
+            assert (
+                len(d["two_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["default"]["len1"]
+            )
             assert len(d["one_chrom_discrepant_snps"]) == 0
             assert len(d["two_chrom_discrepant_snps"]) == 0
             np.testing.assert_allclose(
@@ -505,7 +528,10 @@ class TestLineage(BaseLineageTestCase):
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 0
-            assert len(d["one_chrom_shared_genes"]) == 16267
+            assert (
+                len(d["one_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["default"]["len1"]
+            )
             assert len(d["two_chrom_shared_genes"]) == 0
             assert len(d["one_chrom_discrepant_snps"]) == 0
             assert len(d["two_chrom_discrepant_snps"]) == 0
@@ -535,7 +561,10 @@ class TestLineage(BaseLineageTestCase):
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 0
-            assert len(d["one_chrom_shared_genes"]) == 16267
+            assert (
+                len(d["one_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["default"]["len1"]
+            )
             assert len(d["two_chrom_shared_genes"]) == 0
             assert len(d["one_chrom_discrepant_snps"]) == 0
             assert len(d["two_chrom_discrepant_snps"]) == 0
@@ -574,19 +603,21 @@ class TestLineage(BaseLineageTestCase):
 
             assert len(d["one_chrom_shared_dna"]) == 1  # PAR1, non-PAR, PAR2
             assert len(d["two_chrom_shared_dna"]) == 1  # PAR1
-            assert len(d["one_chrom_shared_genes"]) == 11432
-            assert len(d["two_chrom_shared_genes"]) == 278
+            assert (
+                len(d["one_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["X_chrom_male"]["len2"]
+            )
+            assert (
+                len(d["two_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["X_chrom_male"]["len1"]
+            )
             assert len(d["one_chrom_discrepant_snps"]) == 0
             assert len(d["two_chrom_discrepant_snps"]) == 0
             np.testing.assert_allclose(
-                d["one_chrom_shared_dna"].loc[1]["cMs"],
-                202.022891,
-                rtol=1e-5,
+                d["one_chrom_shared_dna"].loc[1]["cMs"], 202.022891, rtol=1e-5
             )
             np.testing.assert_allclose(
-                d["two_chrom_shared_dna"].loc[1]["cMs"],
-                20.837792,
-                rtol=1e-3,
+                d["two_chrom_shared_dna"].loc[1]["cMs"], 20.837792, rtol=1e-3
             )
             self._make_file_exist_assertions("ind1_ind2", output_dir=tmpdir)
 
@@ -616,19 +647,21 @@ class TestLineage(BaseLineageTestCase):
 
             assert len(d["one_chrom_shared_dna"]) == 1  # PAR1, non-PAR, PAR2
             assert len(d["two_chrom_shared_dna"]) == 1  # PAR1, non-PAR, PAR2
-            assert len(d["one_chrom_shared_genes"]) == 11432
-            assert len(d["two_chrom_shared_genes"]) == 11432
+            assert (
+                len(d["one_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["X_chrom_female"]["len1"]
+            )
+            assert (
+                len(d["two_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["X_chrom_female"]["len2"]
+            )
             assert len(d["one_chrom_discrepant_snps"]) == 0
             assert len(d["two_chrom_discrepant_snps"]) == 0
             np.testing.assert_allclose(
-                d["one_chrom_shared_dna"].loc[1]["cMs"],
-                202.022891,
-                rtol=1e-5,
+                d["one_chrom_shared_dna"].loc[1]["cMs"], 202.022891, rtol=1e-5
             )
             np.testing.assert_allclose(
-                d["two_chrom_shared_dna"].loc[1]["cMs"],
-                202.022891,
-                rtol=1e-5,
+                d["two_chrom_shared_dna"].loc[1]["cMs"], 202.022891, rtol=1e-5
             )
             self._make_file_exist_assertions("ind1_ind2", output_dir=tmpdir)
 
@@ -653,8 +686,14 @@ class TestLineage(BaseLineageTestCase):
 
             assert len(d["one_chrom_shared_dna"]) == 1
             assert len(d["two_chrom_shared_dna"]) == 1
-            assert len(d["one_chrom_shared_genes"]) == 16267
-            assert len(d["two_chrom_shared_genes"]) == 16267
+            assert (
+                len(d["one_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["default"]["len1"]
+            )
+            assert (
+                len(d["two_chrom_shared_genes"])
+                == SHARED_GENE_COUNTS["default"]["len1"]
+            )
             assert len(d["one_chrom_discrepant_snps"]) == 0
             assert len(d["two_chrom_discrepant_snps"]) == 2
             np.testing.assert_allclose(

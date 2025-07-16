@@ -35,6 +35,7 @@ import pandas as pd
 
 from lineage.resources import Resources
 from tests import BaseLineageTestCase
+from tests.test_config import RESOURCE_SIZES
 
 
 class TestResources(BaseLineageTestCase):
@@ -169,7 +170,7 @@ class TestResources(BaseLineageTestCase):
             self.assertEqual(len(genetic_map), 0)
 
     def _generate_test_cytoBand_hg19_resource(self):
-        s = "s\t0\t0\ts\ts\n" * 862
+        s = "s\t0\t0\ts\ts\n" * RESOURCE_SIZES["cytoBand_hg19"]
         mock = mock_open(read_data=gzip.compress(s.encode()))
         with patch("urllib.request.urlopen", mock):
             self.resource._get_path_cytoBand_hg19()
@@ -184,14 +185,14 @@ class TestResources(BaseLineageTestCase):
             self.resource.get_cytoBand_hg19() if self.downloads_enabled else f()
         )
 
-        assert len(cytoBand_hg19) == 862
+        assert len(cytoBand_hg19) == RESOURCE_SIZES["cytoBand_hg19"]
 
         # get already loaded resource
         cytoBand_hg19 = self.resource.get_cytoBand_hg19()
-        assert len(cytoBand_hg19) == 862
+        assert len(cytoBand_hg19) == RESOURCE_SIZES["cytoBand_hg19"]
 
     def _generate_test_knownGene_hg19_resource(self):
-        s = "s\ts\ts\t0\t0\t0\t0\t0\ts\ts\ts\ts\n" * 381974
+        s = "s\ts\ts\t0\t0\t0\t0\t0\ts\ts\ts\ts\n" * RESOURCE_SIZES["knownGene_hg19"]
 
         mock = mock_open(read_data=gzip.compress(s.encode()))
         with patch("urllib.request.urlopen", mock):
@@ -207,14 +208,14 @@ class TestResources(BaseLineageTestCase):
             self.resource.get_knownGene_hg19() if self.downloads_enabled else f()
         )
 
-        assert len(knownGene_hg19) == 381974
+        assert len(knownGene_hg19) == RESOURCE_SIZES["knownGene_hg19"]
 
         # get already loaded resource
         knownGene_hg19 = self.resource.get_knownGene_hg19()
-        assert len(knownGene_hg19) == 381974
+        assert len(knownGene_hg19) == RESOURCE_SIZES["knownGene_hg19"]
 
     def _generate_test_kgXref_hg19_resource(self):
-        s = "s\ts\ts\ts\ts\ts\ts\ts\n" * 381930
+        s = "s\ts\ts\ts\ts\ts\ts\ts\n" * RESOURCE_SIZES["kgXref_hg19"]
 
         mock = mock_open(read_data=gzip.compress(s.encode()))
         with patch("urllib.request.urlopen", mock):
@@ -228,11 +229,11 @@ class TestResources(BaseLineageTestCase):
 
         kgXref_hg19 = self.resource.get_kgXref_hg19() if self.downloads_enabled else f()
 
-        assert len(kgXref_hg19) == 381930
+        assert len(kgXref_hg19) == RESOURCE_SIZES["kgXref_hg19"]
 
         # get already loaded resource
         kgXref_hg19 = self.resource.get_kgXref_hg19()
-        assert len(kgXref_hg19) == 381930
+        assert len(kgXref_hg19) == RESOURCE_SIZES["kgXref_hg19"]
 
     def test_get_all_resources(self):
         def f():
