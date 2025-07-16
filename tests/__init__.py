@@ -33,6 +33,85 @@ from snps.io.reader import NORMALIZED_DTYPES
 from lineage import Lineage
 
 
+def get_complement(base):
+    """Get the complement of a DNA base."""
+    if base == "A":
+        return "T"
+    elif base == "G":
+        return "C"
+    elif base == "C":
+        return "G"
+    elif base == "T":
+        return "A"
+    else:
+        return base
+
+
+def complement_one_chrom(genotype):
+    """Complement the genotype for one chromosome."""
+    if pd.isnull(genotype):
+        return np.nan
+
+    complement = ""
+    for base in list(genotype):
+        complement += get_complement(base)
+        complement += genotype[1]
+        return complement
+
+
+def complement_two_chroms(genotype):
+    """Complement the genotype for both chromosomes."""
+    if pd.isnull(genotype):
+        return np.nan
+
+    complement = ""
+    for base in list(genotype):
+        complement += get_complement(base)
+    return complement
+
+
+def simulate_snps(
+    ind,
+    chrom="1",
+    pos_start=1,
+    pos_max=111700002,
+    pos_step=10000,
+    genotype="AA",
+    insert_nulls=True,
+    null_snp_step=101,
+    complement_genotype_one_chrom=False,
+    complement_genotype_two_chroms=False,
+    complement_snp_step=50,
+):
+    """Simulate SNP data for an individual."""
+    ind._build = 37
+
+    positions = np.arange(pos_start, pos_max, pos_step, dtype=np.int64)
+    snps = pd.DataFrame(
+        {"chrom": chrom},
+        index=pd.Index(["rs" + str(x + 1) for x in range(len(positions))], name="rsid"),
+    )
+    snps["pos"] = positions
+    snps["genotype"] = genotype
+
+    if insert_nulls:
+        snps.loc[snps.iloc[0::null_snp_step, :].index, "genotype"] = np.nan
+
+    indices = snps.iloc[0::complement_snp_step, :].index
+    if complement_genotype_two_chroms:
+        snps.loc[indices, "genotype"] = snps.loc[indices, "genotype"].apply(
+            complement_two_chroms
+        )
+    elif complement_genotype_one_chrom:
+        snps.loc[indices, "genotype"] = snps.loc[indices, "genotype"].apply(
+            complement_one_chrom
+        )
+
+    ind._snps = snps
+
+    return ind
+
+
 class BaseLineageTestCase(TestCase):
     def setUp(self):
         self.l = Lineage()
@@ -51,69 +130,20 @@ class BaseLineageTestCase(TestCase):
         complement_genotype_two_chroms=False,
         complement_snp_step=50,
     ):
-        ind._build = 37
-
-        positions = np.arange(pos_start, pos_max, pos_step, dtype=np.int64)
-        snps = pd.DataFrame(
-            {"chrom": chrom},
-            index=pd.Index(
-                ["rs" + str(x + 1) for x in range(len(positions))], name="rsid"
-            ),
+        """Simulate SNP data for an individual (wrapper for standalone simulate_snps)."""
+        return simulate_snps(
+            ind,
+            chrom,
+            pos_start,
+            pos_max,
+            pos_step,
+            genotype,
+            insert_nulls,
+            null_snp_step,
+            complement_genotype_one_chrom,
+            complement_genotype_two_chroms,
+            complement_snp_step,
         )
-        snps["pos"] = positions
-        snps["genotype"] = genotype
-
-        if insert_nulls:
-            snps.loc[snps.iloc[0::null_snp_step, :].index, "genotype"] = np.nan
-
-        indices = snps.iloc[0::complement_snp_step, :].index
-        if complement_genotype_two_chroms:
-            snps.loc[indices, "genotype"] = snps.loc[indices, "genotype"].apply(
-                self.complement_two_chroms
-            )
-        elif complement_genotype_one_chrom:
-            snps.loc[indices, "genotype"] = snps.loc[indices, "genotype"].apply(
-                self.complement_one_chrom
-            )
-
-        ind._snps = snps
-
-        return ind
-
-    @staticmethod
-    def get_complement(base):
-        if base == "A":
-            return "T"
-        elif base == "G":
-            return "C"
-        elif base == "C":
-            return "G"
-        elif base == "T":
-            return "A"
-        else:
-            return base
-
-    def complement_one_chrom(self, genotype):
-        if pd.isnull(genotype):
-            return np.nan
-
-        complement = ""
-
-        for base in list(genotype):
-            complement += self.get_complement(base)
-            complement += genotype[1]
-            return complement
-
-    def complement_two_chroms(self, genotype):
-        if pd.isnull(genotype):
-            return np.nan
-
-        complement = ""
-
-        for base in list(genotype):
-            complement += self.get_complement(base)
-
-        return complement
 
     @staticmethod
     def create_snp_df(rsid, chrom, pos, genotype):

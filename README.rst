@@ -246,8 +246,9 @@ Acknowledgements
 Thanks to Whit Athey, Ryan Dale, Binh Bui, Jeff Gill, Gopal Vashishtha,
 `CS50 <https://cs50.harvard.edu>`_, and `openSNP <https://opensnp.org>`_.
 
-``lineage`` incorporates code and concepts generated with the assistance of
-`OpenAI's <https://openai.com>`_ `ChatGPT <https://chatgpt.com>`_ . ✨
+``lineage`` incorporates code and concepts generated with the assistance of various
+generative AI tools (including but not limited to `ChatGPT <https://chatgpt.com>`_,
+`Grok <https://grok.com>`_, and `Claude <https://claude.ai>`_). ✨
 
 License
 -------
