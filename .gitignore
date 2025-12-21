@@ -103,6 +103,7 @@ ENV/
 
 # development
 .idea/
+.DS_Store
 
 # lineage
 output/
