@@ -33,3 +33,11 @@ lineage.visualization
     :members:
     :undoc-members:
     :show-inheritance:
+
+lineage.generator
+-----------------
+
+.. automodule:: lineage.generator
+    :members:
+    :undoc-members:
+    :show-inheritance:

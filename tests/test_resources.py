@@ -25,10 +25,8 @@ SOFTWARE.
 
 import gzip
 import io
-import os
 import tarfile
 import tempfile
-import warnings
 from unittest.mock import mock_open, patch
 
 import pandas as pd
@@ -249,17 +247,3 @@ class TestResources(BaseLineageTestCase):
 
         for k, v in resources.items():
             self.assertGreater(len(v), 0)
-
-    def test_download_example_datasets(self):
-        def f():
-            with patch("urllib.request.urlopen", mock_open(read_data=b"")):
-                return self.resource.download_example_datasets()
-
-        paths = (
-            self.resource.download_example_datasets() if self.downloads_enabled else f()
-        )
-
-        for path in paths:
-            if path is None or not os.path.exists(path):
-                warnings.warn("Example dataset(s) not currently available")
-                return

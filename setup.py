@@ -45,8 +45,7 @@ setup(
     name="lineage",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description="tools for genetic genealogy and the analysis of consumer DNA "
-    "test results",
+    description="tools for analyzing and exploring genetic relationships",
     long_description=long_description,
     url="https://github.com/apriha/lineage",
     author="Andrew Riha",
