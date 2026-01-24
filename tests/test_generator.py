@@ -3,8 +3,6 @@
 import os
 import tempfile
 
-import pandas as pd
-
 from lineage.generator import SyntheticRelatedGenerator
 from tests import BaseLineageTestCase
 
@@ -190,8 +188,8 @@ class TestSyntheticRelatedGenerator(BaseLineageTestCase):
         gen2 = SyntheticRelatedGenerator(build=37, seed=123)
         parent2, child2 = gen2.generate_parent_child_pair(num_snps=100)
 
-        pd.testing.assert_frame_equal(parent1, parent2)
-        pd.testing.assert_frame_equal(child1, child2)
+        self.assert_frame_equal_with_string_index(parent1, parent2)
+        self.assert_frame_equal_with_string_index(child1, child2)
 
     def test_sibling_reproducibility(self):
         """Test that sibling generation is reproducible with seed."""
@@ -201,8 +199,8 @@ class TestSyntheticRelatedGenerator(BaseLineageTestCase):
         gen2 = SyntheticRelatedGenerator(build=37, seed=123)
         sib1_b, sib2_b = gen2.generate_sibling_pair(num_snps=100)
 
-        pd.testing.assert_frame_equal(sib1_a, sib1_b)
-        pd.testing.assert_frame_equal(sib2_a, sib2_b)
+        self.assert_frame_equal_with_string_index(sib1_a, sib1_b)
+        self.assert_frame_equal_with_string_index(sib2_a, sib2_b)
 
     def test_different_seeds_produce_different_results(self):
         """Test that different seeds produce different results."""
