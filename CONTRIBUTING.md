@@ -56,7 +56,7 @@ To set up `lineage` for local development:
 5. When you're done making changes, run all the tests with:
 
    ```
-   $ pipenv run pytest --cov-report=html --cov=lineage tests
+   $ pipenv run pytest --cov-report=html --cov=lineage tests README.md
    ```
 
    :::{note}
