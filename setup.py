@@ -45,8 +45,7 @@ setup(
     name="lineage",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description="tools for genetic genealogy and the analysis of consumer DNA "
-    "test results",
+    description="tools for analyzing and exploring genetic relationships",
     long_description=long_description,
     url="https://github.com/apriha/lineage",
     author="Andrew Riha",
@@ -64,12 +63,12 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "Topic :: Scientific/Engineering",
         "Topic :: Scientific/Engineering :: Bio-Informatics",
         "Topic :: Scientific/Engineering :: Information Analysis",
@@ -84,6 +83,6 @@ setup(
     keywords="dna genes genetics genealogy snps chromosomes genotype "
     "bioinformatics ancestry",
     install_requires=["numpy", "pandas", "matplotlib", "atomicwrites", "snps"],
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     platforms=["any"],
 )

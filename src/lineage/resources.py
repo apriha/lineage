@@ -228,48 +228,53 @@ class Resources(SNPsResources):
 
         return self._kgXref_hg19
 
-    def download_example_datasets(self):
-        """Download example datasets from `openSNP <https://opensnp.org>`_.
+    def create_example_datasets(self):
+        """Create synthetic example datasets for lineage demonstrations.
 
-        Per openSNP, "the data is donated into the public domain using `CC0 1.0
-        <http://creativecommons.org/publicdomain/zero/1.0/>`_."
+        Generates related individual pairs suitable for demonstrating
+        ``find_shared_dna()`` and ``find_discordant_snps()`` functionality.
+
+        Creates:
+        - A parent-child pair (showing 100% one_chrom_shared_dna)
+        - A sibling pair (showing mix of one_chrom and two_chrom_shared_dna)
 
         Returns
         -------
-        list of str or empty str
-            paths to example datasets
-
-        References
-        ----------
-        1. Greshake B, Bayer PE, Rausch H, Reda J (2014), "openSNP-A Crowdsourced Web Resource
-           for Personal Genomics," PLOS ONE, 9(3): e89204,
-           https://doi.org/10.1371/journal.pone.0089204
+        dict
+            Dictionary with keys:
+            - 'parent': path to parent file
+            - 'child': path to child file
+            - 'sibling1': path to first sibling file
+            - 'sibling2': path to second sibling file
         """
-        return [
-            self._download_file(
-                "https://opensnp.org/data/662.23andme.340",
-                "662.23andme.340.txt.gz",
-                compress=True,
-            ),
-            self._download_file(
-                "https://opensnp.org/data/662.ftdna-illumina.341",
-                "662.ftdna-illumina.341.csv.gz",
-                compress=True,
-            ),
-            self._download_file(
-                "https://opensnp.org/data/663.23andme.305",
-                "663.23andme.305.txt.gz",
-                compress=True,
-            ),
-            self._download_file(
-                "https://opensnp.org/data/4583.ftdna-illumina.3482",
-                "4583.ftdna-illumina.3482.csv.gz",
-            ),
-            self._download_file(
-                "https://opensnp.org/data/4584.ftdna-illumina.3483",
-                "4584.ftdna-illumina.3483.csv.gz",
-            ),
-        ]
+        from lineage.generator import SyntheticRelatedGenerator
+
+        gen = SyntheticRelatedGenerator(build=37, seed=47)
+
+        # Generate parent-child pair with a small discordant rate to simulate
+        # real-world genotyping errors
+        parent_path, child_path = gen.save_parent_child_pair(
+            self._resources_dir,
+            parent_format="23andme",
+            child_format="ftdna",
+            num_snps=900000,
+            discordant_rate=0.0001,  # ~0.01% discordant SNPs
+        )
+
+        # Generate sibling pair
+        sib1_path, sib2_path = gen.save_sibling_pair(
+            self._resources_dir,
+            sib1_format="23andme",
+            sib2_format="ftdna",
+            num_snps=900000,
+        )
+
+        return {
+            "parent": parent_path,
+            "child": child_path,
+            "sibling1": sib1_path,
+            "sibling2": sib2_path,
+        }
 
     def get_all_resources(self):
         """Get / download all resources (except reference sequences) used throughout `lineage`.

@@ -25,8 +25,7 @@ SOFTWARE.
 
 import os
 import tempfile
-import warnings
-from unittest.mock import Mock, mock_open, patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd
@@ -215,28 +214,6 @@ class TestLineage(BaseLineageTestCase):
         elif exist == "plots":
             self._assert_exists(files, [4])
             self._assert_does_not_exist(files, list(range(4)))
-
-    def _check_example_paths(self, paths):
-        for path in paths:
-            if path is None or not os.path.exists(path):
-                warnings.warn("Example dataset(s) not currently available")
-                return
-
-    def test_download_example_datasets(self):
-        if self.downloads_enabled:
-            paths = self.l.download_example_datasets()
-            self._check_example_paths(paths)
-        else:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                self.l._resources._resources_dir = tmpdir
-
-                # use a temporary directory for test resource data
-                with patch("urllib.request.urlopen", mock_open(read_data=b"")):
-                    paths = self.l.download_example_datasets()
-
-                self._check_example_paths(paths)
-
-                self.l._resources._resources_dir = "resources"
 
     def test_find_discordant_snps(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -754,3 +731,22 @@ class TestLineage(BaseLineageTestCase):
             self._make_file_exist_assertions(
                 "ind1_ind2_ind3", exist="plots", output_dir=tmpdir
             )
+
+
+class TestCreateExampleDatasets(BaseLineageTestCase):
+    """Tests for the create_example_datasets method."""
+
+    def test_create_example_datasets(self):
+        """Test that create_example_datasets generates valid files."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ln = Lineage(output_dir=tmpdir, resources_dir=tmpdir)
+            paths = ln.create_example_datasets()
+
+            # Verify all files created
+            assert "parent" in paths
+            assert "child" in paths
+            assert "sibling1" in paths
+            assert "sibling2" in paths
+
+            for key, path in paths.items():
+                assert os.path.exists(path), f"File not created for {key}: {path}"

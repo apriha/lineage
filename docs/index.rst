@@ -15,6 +15,7 @@
    :caption: Contents
 
    README <readme>
+   concepts
    output_files
    installation
    changelog
