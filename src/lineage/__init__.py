@@ -1,6 +1,6 @@
 """lineage
 
-tools for genetic genealogy and the analysis of consumer DNA test results
+tools for analyzing and exploring genetic relationships
 
 """
 

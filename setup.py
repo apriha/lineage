@@ -38,7 +38,7 @@ import versioneer
 here = abspath(dirname(__file__))
 
 # Get the long description from the README file
-with open(join(here, "README.rst"), encoding="utf-8") as f:
+with open(join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
@@ -47,6 +47,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     description="tools for analyzing and exploring genetic relationships",
     long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/apriha/lineage",
     author="Andrew Riha",
     author_email="apriha@gmail.com",

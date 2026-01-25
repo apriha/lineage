@@ -2,12 +2,12 @@ graft docs
 graft src
 graft tests
 
-include CHANGELOG.rst
-include CONTRIBUTING.rst
-include CONTRIBUTORS.rst
+include CHANGELOG.md
+include CONTRIBUTING.md
+include CONTRIBUTORS.md
 include LICENSE.txt
 include LICENSES-3RD-PARTY.txt
-include README.rst
+include README.md
 include versioneer.py
 
 exclude .git*
