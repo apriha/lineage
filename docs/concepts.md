@@ -107,7 +107,9 @@ will not be computed when using these maps.
 Using a population-specific map can provide more accurate centiMorgan calculations if you know
 the ancestral background of the individuals being compared:
 
+```python
 >>> results = l.find_shared_dna([ind1, ind2], genetic_map="CEU")  # doctest: +SKIP
+```
 
 ## Understanding Thresholds
 `lineage` uses two thresholds to filter out noise and reduce false positives when detecting
@@ -119,11 +121,13 @@ shared DNA segments:
 These conservative defaults help ensure that detected segments represent true shared DNA rather
 than matching by chance. You can adjust these thresholds:
 
+```python
 >>> # More permissive — reveals smaller segments but may include false positives
 >>> results = l.find_shared_dna([ind1, ind2], cM_threshold=0.5, snp_threshold=500)  # doctest: +SKIP
 
 >>> # More conservative — only shows larger, high-confidence segments
 >>> results = l.find_shared_dna([ind1, ind2], cM_threshold=1.0, snp_threshold=1500)  # doctest: +SKIP
+```
 
 ## Shared Genes
 Beyond identifying shared DNA segments, `lineage` can identify **shared genes** — genes
@@ -142,7 +146,9 @@ variations in that region, they are likely producing the **same protein** from t
 ### Using Shared Genes
 Enable shared gene analysis with the `shared_genes` parameter:
 
+```python
 >>> results = l.find_shared_dna([ind1, ind2], shared_genes=True)  # doctest: +SKIP
+```
 
 This outputs additional CSV files listing genes in IBD1 and IBD2 regions, including:
 
@@ -168,9 +174,11 @@ this is an approximation.
 A small number of discordant SNPs is normal. A large number may indicate data quality problems
 or that the individuals may not have the expected biological relationship.
 
+```python
 >>> discordant = l.find_discordant_snps(parent, child)  # doctest: +SKIP
 >>> len(discordant)  # doctest: +SKIP
 42  # A small number is typical
+```
 
 ## Interpreting Results
 The `find_shared_dna` method returns a dictionary with these keys:

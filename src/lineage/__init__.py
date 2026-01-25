@@ -23,6 +23,8 @@ from . import _version
 
 __version__ = _version.get_versions()["version"]
 
+__all__ = ["Lineage", "Individual", "SyntheticRelatedGenerator", "__version__"]
+
 logger = logging.getLogger(__name__)
 
 

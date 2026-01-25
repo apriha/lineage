@@ -15,7 +15,7 @@ installation
 changelog
 contributing
 contributors
-lineage
+api
 ```
 
 ## Indices and tables
