@@ -1,6 +1,6 @@
 """lineage
 
-tools for genetic genealogy and the analysis of consumer DNA test results
+tools for analyzing and exploring genetic relationships
 
 """
 
@@ -22,6 +22,8 @@ from lineage.visualization import plot_chromosomes
 from . import _version
 
 __version__ = _version.get_versions()["version"]
+
+__all__ = ["Lineage", "Individual", "SyntheticRelatedGenerator", "__version__"]
 
 logger = logging.getLogger(__name__)
 

@@ -9,6 +9,7 @@ pytest-cov = "*"
 sphinx = "*"
 sphinx-rtd-theme = "*"
 ruff = "*"
+sybil = "*"
 
 [packages]
 lineage = {editable = true,path = "."}

@@ -100,7 +100,7 @@ jobs:
         fi
     - name: Install dependencies
       run: |
-        pip install pytest-cov
+        pip install pytest-cov sybil
         pip install .
     - name: Ensure Python and source code are on same drive (Windows)
       if: ${{ matrix.os == 'windows-latest' }}
@@ -111,12 +111,12 @@ jobs:
     - name: Test with pytest (Ubuntu & macOS)
       if: ${{ matrix.os != 'windows-latest' }}
       run: |
-        pytest --cov=lineage tests
+        pytest --cov=lineage tests README.md
     - name: Test with pytest (Windows)
       if: ${{ matrix.os == 'windows-latest' }}
       working-directory: C:\a\lineage\lineage
       run: |
-        pytest --cov=lineage tests
+        pytest --cov=lineage tests README.md
     - name: Upload coverage to Codecov (Ubuntu & macOS)
       if: ${{ matrix.os != 'windows-latest' }}
       uses: codecov/codecov-action@v5

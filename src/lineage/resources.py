@@ -133,7 +133,7 @@ class Resources(SNPsResources):
         return self._genetic_map
 
     def get_genetic_map_1000G_GRCh37(self, pop):
-        """Get population-specific 1000 Genomes Project genetic map. [#Auton2013]_ [#Auton2015]_
+        """Get population-specific 1000 Genomes Project genetic map. [#Auton2013]_ [#Auton2015]_ [#Pickrell]_
 
         Notes
         -----
