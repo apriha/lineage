@@ -56,6 +56,7 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
+    "snps": ("https://snps.readthedocs.io/en/stable/", None),
 }
 
 # Support both Markdown and RST files
