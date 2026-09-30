@@ -55,7 +55,8 @@ see the [Concepts Guide](https://lineage.readthedocs.io/en/stable/concepts.html)
 
 ```python
 import logging
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 ```
 
 To try these examples, first generate some sample data:

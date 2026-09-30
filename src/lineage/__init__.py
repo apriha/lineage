@@ -23,7 +23,7 @@ from . import _version
 
 __version__ = _version.get_versions()["version"]
 
-__all__ = ["Lineage", "Individual", "SyntheticRelatedGenerator", "__version__"]
+__all__ = ["Individual", "Lineage", "SyntheticRelatedGenerator", "__version__"]
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class Lineage:
         output_dir="output",
         resources_dir="resources",
         parallelize=False,
-        processes=os.cpu_count(),
+        processes=None,
     ):
         """Initialize a ``Lineage`` object.
 
@@ -48,9 +48,12 @@ class Lineage:
             name / path of resources directory
         parallelize : bool
             utilize multiprocessing to speedup calculations
-        processes : int
-            processes to launch if multiprocessing
+        processes : int, optional
+            processes to launch if multiprocessing; defaults to ``os.cpu_count()``
         """
+        if processes is None:
+            processes = os.cpu_count()
+
         self._output_dir = output_dir
         self._resources_dir = resources_dir
         self._resources = Resources(resources_dir=resources_dir)
@@ -168,9 +171,7 @@ class Lineage:
                 save_df_as_csv(
                     df,
                     self._output_dir,
-                    "discordant_snps_{}_{}_GRCh37.csv".format(
-                        individual1.get_var_name(), individual2.get_var_name()
-                    ),
+                    f"discordant_snps_{individual1.get_var_name()}_{individual2.get_var_name()}_GRCh37.csv",
                     comment=self._get_csv_header(),
                     prepend_info=False,
                 )
@@ -236,11 +237,7 @@ class Lineage:
                 save_df_as_csv(
                     df,
                     self._output_dir,
-                    "discordant_snps_{}_{}_{}_GRCh37.csv".format(
-                        individual1.get_var_name(),
-                        individual2.get_var_name(),
-                        individual3.get_var_name(),
-                    ),
+                    f"discordant_snps_{individual1.get_var_name()}_{individual2.get_var_name()}_{individual3.get_var_name()}_GRCh37.csv",
                     comment=self._get_csv_header(),
                     prepend_info=False,
                 )
@@ -372,7 +369,7 @@ class Lineage:
 
         # generate a list of dynamically named columns for each individual's genotype
         # (e.g., genotype0, genotype1, etc).
-        cols = [f"genotype{str(i)}" for i in range(len(individuals))]
+        cols = [f"genotype{i}" for i in range(len(individuals))]
 
         # set the reference SNPs to compare to be that of the first individual
         df = individuals[0].snps
@@ -392,7 +389,7 @@ class Lineage:
         tasks = []
         chroms_to_drop = []
         for chrom in df["chrom"].unique():
-            if chrom not in genetic_map_dfs.keys():
+            if chrom not in genetic_map_dfs:
                 chroms_to_drop.append(chrom)
                 continue
 
@@ -553,7 +550,7 @@ class Lineage:
         individuals_filename = individuals_filename[:-1]
         individuals_plot_title = individuals_plot_title[:-3]
 
-        cM = "{:.2f}".format(cM_threshold).replace(".", "p")
+        cM = f"{cM_threshold:.2f}".replace(".", "p")
         filename_details = (
             f"{individuals_filename}_{cM}cM_{snp_threshold}snps_GRCh37_{genetic_map}"
         )
@@ -737,7 +734,7 @@ class Lineage:
         snp_threshold = task["snp_threshold"]
         one_x_chrom = task["one_x_chrom"]
 
-        if "one_chrom_match" in df.keys():
+        if "one_chrom_match" in df:
             match_col = "one_chrom_match"
         else:
             match_col = "two_chrom_match"
@@ -816,9 +813,8 @@ class Lineage:
         cMs_match_segment = c[:, 1] - c[:, 0]
 
         discrepant_snps_passed = pd.Index([], name="rsid")
-        counter = 0
         # save matches for this chromosome
-        for x in matches_passed:
+        for counter, x in enumerate(matches_passed):
             d = {
                 "chrom": chrom,
                 "start": df.loc[(df["chrom"] == chrom)].iloc[x[0]].pos,
@@ -840,7 +836,6 @@ class Lineage:
             )
 
             shared_dna.append(d)
-            counter += 1
         return {"shared_dna": shared_dna, "discrepant_snps": discrepant_snps_passed}
 
     def _remap_snps_to_GRCh37(self, individuals):

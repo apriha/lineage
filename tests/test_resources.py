@@ -220,5 +220,5 @@ class TestResources(BaseLineageTestCase):
 
         resources = self.resource.get_all_resources() if self.downloads_enabled else f()
 
-        for k, v in resources.items():
+        for v in resources.values():
             self.assertGreater(len(v), 0)

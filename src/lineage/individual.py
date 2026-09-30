@@ -57,7 +57,7 @@ class Individual(SNPs):
         return {k: kwargs[k] for k in kwargs if k in sig.parameters}
 
     def __repr__(self):
-        return "Individual({!r})".format(self._name)
+        return f"Individual({self._name!r})"
 
     @property
     def name(self):

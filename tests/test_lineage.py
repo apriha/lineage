@@ -139,23 +139,25 @@ class TestLineage(BaseLineageTestCase):
             cytoband = self._generate_test_cytoBand_hg19()
             kg, kgXref = self._generate_test_gene_dfs(test_case=test_case, **kwargs)
 
-            with patch(
-                genetic_map_patch,
-                Mock(return_value=genetic_map),
-            ):
-                with patch(
+            with (
+                patch(
+                    genetic_map_patch,
+                    Mock(return_value=genetic_map),
+                ),
+                patch(
                     "lineage.resources.Resources.get_cytoBand_hg19",
                     Mock(return_value=cytoband),
-                ):
-                    with patch(
-                        "lineage.resources.Resources.get_knownGene_hg19",
-                        Mock(return_value=kg),
-                    ):
-                        with patch(
-                            "lineage.resources.Resources.get_kgXref_hg19",
-                            Mock(return_value=kgXref),
-                        ):
-                            f()
+                ),
+                patch(
+                    "lineage.resources.Resources.get_knownGene_hg19",
+                    Mock(return_value=kg),
+                ),
+                patch(
+                    "lineage.resources.Resources.get_kgXref_hg19",
+                    Mock(return_value=kgXref),
+                ),
+            ):
+                f()
 
     def _assert_exists(self, files, idx):
         for i, file in enumerate(files):
