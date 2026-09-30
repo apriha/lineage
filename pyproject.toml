@@ -2,6 +2,10 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta:__legacy__"
 
+[tool.ruff]
+# versioneer files are vendored / generated
+extend-exclude = ["versioneer.py", "src/lineage/_version.py"]
+
 # https://github.com/astral-sh/ruff/issues/465#issuecomment-1783684428
 [tool.ruff.lint]
 extend-select = ["I"]

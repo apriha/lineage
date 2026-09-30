@@ -35,6 +35,13 @@ class TestResources(BaseLineageTestCase):
                 super().run(result)
                 self.resource._resources_dir = "resources"
 
+    def _assert_resource_size(self, df, resource):
+        if self.downloads_enabled:
+            # downloaded resources are updated upstream, so only verify data was loaded
+            self.assertGreater(len(df), 0)
+        else:
+            self.assertEqual(len(df), RESOURCE_SIZES[resource])
+
     def _generate_test_genetic_map_HapMapII_GRCh37_resource(self):
         filenames = [f"genetic_map_GRCh37_chr{chrom}.txt" for chrom in range(1, 23)]
         filenames.extend(
@@ -158,11 +165,11 @@ class TestResources(BaseLineageTestCase):
             self.resource.get_cytoBand_hg19() if self.downloads_enabled else f()
         )
 
-        assert len(cytoBand_hg19) == RESOURCE_SIZES["cytoBand_hg19"]
+        self._assert_resource_size(cytoBand_hg19, "cytoBand_hg19")
 
         # get already loaded resource
         cytoBand_hg19 = self.resource.get_cytoBand_hg19()
-        assert len(cytoBand_hg19) == RESOURCE_SIZES["cytoBand_hg19"]
+        self._assert_resource_size(cytoBand_hg19, "cytoBand_hg19")
 
     def _generate_test_knownGene_hg19_resource(self):
         s = "s\ts\ts\t0\t0\t0\t0\t0\ts\ts\ts\ts\n" * RESOURCE_SIZES["knownGene_hg19"]
@@ -181,11 +188,11 @@ class TestResources(BaseLineageTestCase):
             self.resource.get_knownGene_hg19() if self.downloads_enabled else f()
         )
 
-        assert len(knownGene_hg19) == RESOURCE_SIZES["knownGene_hg19"]
+        self._assert_resource_size(knownGene_hg19, "knownGene_hg19")
 
         # get already loaded resource
         knownGene_hg19 = self.resource.get_knownGene_hg19()
-        assert len(knownGene_hg19) == RESOURCE_SIZES["knownGene_hg19"]
+        self._assert_resource_size(knownGene_hg19, "knownGene_hg19")
 
     def _generate_test_kgXref_hg19_resource(self):
         s = "s\ts\ts\ts\ts\ts\ts\ts\n" * RESOURCE_SIZES["kgXref_hg19"]
@@ -202,11 +209,11 @@ class TestResources(BaseLineageTestCase):
 
         kgXref_hg19 = self.resource.get_kgXref_hg19() if self.downloads_enabled else f()
 
-        assert len(kgXref_hg19) == RESOURCE_SIZES["kgXref_hg19"]
+        self._assert_resource_size(kgXref_hg19, "kgXref_hg19")
 
         # get already loaded resource
         kgXref_hg19 = self.resource.get_kgXref_hg19()
-        assert len(kgXref_hg19) == RESOURCE_SIZES["kgXref_hg19"]
+        self._assert_resource_size(kgXref_hg19, "kgXref_hg19")
 
     def test_get_all_resources(self):
         def f():
@@ -220,5 +227,5 @@ class TestResources(BaseLineageTestCase):
 
         resources = self.resource.get_all_resources() if self.downloads_enabled else f()
 
-        for k, v in resources.items():
+        for v in resources.values():
             self.assertGreater(len(v), 0)

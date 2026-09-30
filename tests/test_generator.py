@@ -273,13 +273,13 @@ class TestSyntheticRelatedGenerator(BaseLineageTestCase):
         """Test that crossovers_per_chrom parameter affects sibling generation."""
         # Low crossovers should produce longer segments
         gen_low = SyntheticRelatedGenerator(build=37, seed=42, crossovers_per_chrom=0.5)
-        sib1_low, sib2_low = gen_low.generate_sibling_pair(num_snps=5000)
+        sib1_low, _sib2_low = gen_low.generate_sibling_pair(num_snps=5000)
 
         # High crossovers should produce more variation
         gen_high = SyntheticRelatedGenerator(
             build=37, seed=42, crossovers_per_chrom=3.0
         )
-        sib1_high, sib2_high = gen_high.generate_sibling_pair(num_snps=5000)
+        sib1_high, _sib2_high = gen_high.generate_sibling_pair(num_snps=5000)
 
         # Just verify both run without error and produce valid output
         self.assertEqual(len(sib1_low), len(sib1_high))
