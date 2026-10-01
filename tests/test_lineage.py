@@ -674,6 +674,25 @@ class TestLineage(BaseLineageTestCase):
                 "ind1_ind2_ind3", exist="plots", output_dir=tmpdir
             )
 
+    def test_allele_comparisons(self):
+        genotypes1 = pd.Series(["AG", "AG", "AA", "A", "A", "A", "ID", None])
+        genotypes2 = pd.Series(["GA", "CT", "AG", "A", "G", "AG", "DI", "AA"])
+        alleles1 = Lineage._get_alleles(genotypes1)
+        alleles2 = Lineage._get_alleles(genotypes2)
+
+        np.testing.assert_array_equal(
+            Lineage._no_shared_allele(alleles1, alleles2),
+            [False, True, False, False, True, False, False, True],
+        )
+        np.testing.assert_array_equal(
+            Lineage._same_genotype(alleles1, alleles2),
+            [True, False, False, True, False, False, True, False],
+        )
+        np.testing.assert_array_equal(
+            Lineage._is_discordant(genotypes1, genotypes2),
+            [False, True, False, False, True, False, False, False],
+        )
+
 
 class TestCreateExampleDatasets(BaseLineageTestCase):
     """Tests for the create_example_datasets method."""
