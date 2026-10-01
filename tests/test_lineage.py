@@ -674,6 +674,126 @@ class TestLineage(BaseLineageTestCase):
                 "ind1_ind2_ind3", exist="plots", output_dir=tmpdir
             )
 
+    def _generate_test_cytoBand_hg19_bands(self):
+        return pd.DataFrame(
+            {
+                "chrom": ["1", "1", "1"],
+                "start": [0, 50000000, 52000000],
+                "end": [50000000, 52000000, 111800001],
+                "name": ["p36.33", "p36.32", "q11"],
+                "gie_stain": ["gneg", "gpos25", "gneg"],
+            }
+        )
+
+    def _find_shared_dna_exclude_regions(self, exclude_regions):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ln = Lineage(output_dir=tmpdir)
+
+            ind1 = self.simulate_snps(ln.create_individual("ind1"))
+            ind2 = self.simulate_snps(ln.create_individual("ind2"))
+
+            with patch(
+                "lineage.resources.Resources.get_cytoBand_hg19",
+                Mock(return_value=self._generate_test_cytoBand_hg19_bands()),
+            ):
+                return ln.find_shared_dna(
+                    [ind1, ind2], save_output=False, exclude_regions=exclude_regions
+                )
+
+    def test_find_shared_dna_exclude_regions(self):
+        self.run_find_shared_dna_test(self._test_find_shared_dna_exclude_regions)
+
+    def _test_find_shared_dna_exclude_regions(self):
+        for exclude_regions in [[("1", 50000000, 52000000)], ["1p36.32"]]:
+            d = self._find_shared_dna_exclude_regions(exclude_regions)
+
+            # the shared DNA segment is split at the excluded region
+            for key in ["one_chrom_shared_dna", "two_chrom_shared_dna"]:
+                assert len(d[key]) == 2
+                assert (d[key]["end"] < 50000000).sum() == 1
+                assert (d[key]["start"] > 52000000).sum() == 1
+                assert d[key]["cMs"].sum() < 140.443968
+            assert len(d["one_chrom_discrepant_snps"]) == 0
+            assert len(d["two_chrom_discrepant_snps"]) == 0
+
+    def test_find_shared_dna_exclude_regions_sub_bands(self):
+        self.run_find_shared_dna_test(
+            self._test_find_shared_dna_exclude_regions_sub_bands
+        )
+
+    def _test_find_shared_dna_exclude_regions_sub_bands(self):
+        # "1p36.3" includes sub-bands 1p36.33 and 1p36.32
+        d = self._find_shared_dna_exclude_regions(["1p36.3"])
+
+        for key in ["one_chrom_shared_dna", "two_chrom_shared_dna"]:
+            assert len(d[key]) == 1
+            assert d[key].loc[1]["start"] > 52000000
+
+    def test_find_shared_dna_exclude_regions_invalid(self):
+        self.run_find_shared_dna_test(
+            self._test_find_shared_dna_exclude_regions_invalid
+        )
+
+    def _test_find_shared_dna_exclude_regions_invalid(self):
+        for exclude_regions in [["chr1p36"], ["1p12"]]:
+            with self.assertRaises(ValueError):
+                self._find_shared_dna_exclude_regions(exclude_regions)
+
+    def test_find_shared_dna_exclude_strand_ambiguous(self):
+        self.run_find_shared_dna_test(
+            self._test_find_shared_dna_exclude_strand_ambiguous
+        )
+
+    def _test_find_shared_dna_exclude_strand_ambiguous(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            ln = Lineage(output_dir=tmpdir)
+
+            # complemented genotypes are A/T SNPs, which are found as discrepant SNPs unless
+            # strand-ambiguous SNPs are excluded
+            ind1 = self.simulate_snps(ln.create_individual("ind1"))
+            ind2 = self.simulate_snps(
+                ln.create_individual("ind2"),
+                complement_genotype_one_chrom=True,
+                complement_snp_step=5000,
+            )
+
+            d = ln.find_shared_dna(
+                [ind1, ind2], save_output=False, exclude_strand_ambiguous=True
+            )
+
+            assert len(d["one_chrom_shared_dna"]) == 1
+            assert len(d["two_chrom_shared_dna"]) == 1
+            assert len(d["one_chrom_discrepant_snps"]) == 0
+            assert len(d["two_chrom_discrepant_snps"]) == 0
+
+    def test_find_discordant_snps_exclude_strand_ambiguous(self):
+        ln = Lineage()
+        df = pd.DataFrame(
+            {
+                "chrom": "1",
+                "pos": [1, 2, 3, 4],
+                # rs1 (A/T) and rs3 (C/G) are strand-ambiguous; rs2 (A/G) is not
+                "ind1": ["AA", "AA", "CC", "AG"],
+                "ind2": ["TT", "GG", "GG", "AG"],
+                "ind3": ["TT", "GG", "GG", "AG"],
+            },
+            index=pd.Index(["rs1", "rs2", "rs3", "rs4"], name="rsid"),
+        )
+
+        ind1 = self.get_discordant_snps(ln.create_individual("ind1"), df)
+        ind2 = self.get_discordant_snps(ln.create_individual("ind2"), df)
+        ind3 = self.get_discordant_snps(ln.create_individual("ind3"), df)
+
+        pd.testing.assert_index_equal(
+            ln.find_discordant_snps(ind1, ind2).index,
+            pd.Index(["rs1", "rs2", "rs3"], name="rsid"),
+        )
+        for result in [
+            ln.find_discordant_snps(ind1, ind2, exclude_strand_ambiguous=True),
+            ln.find_discordant_snps(ind1, ind2, ind3, exclude_strand_ambiguous=True),
+        ]:
+            pd.testing.assert_index_equal(result.index, pd.Index(["rs2"], name="rsid"))
+
 
 class TestCreateExampleDatasets(BaseLineageTestCase):
     """Tests for the create_example_datasets method."""

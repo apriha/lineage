@@ -7,6 +7,7 @@ tools for analyzing and exploring genetic relationships
 import datetime
 import logging
 import os
+import re
 from itertools import chain, combinations
 
 import numpy as np
@@ -23,9 +24,20 @@ from . import _version
 
 __version__ = _version.get_versions()["version"]
 
-__all__ = ["Individual", "Lineage", "SyntheticRelatedGenerator", "__version__"]
+__all__ = [
+    "PILEUP_REGIONS",
+    "Individual",
+    "Lineage",
+    "SyntheticRelatedGenerator",
+    "__version__",
+]
 
 logger = logging.getLogger(__name__)
+
+# regions known to produce excess false-positive shared DNA segments: the MHC / HLA region
+# (GRC definition, Build 37) and the cytobands of the polymorphic inversions at 8p23.1 and
+# 17q21.31; for use with the ``exclude_regions`` parameter of ``Lineage.find_shared_dna``
+PILEUP_REGIONS = (("6", 28477797, 33448354), "8p23.1", "17q21.31")
 
 
 class Lineage:
@@ -105,7 +117,12 @@ class Lineage:
         return self._resources.create_example_datasets()
 
     def find_discordant_snps(
-        self, individual1, individual2, individual3=None, save_output=False
+        self,
+        individual1,
+        individual2,
+        individual3=None,
+        save_output=False,
+        exclude_strand_ambiguous=False,
     ):
         """Find discordant SNPs between two or three individuals.
 
@@ -119,6 +136,10 @@ class Lineage:
             other parent if `individual1` is child and `individual2` is a parent
         save_output : bool
             specifies whether to save output to a CSV file in the output directory
+        exclude_strand_ambiguous : bool
+            exclude strand-ambiguous (A/T and C/G) SNPs; for these SNPs, a genotype reported
+            on the opposite strand by one of the files is indistinguishable from a true
+            discordance
 
         Returns
         -------
@@ -149,6 +170,9 @@ class Lineage:
 
         if individual3 is None:
             df = df.rename(columns={"genotype": genotype1, "genotype2": genotype2})
+
+            if exclude_strand_ambiguous:
+                df = df.loc[~self._is_strand_ambiguous(df, [genotype1, genotype2])]
 
             # find discordant SNPs between reference and comparison individuals
             df = df.loc[
@@ -188,6 +212,11 @@ class Lineage:
                     "genotype3": genotype3,
                 }
             )
+
+            if exclude_strand_ambiguous:
+                df = df.loc[
+                    ~self._is_strand_ambiguous(df, [genotype1, genotype2, genotype3])
+                ]
 
             # find discordant SNPs between child and two parents
             df = df.loc[
@@ -252,6 +281,8 @@ class Lineage:
         shared_genes=False,
         save_output=True,
         genetic_map="HapMap2",
+        exclude_regions=(),
+        exclude_strand_ambiguous=False,
     ):
         """Find the shared DNA between individuals.
 
@@ -312,6 +343,16 @@ class Lineage:
             `1000 Genomes Project <https://www.internationalgenome.org>`_ phased OMNI data.
             Note that shared DNA is not computed on the X chromosome with the 1000 Genomes
             Project genetic maps since the X chromosome is not included in these genetic maps.
+        exclude_regions : iterable of str or tuple
+            genomic regions in which SNPs are never considered to match, so shared DNA segments
+            are split at these regions instead of spanning them; each region is either a
+            cytoband (e.g., ``"8p23.1"``, or ``"6p21.3"`` for all of its sub-bands) resolved
+            with the UCSC cytoBand table for Build 37, or a ``(chrom, start, end)`` tuple of
+            Build 37 coordinates. ``lineage.PILEUP_REGIONS`` lists regions known to produce
+            false-positive shared DNA (polymorphic inversions and the MHC / HLA region).
+        exclude_strand_ambiguous : bool
+            exclude strand-ambiguous (A/T and C/G) SNPs, for which a genotype reported on the
+            opposite strand by one of the files can't be detected
 
         Returns
         -------
@@ -354,6 +395,9 @@ class Lineage:
                 two_chrom_discrepant_snps,
             )
 
+        # resolve regions to exclude before any computation, so invalid regions fail fast
+        exclude_regions = self._resolve_regions(exclude_regions)
+
         # load the specified genetic map (one genetic map for each chromosome)
         genetic_map_dfs = self._resources.get_genetic_map(genetic_map)
 
@@ -380,6 +424,9 @@ class Lineage:
             # join SNPs for all individuals
             df = df.join(ind.snps["genotype"], how="inner")
             df = df.rename(columns={"genotype": cols[i + 1]})
+
+        if exclude_strand_ambiguous:
+            df = df.loc[~self._is_strand_ambiguous(df, cols)]
 
         # set a flag for if one individual is male (i.e., only one chromosome match on the X
         # chromosome is possible in the non-PAR region)
@@ -444,6 +491,13 @@ class Lineage:
                     & (df[genotype1].str[1] == df[genotype2].str[0])
                 ),
                 "two_chrom_match",
+            ] = False
+
+        # SNPs in excluded regions never match, so shared DNA segments can't span these regions
+        if exclude_regions:
+            df.loc[
+                self._in_regions(df, exclude_regions),
+                ["one_chrom_match", "two_chrom_match"],
             ] = False
 
         # genotype columns are no longer required for calculation
@@ -657,6 +711,90 @@ class Lineage:
             shared_genes = pd.concat(shared_genes_dfs, sort=True)
 
         return shared_genes
+
+    @staticmethod
+    def _is_strand_ambiguous(df, cols):
+        """Flag strand-ambiguous (A/T and C/G) SNPs.
+
+        A SNP is strand-ambiguous if the alleles observed across all genotype columns are
+        exactly A and T, or exactly C and G; for these SNPs, a genotype reported relative to
+        the opposite strand looks like a valid genotype rather than an error.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            SNPs with a genotype column for each individual
+        cols : list of str
+            genotype columns
+
+        Returns
+        -------
+        pandas.Series
+            True for each strand-ambiguous SNP
+        """
+        alleles = {
+            base: np.logical_or.reduce(
+                [df[col].str.contains(base, na=False).values for col in cols]
+            )
+            for base in "ACGT"
+        }
+
+        return pd.Series(
+            (alleles["A"] & alleles["T"] & ~alleles["C"] & ~alleles["G"])
+            | (alleles["C"] & alleles["G"] & ~alleles["A"] & ~alleles["T"]),
+            index=df.index,
+        )
+
+    def _resolve_regions(self, regions):
+        """Resolve regions to ``(chrom, start, end)`` tuples of Build 37 coordinates.
+
+        Parameters
+        ----------
+        regions : iterable of str or tuple
+            cytobands (e.g., ``"8p23.1"``) or ``(chrom, start, end)`` tuples
+
+        Returns
+        -------
+        list of tuple
+            ``(chrom, start, end)`` for each region
+        """
+        resolved = []
+
+        for region in regions:
+            if not isinstance(region, str):
+                chrom, start, end = region
+                resolved.append((str(chrom), start, end))
+                continue
+
+            match = re.fullmatch(r"(\d+|X|Y)([pq][\d.]*)", region)
+            if match is None:
+                raise ValueError(f"Invalid cytoband: {region}")
+
+            cytobands = self._resources.get_cytoBand_hg19()
+
+            # a band also matches all of its sub-bands (e.g., 6p21.3 matches 6p21.31-33)
+            bands = cytobands.loc[
+                (cytobands["chrom"] == match[1])
+                & cytobands["name"].str.startswith(match[2])
+            ]
+            if bands.empty:
+                raise ValueError(f"Cytoband not found: {region}")
+
+            resolved.append((match[1], bands["start"].min(), bands["end"].max()))
+
+        return resolved
+
+    @staticmethod
+    def _in_regions(df, regions):
+        """Flag SNPs within any of the ``(chrom, start, end)`` regions."""
+        in_regions = np.zeros(len(df), dtype=bool)
+
+        for chrom, start, end in regions:
+            in_regions |= (
+                (df["chrom"] == chrom) & (df["pos"] >= start) & (df["pos"] <= end)
+            ).values
+
+        return in_regions
 
     def _is_one_individual_male(self, individuals):
         for ind in individuals:
