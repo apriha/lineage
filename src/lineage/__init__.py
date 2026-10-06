@@ -151,22 +151,7 @@ class Lineage:
             df = df.rename(columns={"genotype": genotype1, "genotype2": genotype2})
 
             # find discordant SNPs between reference and comparison individuals
-            df = df.loc[
-                df[genotype2].notnull()
-                & (
-                    (df[genotype1].str.len() == 1)
-                    & (df[genotype2].str.len() == 1)
-                    & (df[genotype1] != df[genotype2])
-                )
-                | (
-                    (df[genotype1].str.len() == 2)
-                    & (df[genotype2].str.len() == 2)
-                    & (df[genotype1].str[0] != df[genotype2].str[0])
-                    & (df[genotype1].str[0] != df[genotype2].str[1])
-                    & (df[genotype1].str[1] != df[genotype2].str[0])
-                    & (df[genotype1].str[1] != df[genotype2].str[1])
-                )
-            ]
+            df = df.loc[self._is_discordant(df[genotype1], df[genotype2])]
             if save_output:
                 save_df_as_csv(
                     df,
@@ -189,47 +174,17 @@ class Lineage:
                 }
             )
 
-            # find discordant SNPs between child and two parents
+            # find discordant SNPs between child and two parents; i.e., discordant with either
+            # parent, or different from parents that are both homozygous for the same allele
+            alleles2 = self._get_alleles(df[genotype2])
             df = df.loc[
-                (
-                    df[genotype2].notnull()
-                    & (
-                        (df[genotype1].str.len() == 1)
-                        & (df[genotype2].str.len() == 1)
-                        & (df[genotype1] != df[genotype2])
-                    )
-                    | (
-                        (df[genotype1].str.len() == 2)
-                        & (df[genotype2].str.len() == 2)
-                        & (df[genotype1].str[0] != df[genotype2].str[0])
-                        & (df[genotype1].str[0] != df[genotype2].str[1])
-                        & (df[genotype1].str[1] != df[genotype2].str[0])
-                        & (df[genotype1].str[1] != df[genotype2].str[1])
-                    )
-                )
+                self._is_discordant(df[genotype1], df[genotype2])
+                | self._is_discordant(df[genotype1], df[genotype3])
                 | (
-                    df[genotype3].notnull()
-                    & (
-                        (df[genotype1].str.len() == 1)
-                        & (df[genotype3].str.len() == 1)
-                        & (df[genotype1] != df[genotype3])
-                    )
-                    | (
-                        (df[genotype1].str.len() == 2)
-                        & (df[genotype3].str.len() == 2)
-                        & (df[genotype1].str[0] != df[genotype3].str[0])
-                        & (df[genotype1].str[0] != df[genotype3].str[1])
-                        & (df[genotype1].str[1] != df[genotype3].str[0])
-                        & (df[genotype1].str[1] != df[genotype3].str[1])
-                    )
-                )
-                | (
-                    df[genotype2].notnull()
-                    & df[genotype3].notnull()
-                    & (df[genotype2].str.len() == 2)
-                    & (df[genotype2].str[0] == df[genotype2].str[1])
-                    & (df[genotype2] == df[genotype3])
-                    & (df[genotype1] != df[genotype2])
+                    (df[genotype2].str.len() == 2).to_numpy()
+                    & (alleles2[:, 0] == alleles2[:, 1])
+                    & (df[genotype2] == df[genotype3]).to_numpy()
+                    & (df[genotype1] != df[genotype2]).to_numpy()
                 )
             ]
 
@@ -388,7 +343,7 @@ class Lineage:
         # create tasks to compute the genetic distances (cMs) between each SNP on each chromosome
         tasks = []
         chroms_to_drop = []
-        for chrom in df["chrom"].unique():
+        for chrom, chrom_df in df.groupby("chrom", sort=False):
             if chrom not in genetic_map_dfs:
                 chroms_to_drop.append(chrom)
                 continue
@@ -399,7 +354,7 @@ class Lineage:
                 {
                     "genetic_map": genetic_map_dfs[chrom],
                     # get positions for the current chromosome
-                    "snps": pd.DataFrame(df.loc[(df["chrom"] == chrom)]["pos"]),
+                    "snps": pd.DataFrame(chrom_df["pos"]),
                 }
             )
 
@@ -417,34 +372,33 @@ class Lineage:
 
         # now we apply a mask for whether all individuals match on one or two chromosomes...
         # first, set all rows for these columns to True
-        df["one_chrom_match"] = True
-        df["two_chrom_match"] = True
-        # determine where individuals share an allele on one chromosome (i.e., set to False when
-        # at least one allele doesn't match for all individuals)
-        for genotype1, genotype2 in combinations(cols, 2):
-            df.loc[
-                ~df[genotype1].isnull()
-                & ~df[genotype2].isnull()
-                & (df[genotype1].str[0] != df[genotype2].str[0])
-                & (df[genotype1].str[0] != df[genotype2].str[1])
-                & (df[genotype1].str[1] != df[genotype2].str[0])
-                & (df[genotype1].str[1] != df[genotype2].str[1]),
-                "one_chrom_match",
-            ] = False
+        # first, set all rows for these masks to True
+        one_chrom_match = np.ones(len(df), dtype=bool)
+        two_chrom_match = np.ones(len(df), dtype=bool)
 
-        # determine where individuals share alleles on two chromosomes (i.e., set to False when
-        # two alleles don't match for all individuals)
+        # get the alleles of each individual once, as arrays of character codes
+        alleles = {col: self._get_alleles(df[col]) for col in cols}
+        notnull = {col: df[col].notnull().to_numpy() for col in cols}
+
         for genotype1, genotype2 in combinations(cols, 2):
-            df.loc[
-                ~df[genotype1].isnull()
-                & ~df[genotype2].isnull()
-                & (df[genotype1] != df[genotype2])
-                & ~(
-                    (df[genotype1].str[0] == df[genotype2].str[1])
-                    & (df[genotype1].str[1] == df[genotype2].str[0])
-                ),
-                "two_chrom_match",
-            ] = False
+            both_notnull = notnull[genotype1] & notnull[genotype2]
+
+            # determine where individuals share an allele on one chromosome (i.e., set to False
+            # when at least one allele doesn't match for all individuals)
+            one_chrom_match &= ~(
+                both_notnull
+                & self._no_shared_allele(alleles[genotype1], alleles[genotype2])
+            )
+
+            # determine where individuals share alleles on two chromosomes (i.e., set to False
+            # when two alleles don't match for all individuals)
+            two_chrom_match &= ~(
+                both_notnull
+                & ~self._same_genotype(alleles[genotype1], alleles[genotype2])
+            )
+
+        df["one_chrom_match"] = one_chrom_match
+        df["two_chrom_match"] = two_chrom_match
 
         # genotype columns are no longer required for calculation
         df = df.drop(cols, axis=1)
@@ -492,10 +446,11 @@ class Lineage:
     def _find_shared_dna_helper(self, df, cM_threshold, snp_threshold, one_x_chrom):
         tasks = []
 
-        for chrom in df["chrom"].unique():
+        # split SNPs by chromosome once, preserving the order of chromosomes
+        for chrom, chrom_df in df.groupby("chrom", sort=False):
             tasks.append(
                 {
-                    "df": df.loc[df["chrom"] == chrom],
+                    "df": chrom_df,
                     "chrom": chrom,
                     "cM_threshold": cM_threshold,
                     "snp_threshold": snp_threshold,
@@ -658,6 +613,70 @@ class Lineage:
 
         return shared_genes
 
+    @staticmethod
+    def _get_alleles(genotypes):
+        """Get the first two alleles of each genotype as character codes.
+
+        Comparing alleles as arrays of character codes is much faster than comparing
+        characters of genotype strings with the pandas ``.str`` accessor.
+
+        Parameters
+        ----------
+        genotypes : pandas.Series
+            genotypes (e.g., "AG", or "A" for one allele)
+
+        Returns
+        -------
+        numpy.ndarray
+            (n, 2) array of character codes, where 0 indicates no allele
+        """
+        return genotypes.fillna("").to_numpy(dtype="U2").view(np.uint32).reshape(-1, 2)
+
+    @staticmethod
+    def _no_shared_allele(alleles1, alleles2):
+        """Flag genotypes that don't share an allele (character codes from `_get_alleles`)."""
+        return ~(
+            (alleles1[:, :, np.newaxis] == alleles2[:, np.newaxis, :])
+            & (alleles1[:, :, np.newaxis] != 0)
+        ).any(axis=(1, 2))
+
+    @staticmethod
+    def _same_genotype(alleles1, alleles2):
+        """Flag genotypes with the same alleles, in either order (from `_get_alleles`)."""
+        return (alleles1 == alleles2).all(axis=1) | (
+            (alleles1[:, 0] == alleles2[:, 1])
+            & (alleles1[:, 1] == alleles2[:, 0])
+            & (alleles1[:, 1] != 0)
+        )
+
+    @classmethod
+    def _is_discordant(cls, genotypes1, genotypes2):
+        """Flag SNPs where genotypes are inconsistent with a parent-child relationship.
+
+        Genotypes are discordant if both have one allele and the alleles differ, or if both
+        have two alleles and they don't share an allele.
+
+        Parameters
+        ----------
+        genotypes1, genotypes2 : pandas.Series
+            genotypes of each individual
+
+        Returns
+        -------
+        numpy.ndarray
+            True for each discordant SNP
+        """
+        len1 = genotypes1.str.len().to_numpy()
+        len2 = genotypes2.str.len().to_numpy()
+
+        return ((len1 == 1) & (len2 == 1) & (genotypes1 != genotypes2).to_numpy()) | (
+            (len1 == 2)
+            & (len2 == 2)
+            & cls._no_shared_allele(
+                cls._get_alleles(genotypes1), cls._get_alleles(genotypes2)
+            )
+        )
+
     def _is_one_individual_male(self, individuals):
         for ind in individuals:
             if ind.sex == "Male":
@@ -753,7 +772,7 @@ class Lineage:
 
         # get consecutive strings of Trues, for where there's a one or two chrom match between
         # individuals, depending on the task; http://stackoverflow.com/a/17151327
-        a = df.loc[(df["chrom"] == chrom)][match_col].values
+        a = df[match_col].values
         a = np.r_[a, False]
         a_rshifted = np.roll(a, 1)
         starts = a & ~a_rshifted
@@ -767,9 +786,7 @@ class Lineage:
         matches = np.hstack((a_starts, a_ends))
 
         # compute total cMs for each matching segment
-        c = np.r_[0, df.loc[(df["chrom"] == chrom)]["cM_from_prev_snp"].cumsum()][
-            matches
-        ]
+        c = np.r_[0, df["cM_from_prev_snp"].cumsum()][matches]
         cMs_match_segment = c[:, 1] - c[:, 0]
 
         # get matching segments where total cMs is greater than the threshold
@@ -807,9 +824,7 @@ class Lineage:
         matches_passed = matches_passed[np.where(snp_counts > snp_threshold)]
 
         # compute total cMs for each match segment
-        c = np.r_[0, df.loc[(df["chrom"] == chrom)]["cM_from_prev_snp"].cumsum()][
-            matches_passed
-        ]
+        c = np.r_[0, df["cM_from_prev_snp"].cumsum()][matches_passed]
         cMs_match_segment = c[:, 1] - c[:, 0]
 
         discrepant_snps_passed = pd.Index([], name="rsid")
@@ -817,8 +832,8 @@ class Lineage:
         for counter, x in enumerate(matches_passed):
             d = {
                 "chrom": chrom,
-                "start": df.loc[(df["chrom"] == chrom)].iloc[x[0]].pos,
-                "end": df.loc[(df["chrom"] == chrom)].iloc[x[1] - 1].pos,
+                "start": df.iloc[x[0]].pos,
+                "end": df.iloc[x[1] - 1].pos,
                 "cMs": cMs_match_segment[counter],
                 "snps": x[1] - x[0],
             }
