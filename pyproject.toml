@@ -3,6 +3,9 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta:__legacy__"
 
 [tool.ruff]
+# Set explicitly because there is no `[project]` table for Ruff to infer it from;
+# keep in sync with `python_requires` in setup.py
+target-version = "py311"
 # versioneer files are vendored / generated
 extend-exclude = ["versioneer.py", "src/lineage/_version.py"]
 
