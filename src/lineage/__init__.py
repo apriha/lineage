@@ -34,9 +34,10 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
-# regions known to produce excess false-positive shared DNA segments: the MHC / HLA region
-# (GRC definition, Build 37) and the cytobands of the polymorphic inversions at 8p23.1 and
-# 17q21.31; for use with the ``exclude_regions`` parameter of ``Lineage.find_shared_dna``
+#: The MHC region (Build 37 positions) and the cytobands of the 8p23.1 and 17q21.31
+#: inversions, where unrelated individuals share long haplotypes more often than elsewhere
+#: in the genome. Shared DNA there may reflect distant rather than recent ancestry. For use
+#: with ``exclude_regions`` of ``Lineage.find_shared_dna``, which lists the sources.
 PILEUP_REGIONS = (("6", 28477797, 33448354), "8p23.1", "17q21.31")
 
 
@@ -122,6 +123,7 @@ class Lineage:
         individual2,
         individual3=None,
         save_output=False,
+        *,
         exclude_strand_ambiguous=False,
     ):
         """Find discordant SNPs between two or three individuals.
@@ -137,9 +139,8 @@ class Lineage:
         save_output : bool
             specifies whether to save output to a CSV file in the output directory
         exclude_strand_ambiguous : bool
-            exclude strand-ambiguous (A/T and C/G) SNPs; for these SNPs, a genotype reported
-            on the opposite strand by one of the files is indistinguishable from a true
-            discordance
+            exclude SNPs where the alleles observed are exactly A and T, or exactly C and G; a
+            strand flip can't be told apart from a true difference there, so both are excluded
 
         Returns
         -------
@@ -236,6 +237,7 @@ class Lineage:
         shared_genes=False,
         save_output=True,
         genetic_map="HapMap2",
+        *,
         exclude_regions=(),
         exclude_strand_ambiguous=False,
     ):
@@ -265,7 +267,8 @@ class Lineage:
         are adjacent to another matching segment, and if so, the segments are stitched together,
         and the single SNP separating the segments is flagged as potentially discrepant. (This
         means that multiple smaller matching segments passing the ``cM_threshold`` could be
-        stitched, identifying the SNP between each segment as discrepant.)
+        stitched, identifying the SNP between each segment as discrepant.) Segments are not
+        stitched across a SNP in an excluded region (see ``exclude_regions``).
 
         Next, the ``snp_threshold`` is applied to each segment to ensure there are enough SNPs in
         the segment and the segment is not only a few SNPs in a region with a high recombination
@@ -299,15 +302,20 @@ class Lineage:
             Note that shared DNA is not computed on the X chromosome with the 1000 Genomes
             Project genetic maps since the X chromosome is not included in these genetic maps.
         exclude_regions : iterable of str or tuple
-            genomic regions in which SNPs are never considered to match, so shared DNA segments
-            are split at these regions instead of spanning them; each region is either a
-            cytoband (e.g., ``"8p23.1"``, or ``"6p21.3"`` for all of its sub-bands) resolved
-            with the UCSC cytoBand table for Build 37, or a ``(chrom, start, end)`` tuple of
-            Build 37 coordinates. ``lineage.PILEUP_REGIONS`` lists regions known to produce
-            false-positive shared DNA (polymorphic inversions and the MHC / HLA region).
+            regions where SNPs never match, so shared DNA segments are split at these regions
+            and SNPs in them are not reported as discrepant. A region has no effect unless it
+            contains a SNP common to all individuals. Each region is a cytoband (e.g.,
+            ``"8p23.1"``, or ``"6p21.3"`` for all of its sub-bands), resolved with the UCSC
+            cytoBand table for Build 37, or a ``(chrom, start, end)`` tuple of 1-based,
+            inclusive Build 37 positions (a ``"chr"`` prefix is allowed).
+            ``lineage.PILEUP_REGIONS`` lists the MHC region (Ref. 1) and the cytobands of the
+            8p23.1 and 17q21.31 inversions, where unrelated individuals share long haplotypes
+            more often than elsewhere in the genome (Refs. 2, 3); the published regions of
+            excess sharing do not coincide exactly with these.
         exclude_strand_ambiguous : bool
-            exclude strand-ambiguous (A/T and C/G) SNPs, for which a genotype reported on the
-            opposite strand by one of the files can't be detected
+            exclude SNPs where the alleles observed are exactly A and T, or exactly C and G,
+            since a strand flip can't be detected there; these SNPs don't count toward
+            ``snp_threshold``
 
         Returns
         -------
@@ -326,6 +334,18 @@ class Lineage:
                 discrepant SNPs discovered while finding shared DNA on one chromosome
             two_chrom_discrepant_snps (pandas.Index)
                 discrepant SNPs discovered while finding shared DNA on two chromosomes
+
+        References
+        ----------
+        1. Genome Reference Consortium, "GRCh37 assembly regions," NCBI, region MHC
+           (chromosome 6: 28,477,797-33,448,354),
+           https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.1_GRCh37/GCA_000001405.1_GRCh37_assembly_regions.txt
+        2. Browning SR, Browning BL. Probabilistic Estimation of Identity by Descent Segment
+           Endpoints and Detection of Recent Selection. Am J Hum Genet. 2020;107(5):895-910.
+           https://doi.org/10.1016/j.ajhg.2020.09.010
+        3. Gusev A, Palamara PF, Aponte G, Zhuang Z, Darvasi A, Gregersen P, Pe'er I. The
+           Architecture of Long-Range Haplotypes Shared within and across Populations. Mol
+           Biol Evol. 2012;29(2):473-486. https://doi.org/10.1093/molbev/msr133
         """
         # initialize all objects to be returned to be empty to start
         one_chrom_shared_dna = pd.DataFrame()
@@ -334,6 +354,9 @@ class Lineage:
         two_chrom_shared_genes = pd.DataFrame()
         one_chrom_discrepant_snps = pd.Index([])
         two_chrom_discrepant_snps = pd.Index([])
+
+        # resolve regions first, so invalid regions fail fast
+        exclude_regions = self._resolve_regions(exclude_regions)
 
         # ensure that all individuals have SNPs that are mapped relative to Build 37
         self._remap_snps_to_GRCh37(individuals)
@@ -349,9 +372,6 @@ class Lineage:
                 one_chrom_discrepant_snps,
                 two_chrom_discrepant_snps,
             )
-
-        # resolve regions to exclude before any computation, so invalid regions fail fast
-        exclude_regions = self._resolve_regions(exclude_regions)
 
         # load the specified genetic map (one genetic map for each chromosome)
         genetic_map_dfs = self._resources.get_genetic_map(genetic_map)
@@ -447,26 +467,24 @@ class Lineage:
         df["one_chrom_match"] = one_chrom_match
         df["two_chrom_match"] = two_chrom_match
 
-        # SNPs in excluded regions never match, so shared DNA segments can't span these regions
+        # SNPs in excluded regions never match, and segments aren't stitched across them
+        df["excluded"] = self._in_regions(df, exclude_regions)
         if exclude_regions:
-            df.loc[
-                self._in_regions(df, exclude_regions),
-                ["one_chrom_match", "two_chrom_match"],
-            ] = False
+            df.loc[df["excluded"], ["one_chrom_match", "two_chrom_match"]] = False
 
         # genotype columns are no longer required for calculation
         df = df.drop(cols, axis=1)
 
         # find shared DNA on one chrom
         one_chrom_shared_dna, one_chrom_discrepant_snps = self._find_shared_dna_helper(
-            df[["chrom", "pos", "cM_from_prev_snp", "one_chrom_match"]],
+            df[["chrom", "pos", "cM_from_prev_snp", "excluded", "one_chrom_match"]],
             cM_threshold,
             snp_threshold,
             one_x_chrom,
         )
         # find shared DNA on two chroms
         two_chrom_shared_dna, two_chrom_discrepant_snps = self._find_shared_dna_helper(
-            df[["chrom", "pos", "cM_from_prev_snp", "two_chrom_match"]],
+            df[["chrom", "pos", "cM_from_prev_snp", "excluded", "two_chrom_match"]],
             cM_threshold,
             snp_threshold,
             one_x_chrom,
@@ -770,26 +788,83 @@ class Lineage:
         Parameters
         ----------
         regions : iterable of str or tuple
-            cytobands (e.g., ``"8p23.1"``) or ``(chrom, start, end)`` tuples
+            cytobands (e.g., ``"8p23.1"``) or ``(chrom, start, end)`` tuples of 1-based,
+            inclusive positions (e.g., ``("6", 28477797, 33448354)``; a ``"chr"`` prefix is
+            allowed)
 
         Returns
         -------
         list of tuple
-            ``(chrom, start, end)`` for each region
+            ``(chrom, start, end)`` for each region, with 1-based, inclusive positions
+
+        Raises
+        ------
+        TypeError
+            if `regions` is not iterable
+        ValueError
+            if a region is invalid, if a single region is passed instead of an iterable of
+            regions, or if a cytoband can't be resolved
         """
+        try:
+            items = list(regions)
+        except TypeError:
+            raise TypeError(
+                f"Expected an iterable of regions, not {regions!r}"
+            ) from None
+
+        # a single region would otherwise be iterated over as several regions
+        if (
+            isinstance(regions, (str, dict))
+            or any(isinstance(item, (int, float, np.number)) for item in items)
+            or (
+                len(items) == 3
+                and all(isinstance(item, str) and item.isdigit() for item in items[1:])
+            )
+        ):
+            raise ValueError(
+                f"Expected an iterable of regions, not a single region: {regions!r}"
+            )
+
+        chroms = [str(i) for i in range(1, 23)] + ["X", "Y", "MT"]
         resolved = []
 
-        for region in regions:
+        for region in items:
             if not isinstance(region, str):
-                chrom, start, end = region
-                resolved.append((str(chrom), start, end))
+                try:
+                    chrom, start, end = region
+                except (TypeError, ValueError):
+                    raise ValueError(f"Invalid region: {region!r}") from None
+
+                chrom = str(chrom).removeprefix("chr")
+
+                if (
+                    chrom not in chroms
+                    or not all(
+                        isinstance(pos, (int, np.integer)) and not isinstance(pos, bool)
+                        for pos in (start, end)
+                    )
+                    or not 0 < start <= end
+                ):
+                    raise ValueError(f"Invalid region: {region!r}")
+
+                resolved.append((chrom, start, end))
                 continue
 
             match = re.fullmatch(r"(\d+|X|Y)([pq][\d.]*)", region)
             if match is None:
                 raise ValueError(f"Invalid cytoband: {region}")
 
-            cytobands = self._resources.get_cytoBand_hg19()
+            try:
+                cytobands = self._resources.get_cytoBand_hg19()
+            except OSError:
+                # the cytoBand table couldn't be downloaded
+                cytobands = pd.DataFrame()
+
+            if cytobands.empty:
+                raise ValueError(
+                    f"Cytoband table not available to resolve {region}; specify the region "
+                    "as a (chrom, start, end) tuple instead"
+                )
 
             # a band also matches all of its sub-bands (e.g., 6p21.3 matches 6p21.31-33)
             bands = cytobands.loc[
@@ -799,7 +874,8 @@ class Lineage:
             if bands.empty:
                 raise ValueError(f"Cytoband not found: {region}")
 
-            resolved.append((match[1], bands["start"].min(), bands["end"].max()))
+            # cytoBand starts are 0-based and ends are 1-based, so add 1 to the start
+            resolved.append((match[1], bands["start"].min() + 1, bands["end"].max()))
 
         return resolved
 
@@ -930,10 +1006,14 @@ class Lineage:
         # get matching segments where total cMs is greater than the threshold
         matches_passed = matches[np.where(cMs_match_segment > cM_threshold)]
 
+        # segments aren't stitched across SNPs in excluded regions
+        excluded = np.r_[df["excluded"].values, False]
+
         # get indices where a_end boundary is adjacent to a_start, perhaps indicating a
         # discrepant SNP
         adjacent_ix = np.where(
-            np.roll(matches_passed[:, 0], -1) - matches_passed[:, 1] == 1
+            (np.roll(matches_passed[:, 0], -1) - matches_passed[:, 1] == 1)
+            & ~excluded[matches_passed[:, 1]]
         )
 
         # if there are adjacent segments
@@ -945,7 +1025,7 @@ class Lineage:
 
             # stitch together adjacent segments
             for x in matches_passed:
-                if prev != -1 and prev + 1 == x[0]:
+                if prev != -1 and prev + 1 == x[0] and not excluded[prev]:
                     matches_stitched[counter, 1] = x[1]
                 else:
                     matches_stitched = np.vstack((matches_stitched, x))
