@@ -78,7 +78,7 @@ class TestLineage(BaseLineageTestCase):
                 "proteinID": ["g"] * len2,
             }
         )
-        kg.set_index("name", inplace=True)
+        kg = kg.set_index("name")
 
         kgXref = pd.DataFrame(
             {
@@ -88,7 +88,7 @@ class TestLineage(BaseLineageTestCase):
                 "description": ["s"] * len2,
             }
         )
-        kgXref.set_index("kgID", inplace=True)
+        kgXref = kgXref.set_index("kgID")
 
         return kg, kgXref
 

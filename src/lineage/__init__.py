@@ -5,6 +5,7 @@ tools for analyzing and exploring genetic relationships
 """
 
 import datetime
+import importlib.metadata
 import logging
 import os
 import re
@@ -19,10 +20,7 @@ from lineage.individual import Individual
 from lineage.resources import Resources
 from lineage.visualization import plot_chromosomes
 
-# set version string with Versioneer
-from . import _version
-
-__version__ = _version.get_versions()["version"]
+__version__ = importlib.metadata.version("lineage")
 
 __all__ = [
     "PILEUP_REGIONS",
@@ -164,7 +162,7 @@ class Lineage:
         df = df.loc[df["genotype"].notnull()]
 
         # add SNPs shared with `individual2`
-        df = df.join(individual2.snps["genotype"], rsuffix="2")
+        df = df.join(individual2.snps["genotype"].rename("genotype2"))
 
         genotype1 = "genotype_" + individual1.get_var_name()
         genotype2 = "genotype_" + individual2.get_var_name()
@@ -187,7 +185,7 @@ class Lineage:
                 )
         else:
             # add SNPs shared with `individual3`
-            df = df.join(individual3.snps["genotype"], rsuffix="3")
+            df = df.join(individual3.snps["genotype"].rename("genotype3"))
 
             genotype3 = "genotype_" + individual3.get_var_name()
 

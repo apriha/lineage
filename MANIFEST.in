@@ -8,9 +8,13 @@ include CONTRIBUTORS.md
 include LICENSE.txt
 include LICENSES-3RD-PARTY.txt
 include README.md
-include versioneer.py
 
 exclude .git*
+
+# development tooling, not needed to build, install, or test from the sdist
+prune .github
+prune .vscode
+exclude .pre-commit-config.yaml .python-version .readthedocs.yaml uv.lock
 
 prune docs/images
 prune docs/_build

@@ -1,0 +1,21 @@
+# https://pre-commit.com
+# Install once with: uv run pre-commit install
+# Run on demand with: uv run pre-commit run --all-files
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.4
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        # leave test data files unchanged
+        exclude: '^tests/(input|resources|output)/'
+      - id: end-of-file-fixer
+        exclude: '^tests/(input|resources|output)/'
+      - id: check-toml
+      - id: check-yaml
