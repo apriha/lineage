@@ -1,14 +1,93 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta:__legacy__"
+requires = ["setuptools>=77", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lineage"
+dynamic = ["version"]
+description = "tools for analyzing and exploring genetic relationships"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE.txt", "LICENSES-3RD-PARTY.txt"]
+authors = [{ name = "Andrew Riha", email = "apriha@gmail.com" }]
+keywords = [
+    "dna",
+    "genes",
+    "genetics",
+    "genealogy",
+    "snps",
+    "chromosomes",
+    "genotype",
+    "bioinformatics",
+    "ancestry",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "numpy>=2",
+    "pandas>=3",
+    "matplotlib>=3.10.7",
+    "atomicwrites>=1.4",
+    "snps>=2.12.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/apriha/lineage"
+Documentation = "https://lineage.readthedocs.io/"
+Changelog = "https://github.com/apriha/lineage/releases"
+"Issue Tracker" = "https://github.com/apriha/lineage/issues"
+
+# Docs dependencies live in docs/requirements.txt (used by Read the Docs and CI), not here.
+[dependency-groups]
+test = ["pytest", "pytest-cov", "sybil"]
+dev = [
+    "ruff",
+    "pre-commit",
+    { include-group = "test" },
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
 
 [tool.ruff]
-# Set explicitly because there is no `[project]` table for Ruff to infer it from;
-# keep in sync with `python_requires` in setup.py
 target-version = "py311"
-# versioneer files are vendored / generated
-extend-exclude = ["versioneer.py", "src/lineage/_version.py"]
 
 # https://github.com/astral-sh/ruff/issues/465#issuecomment-1783684428
 [tool.ruff.lint]
 extend-select = ["I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py", "tests.py"]
+addopts = "-ra --strict-markers --tb=short -p no:doctest"
+filterwarnings = [
+    "error",
+    # snps 2.x calls pandas methods with `inplace=True`, deprecated in pandas 3.1
+    'ignore:The inplace keyword in DataFrame\.\w+ is deprecated:DeprecationWarning:snps\.',
+]
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+precision = 2

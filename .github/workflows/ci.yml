@@ -17,6 +17,9 @@ on:
     branches:
       - '**'
 
+permissions:
+  contents: read
+
 jobs:
   enable-workflow:
     runs-on: ubuntu-latest
@@ -29,26 +32,23 @@ jobs:
     needs: [enable-workflow]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v6
       with:
         python-version: '3.14'
-    - name: Install Ruff
+    - name: Run pre-commit (lint, format, file checks)
       run: |
-        pip install ruff
-    - name: Lint with Ruff
-      run: |
-        ruff check
-    - name: Format with Ruff
-      run: |
-        ruff format --check
+        pip install pre-commit
+        pre-commit run --all-files --show-diff-on-failure
 
   build-docs:
     needs: [enable-workflow]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0  # fetch tags for setuptools-scm
+    - uses: actions/setup-python@v6
       with:
         python-version: '3.14'
     - name: Install Sphinx
@@ -78,12 +78,12 @@ jobs:
       NUM_JOBS: ${{ strategy.job-total }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         persist-credentials: false
     - name: Setup Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
     - name: Determine if downloads are enabled for this job
@@ -120,6 +120,29 @@ jobs:
         pytest --cov=lineage tests README.md
     - name: Upload coverage to Codecov (Ubuntu & macOS)
       if: ${{ matrix.os != 'windows-latest' }}
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v7
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+
+  # Runs the suite on the oldest versions of the dependencies that lineage declares,
+  # on the oldest supported Python. uv's `lowest-direct` resolution lowers only
+  # lineage's own requirements.
+  test-lowest:
+    needs: [lint-format, build-docs]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+    - name: Setup Python 3.11
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.11'
+    - name: Install the lowest declared dependency versions
+      run: |
+        pip install uv pytest sybil
+        uv pip install --system --resolution lowest-direct .
+    - name: Test with pytest
+      run: |
+        pytest tests README.md
