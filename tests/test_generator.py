@@ -2,9 +2,10 @@
 
 import os
 import tempfile
+from unittest.mock import Mock, patch
 
 from lineage.generator import SyntheticRelatedGenerator
-from tests import BaseLineageTestCase
+from tests import BaseLineageTestCase, synthetic_genetic_map
 
 
 class TestSyntheticRelatedGenerator(BaseLineageTestCase):
@@ -308,11 +309,12 @@ class TestSyntheticRelatedGenerator(BaseLineageTestCase):
         - ~50% IBD1 (one allele shared by descent)
         - ~25% IBD2 (both alleles shared by descent)
 
-        This means siblings share ~75% of their genome (~2625 cM of ~3500 cM),
-        with approximately 2/3 of shared DNA being IBD1 and 1/3 being IBD2.
+        This means siblings share ~75% of their genome (~2270 cM of the ~3028 cM
+        synthetic genetic map), with approximately 2/3 of shared DNA being IBD1
+        and 1/3 being IBD2.
 
         This test uses lineage's find_shared_dna() which identifies contiguous
-        segments of shared DNA using genetic maps and thresholds, filtering out
+        segments of shared DNA using a genetic map and thresholds, filtering out
         spurious matches from identity by state (IBS).
 
         Uses a deterministic seed for reproducibility.
@@ -321,12 +323,19 @@ class TestSyntheticRelatedGenerator(BaseLineageTestCase):
 
         gen = SyntheticRelatedGenerator(build=37, seed=1234, crossovers_per_chrom=1.0)
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        # patching the getter also bypasses any map that other tests left loaded
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            patch(
+                "lineage.resources.Resources.get_genetic_map_HapMapII_GRCh37",
+                Mock(return_value=synthetic_genetic_map()),
+            ),
+        ):
             # Generate and save siblings with sufficient SNPs for reliable detection
             paths = gen.save_sibling_pair(tmpdir, num_snps=500000)
 
             # Load with lineage and find shared DNA
-            lineage_obj = Lineage(output_dir=tmpdir, resources_dir="resources")
+            lineage_obj = Lineage(output_dir=tmpdir)
             sib1 = lineage_obj.create_individual("Sibling1", paths[0])
             sib2 = lineage_obj.create_individual("Sibling2", paths[1])
             results = lineage_obj.find_shared_dna([sib1, sib2], save_output=False)
@@ -340,13 +349,14 @@ class TestSyntheticRelatedGenerator(BaseLineageTestCase):
             ibd2_cM = two_chrom["cMs"].sum() if len(two_chrom) > 0 else 0
             ibd1_cM = total_shared_cM - ibd2_cM
 
-            # Siblings should share substantial DNA (expect ~2000-3200 cM)
+            # Siblings should share substantial DNA (expect ~75% of the ~3028 cM the
+            # synthetic map gives chromosomes 1-22 and X), and never more than all of it
             self.assertGreater(
                 total_shared_cM, 1500, f"Total shared too low: {total_shared_cM:.0f} cM"
             )
             self.assertLess(
                 total_shared_cM,
-                3600,
+                3028,
                 f"Total shared too high: {total_shared_cM:.0f} cM",
             )
 
