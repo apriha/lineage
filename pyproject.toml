@@ -60,6 +60,8 @@ test = ["pytest", "pytest-cov", "sybil"]
 dev = [
     "ruff",
     "pre-commit",
+    "mypy",
+    "pandas-stubs",
     { include-group = "test" },
 ]
 
@@ -74,6 +76,23 @@ target-version = "py311"
 # https://github.com/astral-sh/ruff/issues/465#issuecomment-1783684428
 [tool.ruff.lint]
 extend-select = ["I"]
+
+[tool.mypy]
+files = ["src"]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+
+# Modules not yet type-checked
+[[tool.mypy.overrides]]
+module = [
+    "lineage",
+    "lineage.generator",
+    "lineage.individual",
+    "lineage.resources",
+    "lineage.visualization",
+]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
