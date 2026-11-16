@@ -59,6 +59,21 @@ jobs:
       run: |
         sphinx-build -W --keep-going -T -E -D language=en docs docs/_build
 
+  type-check:
+    needs: [enable-workflow]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0  # fetch tags for setuptools-scm
+    - uses: actions/setup-python@v6
+      with:
+        python-version: '3.14'
+    - name: Check types with mypy
+      run: |
+        pip install . mypy pandas-stubs
+        mypy
+
   test:
     needs: [lint-format, build-docs]
     runs-on: ${{ matrix.os }}
