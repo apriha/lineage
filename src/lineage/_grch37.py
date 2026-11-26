@@ -91,16 +91,7 @@ def check_positions(value: object, region: str, label: str) -> npt.NDArray[np.ui
         raise ValueError(f"{label} must be a 1-D array, not {pos.ndim}-D")
     if pos.dtype.kind not in "iuf":
         raise ValueError(f"{label} must be integers, not {pos.dtype}")
-    if pos.dtype.kind == "f":
-        # Widen first: compared with a float32 or float16 array, a bound is rounded
-        # to the array's precision.
-        pos = pos.astype(np.promote_types(pos.dtype, np.float64))
-        bad = ~np.isfinite(pos) | (np.trunc(pos) != pos)
-        if bad.any():
-            i = int(np.argmax(bad))
-            raise ValueError(
-                f"{label} must be finite whole numbers; {pos[i]} at index {i} is not"
-            )
+    pos = check_whole_numbers(pos, label)
     outside = ~_in_region(region, pos)
     if outside.any():
         i = int(np.argmax(outside))
@@ -117,6 +108,24 @@ def check_positions(value: object, region: str, label: str) -> npt.NDArray[np.ui
     checked = pos.astype(np.uint32)
     checked.setflags(write=False)
     return checked
+
+
+def check_whole_numbers(
+    values: npt.NDArray[_Number], label: str, *, entry: str = "index"
+) -> npt.NDArray[_Number]:
+    """Return finite whole numbers, with floats widened to at least float64."""
+    if values.dtype.kind != "f":
+        return values
+    # Widen first: compared with a float32 or float16 array, a bound is rounded to the
+    # array's precision.
+    widened = values.astype(np.promote_types(values.dtype, np.float64))
+    not_whole = ~np.isfinite(widened) | (np.trunc(widened) != widened)
+    if not_whole.any():
+        i = int(np.argmax(not_whole))
+        raise ValueError(
+            f"{label} must be finite whole numbers; {widened[i]} at {entry} {i} is not"
+        )
+    return widened
 
 
 def holds_bool(value: object) -> bool:

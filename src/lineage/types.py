@@ -4,17 +4,27 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Self, TypeAlias
+from typing import Final, Self, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
 
 from lineage import _grch37
 
-__all__ = ["Loci", "Sex"]
+__all__ = ["ABSENT", "UNKNOWN", "Haplotypes", "Loci", "Sex"]
 
 _UInt32s: TypeAlias = npt.NDArray[np.uint32]
 _Objects: TypeAlias = npt.NDArray[np.object_]
+
+#: The allele of each of a chromosome's two copies at each locus, shape (2, n): 0 to 3
+#: for A, C, G and T, or :data:`UNKNOWN` or :data:`ABSENT`.
+Haplotypes: TypeAlias = npt.NDArray[np.int8]
+
+#: A copy exists, but its allele is not known.
+UNKNOWN: Final = -1
+
+#: There is no such copy, as for the second X of a male.
+ABSENT: Final = -2
 
 
 class Sex(StrEnum):
