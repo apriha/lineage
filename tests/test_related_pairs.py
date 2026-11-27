@@ -113,7 +113,7 @@ def test_parent_child_discordant_snps(ln):
     one_chrom = d["one_chrom_shared_dna"]
     assert one_chrom["chrom"].tolist() == ["1"] + MAPPED_CHROMS
     assert _bounds(one_chrom, "1") == [(23939, 103792931), (105116617, 249198353)]
-    assert one_chrom["cMs"].sum() == pytest.approx(3026.09, abs=0.01)
+    assert one_chrom["cMs"].sum() == pytest.approx(3026.08, abs=0.01)
     assert d["one_chrom_discrepant_snps"].tolist() == ["rs3299"] + isolated
     assert len(d["two_chrom_shared_dna"]) == 0
     assert len(d["two_chrom_discrepant_snps"]) == 0
@@ -138,8 +138,15 @@ def test_siblings(ln):
         + ["10", "11", "12", "13", "14", "15", "16", "17", "19", "X"]
     )
     assert two_chrom["chrom"].tolist() == ["3", "5", "6", "7", "9", "11", "X"]
-    assert one_chrom["cMs"].sum() == pytest.approx(2162.34, abs=0.01)
-    assert two_chrom["cMs"].sum() == pytest.approx(541.28, abs=0.01)
+    assert one_chrom["cMs"].sum() == pytest.approx(2162.24, abs=0.01)
+    assert two_chrom["cMs"].sum() == pytest.approx(541.09, abs=0.01)
+    for segments in (one_chrom, two_chrom):
+        for segment in segments.itertuples():
+            genetic_map = GENETIC_MAP[segment.chrom]
+            start_cM, end_cM = np.interp(
+                [segment.start, segment.end], genetic_map["pos"], genetic_map["map"]
+            )
+            assert segment.cMs == pytest.approx(end_cM - start_cM, abs=1e-6)
 
     assert _bounds(one_chrom, "1") == [(42423995, 89437092), (145698751, 249198353)]
     assert _bounds(one_chrom, "6") == [(10916, 171079397)]

@@ -997,9 +997,9 @@ class Lineage:
         # get the matching segments
         matches = np.hstack((a_starts, a_ends))
 
-        # compute total cMs for each matching segment
-        c = np.r_[0, df["cM_from_prev_snp"].cumsum()][matches]
-        cMs_match_segment = c[:, 1] - c[:, 0]
+        # compute total cMs for each matching segment (from its first SNP to its last SNP)
+        cum_cM = df["cM_from_prev_snp"].cumsum().to_numpy()
+        cMs_match_segment = cum_cM[matches[:, 1] - 1] - cum_cM[matches[:, 0]]
 
         # get matching segments where total cMs is greater than the threshold
         matches_passed = matches[np.where(cMs_match_segment > cM_threshold)]
@@ -1040,8 +1040,9 @@ class Lineage:
         matches_passed = matches_passed[np.where(snp_counts > snp_threshold)]
 
         # compute total cMs for each match segment
-        c = np.r_[0, df["cM_from_prev_snp"].cumsum()][matches_passed]
-        cMs_match_segment = c[:, 1] - c[:, 0]
+        cMs_match_segment = (
+            cum_cM[matches_passed[:, 1] - 1] - cum_cM[matches_passed[:, 0]]
+        )
 
         discrepant_snps_passed = pd.Index([], name="rsid")
         # save matches for this chromosome
