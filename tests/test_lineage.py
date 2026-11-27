@@ -1086,6 +1086,47 @@ class TestLineage(BaseLineageTestCase):
         ]:
             pd.testing.assert_index_equal(result.index, pd.Index(["rs2"], name="rsid"))
 
+    def test_find_shared_dna_excludes_gap_before_segment_start(self):
+        # 100 discordant SNPs at 1.0-1.1 Mb, a 20 cM gap, then 1250 matching SNPs
+        # spanning 0.1 cM (21.1-21.2 Mb), below the default 0.75 cM threshold.
+        pos1 = np.arange(1_000_000, 1_100_000, 1000, dtype=np.int64)
+        pos2 = np.arange(21_100_000, 21_200_000, 80, dtype=np.int64)
+        pos = np.concatenate([pos1, pos2])
+        df = pd.DataFrame(
+            {
+                "chrom": "1",
+                "pos": pos,
+                "ind1": "AA",
+                "ind2": ["CC"] * len(pos1) + ["AA"] * len(pos2),
+            },
+            index=pd.Index([f"rs{i + 1}" for i in range(len(pos))], name="rsid"),
+        )
+        genetic_map = self._generate_test_genetic_map(
+            chrom="1", pos=(1, 30_000_000), rate=(1.0, 0.0), map_cMs=(0.0, 30.0)
+        )
+
+        with patch(
+            "lineage.resources.Resources.get_genetic_map_HapMapII_GRCh37",
+            Mock(return_value=genetic_map),
+        ):
+            ln = Lineage()
+            ind1 = self.get_discordant_snps(ln.create_individual("ind1"), df)
+            ind2 = self.get_discordant_snps(ln.create_individual("ind2"), df)
+
+            # Default 0.75 cM threshold should not emit the 0.1 cM matching run
+            d = ln.find_shared_dna([ind1, ind2], save_output=False)
+            assert len(d["one_chrom_shared_dna"]) == 0
+            assert len(d["two_chrom_shared_dna"]) == 0
+
+            # With a lower threshold, the reported cMs should match end - start (~0.1 cM)
+            d_low = ln.find_shared_dna(
+                [ind1, ind2], cM_threshold=0.05, save_output=False
+            )
+            expected_cM = (pos2[-1] - pos2[0]) / 1e6
+            for key in ("one_chrom_shared_dna", "two_chrom_shared_dna"):
+                assert len(d_low[key]) == 1
+                np.testing.assert_allclose(d_low[key].loc[1]["cMs"], expected_cM)
+
 
 class TestCreateExampleDatasets(BaseLineageTestCase):
     """Tests for the create_example_datasets method."""
